@@ -11,4 +11,5 @@ This is a learning exercise for me to learn:
 * Some really, really dumb napkin distance calculations
 
 If I get this done, this should be a runtime-free tool that can run against
-speedtest.net. 
+speedtest.net.
+
