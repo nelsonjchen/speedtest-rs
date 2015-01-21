@@ -13,3 +13,6 @@ This is a learning exercise for me to learn:
 If I get this done, this should be a runtime-free tool that can run against
 speedtest.net. Cross-compile this and maybe it can go anywhere!
 
+This will be based heavily on:
+
+https://github.com/sivel/speedtest-cli
