@@ -5,4 +5,4 @@ version = "0.0.1"
 authors = ["Nelson Chen <crazysim@gmail.com>"]
 
 [dependencies.xml-rs]
-git="https://github.com/netvl/xml-rs.git"
+version = "*"
