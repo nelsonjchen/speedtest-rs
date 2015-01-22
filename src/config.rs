@@ -7,7 +7,7 @@ mod tests {
 
     #[test]
     fn read_xml() {
-        let file = File::open(&Path::new("data/speedtest-config.php")).unwrap();
+        let file = File::open(&Path::new("data/speedtest-config.php.xml")).unwrap();
         let reader = BufferedReader::new(file);
 
         let mut parser = EventReader::new(reader);
