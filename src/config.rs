@@ -1,7 +1,6 @@
+
 #[cfg(test)]
 mod tests {
-    extern crate xml;
-
     use std::io::{File, BufferedReader};
     use xml::reader::EventReader;
     use xml::reader::events::*;
