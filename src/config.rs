@@ -14,7 +14,6 @@ mod tests {
         for e in parser.events() {
             match e {
                 XmlEvent::StartElement {name, attributes: _, namespace: _ } => {
-                    println!("{}", name);
                 }
                 _ => {}
             }
