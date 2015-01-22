@@ -1,4 +1,3 @@
-extern crate xml;
 mod config;
 
 fn main() {
