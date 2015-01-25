@@ -1,3 +1,7 @@
+pub fn speedtest() {
+
+}
+
 #[cfg(test)]
 mod tests {
     extern crate xml;
