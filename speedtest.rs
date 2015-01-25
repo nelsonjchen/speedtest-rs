@@ -12,11 +12,12 @@ mod tests {
 
         let mut parser = EventReader::new(reader);
         for e in parser.events() {
-            match e {
-                XmlEvent::StartElement {name, attributes: _, namespace: _ } => {
-                }
-                _ => {}
-            }
+            println!("{:?}", e);
+            // match e {
+                // XmlEvent::StartElement {name, attributes: attr, namespace: _ } => {
+                // }
+                // _ => {}
+            // }
         }
     }
 }
