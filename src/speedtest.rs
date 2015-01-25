@@ -1,7 +1,14 @@
-pub fn speedtest() {
+struct SpeedTestConfig;
 
+
+pub fn speedtest() {
+    println!("Starting Speed Test");
+    let config = getConfig();
 }
 
+fn getConfig() {
+
+}
 #[cfg(test)]
 mod tests {
     extern crate xml;
