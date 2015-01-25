@@ -2,7 +2,7 @@
 name = "speedtest-rust"
 version = "0.0.1"
 dependencies = [
- "xml-rs 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "xml-rs 0.1.15 (git+https://github.com/netvl/xml-rs.git)",
 ]
 
 [[package]]
@@ -12,8 +12,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "xml-rs"
-version = "0.1.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+version = "0.1.15"
+source = "git+https://github.com/netvl/xml-rs.git#47c62f05b463f68cb460421ddcadd04330312523"
 dependencies = [
  "bitflags 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
