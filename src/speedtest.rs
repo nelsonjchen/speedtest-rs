@@ -6,8 +6,8 @@ pub fn speedtest() {
     let config = getConfig();
 }
 
-fn getConfig() {
-
+fn getConfig() -> SpeedTestConfig {
+    SpeedTestConfig
 }
 #[cfg(test)]
 mod tests {
