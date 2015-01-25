@@ -6,3 +6,6 @@ authors = ["Nelson Chen <crazysim@gmail.com>"]
 
 [dependencies.xml-rs]
 git="https://github.com/netvl/xml-rs.git"
+
+[dependencies.hyper]
+git="https://github.com/hyperium/hyper.git"
