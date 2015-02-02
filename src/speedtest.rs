@@ -16,7 +16,7 @@ fn get_config() -> SpeedTestConfig {
     SpeedTestConfig
 }
 
-fn distance(origin: EarthLocation, destination: EarthLocation) -> f32 {
+fn fast_earth_distance(origin: EarthLocation, destination: EarthLocation) -> f32 {
     let radius: f32 = 6371.0;
     let d_lat = (origin.latitude - destination.latitude).to_radians();
     let d_long = (origin.latitude - destination.latitude).to_radians();
