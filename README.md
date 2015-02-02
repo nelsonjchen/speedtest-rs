@@ -16,3 +16,34 @@ speedtest.net. Cross-compile this and maybe it can go anywhere!
 This will be based heavily on:
 
 https://github.com/sivel/speedtest-cli
+
+For now, it would only support speedtest.net and not Speedtest Mini.
+
+# How this speedtest would work.
+
+This is pretty much cribbed from the Python implementation.
+
+1. "http://www.speedtest.net/speedtest-config.php" is downloaded.
+1. The `client` attributes are read.
+  * `client`'s attributes
+    * `ip` - Your IP address.
+    * `lat` - GeoIP'd Latitude of your location
+    * `lon` - GeoIP'd Longitude of your location
+    * `isp` - Your ISP name. e.g. "Time Warner Cable"
+    * etc. They are not used.
+
+  In the original Python implementation, `times`, `download`, and `upload`
+  elements' attributes are also read.
+
+  * `times` - Saved in the Python implementation but it's not used throughout
+    the script.
+  * `download` - Saved in the Python implementation. Not used either.
+  * `upload` - Ditto.
+
+  Deleting these unused elements (`times`, `download`, and `upload`) still lets
+  the Python implementation work. As far as I know, they are unused. Judging
+  from the history of the original Python implementation, they were introduced
+  in the first commit but never removed and stayed in as further refactoring
+  was done.
+
+
