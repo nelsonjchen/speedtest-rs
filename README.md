@@ -45,5 +45,16 @@ This is pretty much cribbed from the Python implementation.
   from the history of the original Python implementation, they were introduced
   in the first commit but never removed and stayed in as further refactoring
   was done.
+1. The server list is downloaded.
+1. Each `server` attributes are read.
+  * `lat` - GeoIP'd Latitude of your location
+  * `lon` - GeoIP'd Longitude of your location
+  * `url` - This is used as the endpoint that is used to calculate speeds.
+  * `name` - Name of the server used.
+  * `sponsor` - Sponsor of the server
+  * etc. and some more like `host`, `id`, and `country` but they are not used.
+1. The five closest servers are found by the latitude and longitude with the
+   original `client` attribute from the configuration.
+1. These five servers are tested for latency and the best server is selected.
 
 
