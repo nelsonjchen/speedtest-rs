@@ -3,12 +3,17 @@ struct SpeedTestConfig;
 
 pub fn speedtest() {
     println!("Starting Speed Test");
-    let config = getConfig();
+    let config = get_config();
 }
 
-fn getConfig() -> SpeedTestConfig {
+fn get_config() -> SpeedTestConfig {
     SpeedTestConfig
 }
+
+fn distance() {
+
+}
+
 #[cfg(test)]
 mod tests {
     extern crate xml;
@@ -30,5 +35,10 @@ mod tests {
                 // _ => {}
             // }
         }
+    }
+
+    #[test]
+    fn test_distance() {
+
     }
 }
