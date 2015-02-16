@@ -1,3 +1,5 @@
+#![feature(std_misc)]
+
 mod speedtest;
 
 #[allow(dead_code)]
