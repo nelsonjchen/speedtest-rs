@@ -1,8 +1,9 @@
 struct SpeedTestConfig;
 
+
 pub fn speedtest() {
     println!("Starting Speed Test");
-    let config = get_config();
+    get_config();
 }
 
 fn get_config() -> SpeedTestConfig {
@@ -12,4 +13,8 @@ fn get_config() -> SpeedTestConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_five_closest_servers() {
+    }
 }
