@@ -1,4 +1,4 @@
-struct SpeedTestConfig{
+pub struct SpeedTestConfig{
     ip: String,
     lat: String,
     lon: String,
@@ -6,12 +6,11 @@ struct SpeedTestConfig{
 }
 
 
-pub fn speedtest() {
-    println!("Starting Speed Test");
-    get_config();
+pub fn run_speedtest() {
+    println!("TODO");
 }
 
-fn get_config() -> SpeedTestConfig {
+pub fn parse_config_xml(config_xml: String) -> SpeedTestConfig {
     SpeedTestConfig{
         ip: "127.0.0.1".to_string(),
         lat: "37.4192".to_string(),
@@ -25,6 +24,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_five_closest_servers() {
+    fn test_parse_config_xml() {
     }
 }

@@ -3,5 +3,5 @@ mod cheap_distance;
 
 #[allow(dead_code)]
 fn main() {
-    speedtest::speedtest();
+    speedtest::run_speedtest();
 }
