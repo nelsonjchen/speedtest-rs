@@ -1,4 +1,9 @@
-struct SpeedTestConfig;
+struct SpeedTestConfig{
+    ip: String,
+    lat: String,
+    lon: String,
+    isp: String,
+}
 
 
 pub fn speedtest() {
@@ -7,7 +12,12 @@ pub fn speedtest() {
 }
 
 fn get_config() -> SpeedTestConfig {
-    SpeedTestConfig
+    SpeedTestConfig{
+        ip: "127.0.0.1".to_string(),
+        lat: "37.4192".to_string(),
+        lon: "-122.0574".to_string(),
+        isp: "Time Warner Cable".to_string(),
+    }
 }
 
 #[cfg(test)]
