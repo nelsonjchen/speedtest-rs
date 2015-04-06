@@ -1,4 +1,4 @@
-use xml::{Parser, ElementBuilder};
+use xml::{Element, Parser, ElementBuilder};
 
 pub struct SpeedTestConfig{
     ip: String,
@@ -13,6 +13,7 @@ pub fn run_speedtest() {
 }
 
 pub fn parse_config_xml(config_xml: String) -> SpeedTestConfig {
+    let elem: Element = config_xml.parse().unwrap();
     SpeedTestConfig{
         ip: "127.0.0.1".to_string(),
         lat: "37.4192".to_string(),
@@ -37,5 +38,6 @@ mod tests {
 	<client ip="174.79.12.26" lat="32.9954" lon="-117.0753" isp="Cox Communications" isprating="3.1" rating="0" ispdlavg="18259" ispulavg="5021" loggedin="0"/>
 </settings>
         "#.to_string();
+        parse_config_xml(config_xml_string);
     }
 }
