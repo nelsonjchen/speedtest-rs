@@ -29,6 +29,8 @@ mod tests {
 
     #[test]
     fn test_parse_config_xml() {
+        // TODO: File Reading with try!(File::Open()). Not sure why it considers
+        // the result of File::Open() a ().
         let config_xml_string: String = r#"
         <?xml version="1.0" encoding="UTF-8"?>
 <settings>
