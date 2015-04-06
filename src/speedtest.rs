@@ -23,11 +23,16 @@ pub fn parse_config_xml(config_xml: String) -> SpeedTestConfig {
 mod tests {
     use super::*;
     use std::io::prelude::*;
-    use std::fs::File;
-    use std::path::Path;
+    use std::string::String;
+
 
     #[test]
     fn test_parse_config_xml() {
-        let mut f = try!(File::open("foo.txt"));
+        let config_xml_string: String = r#"
+        <?xml version="1.0" encoding="UTF-8"?>
+<settings>
+	<client ip="174.79.12.26" lat="32.9954" lon="-117.0753" isp="Cox Communications" isprating="3.1" rating="0" ispdlavg="18259" ispulavg="5021" loggedin="0"/>
+</settings>
+        "#.to_string();
     }
 }
