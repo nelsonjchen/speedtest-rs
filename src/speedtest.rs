@@ -1,3 +1,5 @@
+use xml::{Parser, ElementBuilder};
+
 pub struct SpeedTestConfig{
     ip: String,
     lat: String,
@@ -24,7 +26,6 @@ mod tests {
     use super::*;
     use std::io::prelude::*;
     use std::string::String;
-
 
     #[test]
     fn test_parse_config_xml() {
