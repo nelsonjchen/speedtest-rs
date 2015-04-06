@@ -22,8 +22,12 @@ pub fn parse_config_xml(config_xml: String) -> SpeedTestConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::prelude::*;
+    use std::fs::File;
+    use std::path::Path;
 
     #[test]
     fn test_parse_config_xml() {
+        let mut f = try!(File::open("foo.txt"));
     }
 }
