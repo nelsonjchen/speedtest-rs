@@ -11,7 +11,7 @@ pub struct SpeedTestConfig{
 pub struct ParseError;
 
 pub fn run_speedtest() {
-    println!("TODO");
+    unimplemented!();
 }
 
 pub fn parse_config_xml(config_xml: String) -> Result<SpeedTestConfig, ParseError> {
