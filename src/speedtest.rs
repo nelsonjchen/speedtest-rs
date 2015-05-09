@@ -16,12 +16,7 @@ pub fn run_speedtest() {
 
 pub fn parse_config_xml(config_xml: String) -> Result<SpeedTestConfig, ParseError> {
     // let elem: Element = config_xml.parse().unwrap();
-    Ok(SpeedTestConfig {
-        ip: "127.0.0.1".to_string(),
-        lat: "0.0".to_string(),
-        lon: "0.0".to_string(),
-        isp: "Nipple Massage Cable".to_string(),
-    })
+    unimplemented!();
 }
 
 #[cfg(test)]
