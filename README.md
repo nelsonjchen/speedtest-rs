@@ -9,6 +9,7 @@ This is a learning exercise for me to learn:
 * Sockets in Rust
 * Threads with Rust
 * Some really, really dumb napkin distance calculations
+* Idiomatic Rust
 
 If I get this done, this should be a runtime-free tool that can run against
 speedtest.net. Cross-compile this and maybe it can go anywhere!
