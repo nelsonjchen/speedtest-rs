@@ -1,21 +1,23 @@
 // use xml::{Element, Parser, ElementBuilder};
+use std::io::Read;
 
-pub struct SpeedTestConfig{
+#[derive(Debug)]
+pub struct ParseError(String);
+
+pub struct SpeedTestConfig {
     ip: String,
     lat: String,
     lon: String,
     isp: String,
 }
 
-#[derive(Debug)]
-pub struct ParseError;
-
-pub fn run_speedtest() {
-    unimplemented!();
+impl SpeedTestConfig {
+    fn new<R: Read(parser: &mut EventReader<R>) -> Result<SpeedTestConfig, ParseError> {
+        unimplemented!();
+    }
 }
 
-pub fn parse_config_xml(config_xml: String) -> Result<SpeedTestConfig, ParseError> {
-    // let elem: Element = config_xml.parse().unwrap();
+pub fn run_speedtest() {
     unimplemented!();
 }
 
@@ -28,7 +30,9 @@ mod tests {
 
     #[test]
     fn test_parse_config_xml() {
-        let config = parse_config_xml(include_bytes!("data/speedtest-config.php.xml")).unwrap();
+        unimplemented!();
+        let config_xml = include_bytes!("../tests/data/speedtest-config.php.xml");
+        let config = parse_config_xml(config_xml).unwrap();
         assert_eq!("174.79.12.26", config.ip);
     }
 }
