@@ -28,10 +28,7 @@ mod tests {
 
     #[test]
     fn test_parse_config_xml() {
-        let mut config_xml_string = String::new();
-        let _ = File::open("data/speedtest-config.php.xml").
-            unwrap().read_to_string(&mut config_xml_string);
-        let config = parse_config_xml(config_xml_string).unwrap();
+        let config = parse_config_xml(include_bytes!("data/speedtest-config.php.xml")).unwrap();
         assert_eq!("174.79.12.26", config.ip);
     }
 }
