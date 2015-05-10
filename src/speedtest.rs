@@ -60,7 +60,7 @@ impl SpeedTestConfig {
                 })
             },
             _ => {
-                return Err(ParseError("something is missing".to_string()));
+                return Err(ParseError("Configuration is invalid".to_string()));
             }
         }
     }
