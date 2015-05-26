@@ -84,5 +84,8 @@ mod tests {
         let mut parser = EventReader::new(include_bytes!("../tests/data/speedtest-config.php.xml") as &[u8]);
         let config = SpeedTestConfig::new(&mut parser).unwrap();
         assert_eq!("174.79.12.26", config.ip);
+        assert_eq!("32.9954", config.lat);
+        assert_eq!("-117.0753", config.lon);
+        assert_eq!("Cox Communications", config.isp);
     }
 }
