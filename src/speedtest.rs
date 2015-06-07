@@ -121,7 +121,9 @@ impl SpeedTestServers {
                 }
             }
         }
-        return Err(ParseError("Configuration is invalid".to_string()));
+        return Ok(SpeedTestServers{
+            servers: servers
+        })
     }
 }
 
