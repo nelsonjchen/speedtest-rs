@@ -99,6 +99,17 @@ impl SpeedTestServers {
                                     }
                                 }
                             }
+                            match (lat, lon) {
+                                (Some(lat), Some(lon)) => {
+                                    servers.push(SpeedTestServer{
+                                        lat: lat,
+                                        lon: lon,
+                                        });
+                                }
+                                _ => {
+                                    // eh
+                                }
+                            }
                         }
                         _ => {
                             // I don't care about other tags.
