@@ -66,6 +66,54 @@ impl SpeedTestConfig {
     }
 }
 
+pub struct SpeedTestServer {
+    lat: String,
+    lon: String,
+}
+
+pub struct SpeedTestServers {
+    servers: Vec<SpeedTestServer>,
+}
+
+impl SpeedTestServers {
+    fn new<R: Read>(parser: &mut EventReader<R>) -> Result<SpeedTestServers, ParseError> {
+        let mut servers: Vec<SpeedTestServer> = Vec::new();
+
+        for e in parser.events(){
+            match e {
+                StartElement { ref name, ref attributes, ..} => {
+                    match name.local_name.as_ref() {
+                        "server" => {
+                            let mut lat: Option<String> = None;
+                            let mut lon: Option<String> = None;
+                            for attribute in attributes {
+                                match attribute.name.local_name.as_ref() {
+                                    "lat" => {
+                                        lat = Some(attribute.value.clone());
+                                    },
+                                    "lon" => {
+                                        lat = Some(attribute.value.clone());
+                                    },
+                                    _ => {
+                                        // eh?
+                                    }
+                                }
+                            }
+                        }
+                        _ => {
+                            // I don't care about other tags.
+                        }
+                    }
+                }
+                _ => {
+                    // not using other parts of the xml library right now.
+                }
+            }
+        }
+        return Err(ParseError("Configuration is invalid".to_string()));
+    }
+}
+
 pub fn run_speedtest() {
     unimplemented!();
 }
