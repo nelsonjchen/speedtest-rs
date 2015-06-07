@@ -19,24 +19,24 @@ impl SpeedTestConfig {
         let mut lat: Option<String> = None;
         let mut lon: Option<String> = None;
         let mut isp: Option<String> = None;
-        for e in parser.events() {
-            match e {
+        for event in parser.events() {
+            match event {
                 StartElement { ref name, ref attributes, ..} => {
                     match name.local_name.as_ref() {
                         "client" => {
-                            for item in attributes {
-                                match item.name.local_name.as_ref() {
+                            for attribute in attributes {
+                                match attribute.name.local_name.as_ref() {
                                     "ip" => {
-                                        ip = Some(item.value.clone());
+                                        ip = Some(attribute.value.clone());
                                     },
                                     "lat" => {
-                                        lat = Some(item.value.clone());
+                                        lat = Some(attribute.value.clone());
                                     },
                                     "lon" => {
-                                        lon = Some(item.value.clone());
+                                        lon = Some(attribute.value.clone());
                                     },
                                     "isp" => {
-                                        isp = Some(item.value.clone());
+                                        isp = Some(attribute.value.clone());
                                     },
                                     _ => {},
 
