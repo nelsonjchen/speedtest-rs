@@ -1,5 +1,7 @@
 # Speedtest{-cli,-go}, but in rust, Speedtest-Rust
 
+*This is not working at the moment. I'm just stumbling around.*
+
 This is a learning exercise for me to learn:
 
 * How some python stuff maps to Rust
