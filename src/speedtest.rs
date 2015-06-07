@@ -67,8 +67,15 @@ impl SpeedTestConfig {
 }
 
 pub struct SpeedTestServer {
+    country: String,
+    host: String,
+    id: String,
     lat: String,
     lon: String,
+    name: String,
+    sponsor: String,
+    url: String,
+    url2: String,
 }
 
 pub struct SpeedTestServers {
@@ -84,26 +91,61 @@ impl SpeedTestServers {
                 StartElement { ref name, ref attributes, ..} => {
                     match name.local_name.as_ref() {
                         "server" => {
+                            let mut country: Option<String> = None;
+                            let mut host: Option<String> = None;
+                            let mut id: Option<String> = None;
                             let mut lat: Option<String> = None;
                             let mut lon: Option<String> = None;
+                            let mut name: Option<String> = None;
+                            let mut sponsor: Option<String> = None;
+                            let mut url: Option<String> = None;
+                            let mut url2: Option<String> = None;
                             for attribute in attributes {
                                 match attribute.name.local_name.as_ref() {
+                                    "country" => {
+                                        country = Some(attribute.value.clone());
+                                    },
+                                    "host" => {
+                                        host = Some(attribute.value.clone());
+                                    },
+                                    "id" => {
+                                        id = Some(attribute.value.clone());
+                                    },
                                     "lat" => {
                                         lat = Some(attribute.value.clone());
                                     },
                                     "lon" => {
-                                        lat = Some(attribute.value.clone());
+                                        lon = Some(attribute.value.clone());
+                                    },
+                                    "name" => {
+                                        name = Some(attribute.value.clone());
+                                    },
+                                    "sponsor" => {
+                                        sponsor = Some(attribute.value.clone());
+                                    },
+                                    "url" => {
+                                        url = Some(attribute.value.clone());
+                                    },
+                                    "url2" => {
+                                        url2 = Some(attribute.value.clone());
                                     },
                                     _ => {
                                         // eh?
                                     }
                                 }
                             }
-                            match (lat, lon) {
-                                (Some(lat), Some(lon)) => {
+                            match (country, host, id, lat, lon, name, sponsor, url, url2) {
+                                (Some(country), Some(host), Some(id), Some(lat), Some(lon), Some(name), Some(sponsor), Some(url), Some(url2)) => {
                                     servers.push(SpeedTestServer{
+                                        country: country,
+                                        host: host,
+                                        id: id,
                                         lat: lat,
                                         lon: lon,
+                                        name: name,
+                                        sponsor: sponsor,
+                                        url: url,
+                                        url2: url2,
                                         });
                                 }
                                 _ => {
