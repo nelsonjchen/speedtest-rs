@@ -67,7 +67,7 @@ impl SpeedTestConfig {
 }
 
 pub struct SpeedTestServer {
-    country: String,
+    pub country: String,
     host: String,
     id: String,
     lat: String,
@@ -78,12 +78,12 @@ pub struct SpeedTestServer {
     url2: String,
 }
 
-pub struct SpeedTestServers {
+pub struct SpeedTestServersConfig {
     servers: Vec<SpeedTestServer>,
 }
 
-impl SpeedTestServers {
-    fn new<R: Read>(parser: &mut EventReader<R>) -> Result<SpeedTestServers, ParseError> {
+impl SpeedTestServersConfig {
+    fn new<R: Read>(parser: &mut EventReader<R>) -> Result<SpeedTestServersConfig, ParseError> {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
 
         for e in parser.events(){
@@ -134,20 +134,42 @@ impl SpeedTestServers {
                                     }
                                 }
                             }
-                            match (country, host, id, lat, lon, name, sponsor, url, url2) {
-                                (Some(country), Some(host), Some(id), Some(lat), Some(lon), Some(name), Some(sponsor), Some(url), Some(url2)) => {
-                                    servers.push(SpeedTestServer{
-                                        country: country,
-                                        host: host,
-                                        id: id,
-                                        lat: lat,
-                                        lon: lon,
-                                        name: name,
-                                        sponsor: sponsor,
-                                        url: url,
-                                        url2: url2,
-                                        });
-                                }
+                            match (
+                                country,
+                                host,
+                                id,
+                                lat,
+                                lon,
+                                name,
+                                sponsor,
+                                url,
+                                url2
+                                ) {
+                                    (
+                                        Some(country),
+                                        Some(host),
+                                        Some(id),
+                                        Some(lat),
+                                        Some(lon),
+                                        Some(name),
+                                        Some(sponsor),
+                                        Some(url),
+                                        Some(url2)
+                                        ) => {
+                                            servers.push(
+                                                SpeedTestServer{
+                                                    country: country,
+                                                    host: host,
+                                                    id: id,
+                                                    lat: lat,
+                                                    lon: lon,
+                                                    name: name,
+                                                    sponsor: sponsor,
+                                                    url: url,
+                                                    url2: url2,
+                                                }
+                                            );
+                                        }
                                 _ => {
                                     // eh
                                 }
@@ -163,7 +185,7 @@ impl SpeedTestServers {
                 }
             }
         }
-        return Ok(SpeedTestServers{
+        return Ok(SpeedTestServersConfig{
             servers: servers
         })
     }
@@ -184,11 +206,24 @@ mod tests {
 
     #[test]
     fn test_parse_config_xml() {
-        let mut parser = EventReader::new(include_bytes!("../tests/data/speedtest-config.php.xml") as &[u8]);
+        let mut parser = EventReader::new(
+            include_bytes!("../tests/data/speedtest-config.php.xml") as &[u8]
+        );
         let config = SpeedTestConfig::new(&mut parser).unwrap();
         assert_eq!("174.79.12.26", config.ip);
         assert_eq!("32.9954", config.lat);
         assert_eq!("-117.0753", config.lon);
         assert_eq!("Cox Communications", config.isp);
+    }
+
+    #[test]
+    fn test_parse_speedtest_servers_xml() {
+        let mut parser = EventReader::new(
+            include_bytes!("../tests/data/stripped-down-speedtest-config.php.xml") as &[u8]
+        );
+        let spt_server_config = SpeedTestServersConfig::new(&mut parser).unwrap();
+        assert!(spt_server_config.servers.len() > 1);
+        let server = spt_server_config.servers.get(1).unwrap();
+        &server.country;
     }
 }
