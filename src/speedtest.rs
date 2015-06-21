@@ -86,8 +86,8 @@ impl SpeedTestServersConfig {
     fn new<R: Read>(parser: &mut EventReader<R>) -> Result<SpeedTestServersConfig, ParseError> {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
 
-        for e in parser.events(){
-            match e {
+        for event in parser.events(){
+            match event {
                 StartElement { ref name, ref attributes, ..} => {
                     match name.local_name.as_ref() {
                         "server" => {
@@ -219,7 +219,7 @@ mod tests {
     #[test]
     fn test_parse_speedtest_servers_xml() {
         let mut parser = EventReader::new(
-            include_bytes!("../tests/data/stripped-down-speedtest-config.php.xml") as &[u8]
+            include_bytes!("../tests/data/stripped-down-speedtest-servers-static.php.xml") as &[u8]
         );
         let spt_server_config = SpeedTestServersConfig::new(&mut parser).unwrap();
         assert!(spt_server_config.servers.len() > 1);
