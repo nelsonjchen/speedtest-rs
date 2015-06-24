@@ -191,7 +191,7 @@ impl SpeedTestServersConfig {
         })
     }
 
-    pub fn closest_server() {
+    pub fn closest_server(self, config: SpeedTestConfig) -> Option<SpeedTestServer> {
         unimplemented!();
     }
 }
@@ -231,5 +231,13 @@ mod tests {
         let server = spt_server_config.servers.get(1).unwrap();
         assert!(server.url2.len() > 0);
         assert!(server.country.len() > 0);
+    }
+
+    #[test]
+    fn test_fastest_server() {
+        let mut parser = EventReader::new(
+            include_bytes!("../tests/data/geo-test-speedtest-servers-static.php.xml") as &[u8]
+        );
+        let spt_server_config = SpeedTestServersConfig::new(&mut parser).unwrap();
     }
 }
