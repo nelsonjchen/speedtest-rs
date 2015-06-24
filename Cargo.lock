@@ -7,7 +7,7 @@ dependencies = [
 
 [[package]]
 name = "bitflags"
-version = "0.1.1"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -15,6 +15,6 @@ name = "xml-rs"
 version = "0.1.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "bitflags 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
