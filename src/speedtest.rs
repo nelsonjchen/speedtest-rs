@@ -82,6 +82,7 @@ pub struct SpeedTestServersConfig {
     servers: Vec<SpeedTestServer>,
 }
 
+
 impl SpeedTestServersConfig {
     fn new<R: Read>(parser: &mut EventReader<R>) -> Result<SpeedTestServersConfig, ParseError> {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
@@ -189,6 +190,10 @@ impl SpeedTestServersConfig {
             servers: servers
         })
     }
+
+    pub fn closest_server() {
+        unimplemented!();
+    }
 }
 
 pub fn run_speedtest() {
@@ -222,8 +227,9 @@ mod tests {
             include_bytes!("../tests/data/stripped-down-speedtest-servers-static.php.xml") as &[u8]
         );
         let spt_server_config = SpeedTestServersConfig::new(&mut parser).unwrap();
-        assert!(spt_server_config.servers.len() > 1);
+        assert!(spt_server_config.servers.len() > 5);
         let server = spt_server_config.servers.get(1).unwrap();
-        &server.country;
+        assert!(server.url2.len() > 0);
+        assert!(server.country.len() > 0);
     }
 }
