@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+  <client ip="174.79.12.26" isp="Cox Communications" ispdlavg="18259" isprating="3.1"
+    ispulavg="5021" lat="32.9954" loggedin="0" lon="-117.0753" rating="0"/>
+  <server-config forcepingid=""
+    ignoreids="660,683,963,1023,1084,1161,1254,1389,1390,1403,1404,1405,1406,1407,1411,1412,1413,1435,1436,1525,1597,1670,1719,1758,1762,1800,1815,1816,1834,1838,1839,1840,1847,1850,1852,1854,1859,1860,1861,1871,1872,1873,1874,1875,1877,1880,1913,2052,2108,2148,2257,2317,2341,2373,2560,2631,2849,2871,3043,3280,3383,3448,3695,3696,3697,3698,3699,3725,3726,3727,3728,3729,3730,3731,3732,3733,3788,4021,4533,4787,5023,5024,5025,5026,5027,5028,5029,5030,5031,5032,5033,5085,5086,5087,5107,5108,5109,5111,5112,5113,5114,5115,5116,5117,5118,949,5249"
+    notonmap="4179,5237,5718,2690,4781,4231,2801,4810,2772,4689,3285,5681,5486,2705,5844,5639,4984,2322,5510,4381,5581,4472,5201,3682,5040,5580,4152,4046,3868,5045,5147,5314,4219,4268,4521,3326,3777,5664,2806,4493,2718,3923,951,5757,3149,1894,1000,2264,5046,4446,4864,5059,5284,4008,5090,3206,3225,2295,5447,5772,1108,5072,5142,5157,2356,3145,3681,2770,5582,4688,4335,5680,2828,3862,3583,2334,5502,4453,4590,5082,4290,5150,2155,4659,1483,4169,5210,3860,2565,5818,3953,3079,5463,4208,2576,3104,5105,4667,4850,3287,4128,2206,4272,4589,2792,5098,4349,2488,5303,5602,5827,4975,4081,5517,5348,4622,3656,4937,3892,2115,5315,3967,2133,1441,5020,4251,3366,4535,3624,4406,3458,4588,5415,3870,3315,4883,4491,4567,3147,2459,3855,5431,428,5440,5812,1452,3281,2504,4673,4308,3328,4085,4161,1579,4487,480,4235,5304,5168,5356,4635,5248,4402,5777,4594,1740,4615,2329,4921,4245,5272,5418,4545,5205,5666,5744,4696,2186,4336,2382,4989,5469,5749,4775,5412,5539,5385" preferredserverid="" threadcount="4"/>
+  <licensekey>9c1687ea58e5e770-1df5b7cd427370f7-4b62a84526ea1f56</licensekey>
+  <customer>speedtest</customer>
+  <odometer rate="23" start="6894680270"/>
+  <times dl1="5000000" dl2="35000000" dl3="800000000" ul1="1000000" ul2="8000000"
+    ul3="35000000"/>
+  <download initialtest="250K" mintestsize="250K" testlength="10" threadsperurl="4"/>
+  <upload initialtest="0" maxchunkcount="50" maxchunksize="512K" mintestsize="32K"
+    ratio="5" testlength="10" threads="2" threadsperurl="4"/>
+  <latency testlength="10" timeout="20" waittime="50"/>
+  <socket-download minsamplesize="32000" readbuffer="65536" minthreads="4"
+    maxthreads="32" packetlength="1000" maxsamplesize="5000000" initialthreads="4" bufferlength="5000"
+    startbuffersize="1" startsamplesize="1000000" testlength="15" threadratio="750K"/>
+  <socket-upload minsamplesize="32000" disabled="false" bufferlength="1000"
+    initialthreads="dyn:tcpulthreads" maxsamplesize="1000000" maxthreads="32" minthreads="dyn:tcpulthreads"
+    packetlength="1000" startbuffersize="2" startsamplesize="100000" testlength="15" threadratio="750K"/>
+  <socket-latency testlength="10" timeout="20" waittime="50"/>
+  <conditions>
+    <cond download="+100000" name="tcpulthreads" value="8"/>
+    <cond download="+10000" name="tcpulthreads" value="4"/>
+    <cond name="tcpulthreads" value="2"/>
+  </conditions><interface colortcp="0" template="mbps"/>
+  <translation lang="xml">
+    <text id="rateyourisp">Rate Your ISP</text>
+    <text id="copy">COPY IP</text>
+    <text id="long-kbps">kilobits</text>
+    <text id="long-Mbps">megabits</text>
+    <text id="newserver">NEW SERVER</text>
+    <text id="testagain">TEST AGAIN</text>
+    <text id="uploadspeed">UPLOAD SPEED</text>
+    <text id="downloadspeed">DOWNLOAD SPEED</text>
+    <text id="kbps">kbps</text>
+    <text id="Mbps">Mbps</text>
+    <text id="begintest">BEGIN TEST</text>
+    <text id="startclosest">START TEST TO RECOMMENDED SERVER</text>
+    <text id="long-MB/s">megabytes</text>
+    <text id="long-kB/s">kilobytes</text>
+    <text id="kB/s">kB/s</text>
+    <text id="MB/s">MB/s</text>
+    <text id="mbps">Mbps</text>
+    <text id="ratinghelp">How happy are you with your current Internet service
+      provider?</text>
+    <text id="rating1">Very unhappy</text>
+    <text id="rating2">Unhappy</text>
+    <text id="rating3">Neutral</text>
+    <text id="rating4">Happy</text>
+    <text id="rating5">Very happy</text>
+    <text id="speedwavebegin">YOUR RESULT WILL BECOME PART OF A SPEED WAVE</text>
+    <text id="ping">PING</text>
+    <text id="hostedby">Hosted by</text>
+    <text id="counterdescription">TOTAL TESTS TO DATE</text>
+    <text id="copied">COPIED</text>
+    <text id="autostartdesc">AUTO STARTING SPEED TEST IN</text>
+    <text id="seconds">SECONDS</text>
+    <text id="second">SECOND</text>
+    <text id="error">ERROR</text>
+    <text id="tryagain">Try Again</text>
+    <text id="share-wavetitle">START A SPEED WAVE</text>
+    <text id="share-namewave">Speed Wave Name</text>
+    <text id="share-waveresults">Your result is now part of the Speed Wave!</text>
+    <text id="compare-yourtest">Your Result</text>
+    <text id="survey-surveytitle">Help Us Understand Broadband Costs</text>
+    <text id="survey-downloadpackage">Download Package</text>
+    <text id="survey-uploadpackage">Upload Package</text>
+    <text id="survey-howmuch">How much do you pay?</text>
+    <text id="survey-includes">Includes:</text>
+    <text id="survey-postalcode">Is this your postal code?</text>
+    <text id="survey-submit">SUBMIT</text>
+    <text id="share-accounttitle">GET A FREE OOKLA SPEEDTEST ACCOUNT</text>
+    <text id="share-accountdescription">Being logged in would allow you to start a
+      Speed Wave here! Registration is free and only requires a valid email
+      address.</text>
+    <text id="share-emailaddress">Your Email Address</text>
+    <text id="share-twitterurl">https://twitter.com/share?text=Check%20out%20my%20%40Ookla%20Speedtest%20result!%20What%27s%20your%20speed%3F&amp;url=http%3A%2F%2Fwww.speedtest.net%2Fmy-result%2F{RESULTID}&amp;related=ookla%3ACreators%20of%20Ookla%20Speedtest&amp;hashtags=speedtest</text>
+    <text id="share-facebookurl">https://www.facebook.com/dialog/feed?app_id=581657151866321&amp;link=http://www.speedtest.net/my-result/{RESULTID}&amp;description=This%20is%20my%20Ookla%20Speedtest%20result.%20Compare%20your%20speed%20to%20mine!&amp;redirect_uri=http://www.speedtest.net&amp;name=Check%20out%20my%20Ookla%20Speedtest%20results.%20What%27s%20your%20speed%3F</text>
+    <text id="share-viewwave">VIEW SPEED WAVE</text>
+    <text id="share-createwave">CREATE</text>
+    <text id="survey-speed">Speed</text>
+    <text id="survey-phone">Phone</text>
+    <text id="survey-tv">TV</text>
+    <text id="survey-package">What speeds do you pay for?</text>
+    <text id="survey-thanks">Thanks for participating in the survey!</text>
+    <text id="selectingbestserver">SELECTING BEST SERVER BASED ON PING</text>
+    <text id="compare-myresults">MY RESULTS</text>
+    <text id="share-createaccount">CREATE</text>
+    <text id="begintest-preferred">YOUR PREFERRED SERVER</text>
+    <text id="begintest-ping">RECOMMENDED SERVER</text>
+    <text id="connecting">CONNECTING</text>
+    <text id="share-copy">COPY</text>
+    <text id="endtest-share-button">SHARE THIS RESULT</text>
+    <text id="endtest-compare-button">COMPARE YOUR RESULT</text>
+    <text id="endtest-contribute-button">CONTRIBUTE TO NET INDEX</text>
+    <text id="close">CLOSE</text>
+    <text id="survey-retake">RETAKE THE SURVEY</text>
+    <text id="share-link">IMAGE</text>
+    <text id="share-forum">FORUM</text>
+    <text id="share-wavedescription">Use this test result to begin your own Speed
+      Wave!</text>
+    <text id="pcmagmessage">Fastest ISPs</text>
+    <text id="panel0">wave</text>
+    <text id="panel1">share</text>
+    <text id="panel2">link:{LANG_CODE}/results.php?source=compare</text>
+    <text id="panel3">contribute</text>
+    <text id="bitspersecond">bits per second</text>
+    <text id="endtest">standard</text>
+    <text id="lang">en</text>
+    <text id="share-pinteresturl">http://pinterest.com/pin/create/button/?url=http%3A%2F%2Fwww.speedtest.net%2F&amp;media=http%3A%2F%2Fspeedtest.net%2Fresult%2F{RESULTID}.png&amp;description=Check%20out%20my%20result%20from%20Ookla%20Speedtest!</text>
+    <text id="panelsuffix"></text>
+    <text id="survey-nextbtn">Continue</text>
+    <text id="survey-editbtn">EDIT</text>
+    <text id="survey-download">Download</text>
+    <text id="survey-download-validate">Download:</text>
+    <text id="survey-upload">Upload</text>
+    <text id="survey-upload-validate">Upload:</text>
+    <text id="survey-connectiontype">Connection Type?</text>
+    <text id="survey-q1label1">Home</text>
+    <text id="survey-q1label2">Business</text>
+    <text id="survey-q1label3">School</text>
+    <text id="survey-q1label4">Public Wi-Fi</text>
+    <text id="survey-q1label5">Other</text>
+    <text id="survey-ispconf">My ISP is:</text>
+    <text id="survey-q2label1">Yes</text>
+    <text id="survey-q2label2">Wrong</text>
+    <text id="survey-q3label1">Yes</text>
+    <text id="survey-q3label2">Wrong</text>
+    <text id="survey-postalcode-input">Please enter your postal code</text>
+    <text id="survey-labelispinput">Please enter your ISP name</text>
+    <text id="survey-okbtn">OK</text>
+    <text id="survey-validationUploadline1">Please check your upload speed. This
+      seems faster than expected.</text>
+    <text id="survey-validationAmountline1">Please check the amount entered. This
+      seems higher than expected.</text>
+    <text id="survey-validationDownloadline1">Please check your Download speed. This
+      seems faster than expected.</text>
+    <text id="share-web">WEB</text>
+    <text id="share-html">EMBED</text>
+    <text id="endtest-contribute-are-you-on">Are you on</text>
+    <text id="endtest-contribute-take-survey">Take our Broadband Internet
+      Survey!</text>
+  </translation>
+  <survey>
+    <defaults isp_common_name="Cox" isp_name="Cox Communications" postal_code="92128"/>
+    <currency rate_USD="1" sign="$"/>
+  </survey><panels panel0="wave-ad-wide" panel1="share-wide"
+      panel2="link:/results.php?source=compare" panel3="contribute-wide-new:wide"/>
+  <endtest endtest="standard-wide-new-1button"/></settings>
