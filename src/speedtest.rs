@@ -31,10 +31,24 @@ impl SpeedTestConfig {
                                         ip = Some(attribute.value.clone());
                                     },
                                     "lat" => {
-                                        lat = Some(attribute.value.clone());
-                                        },
+                                        match attribute.value.parse::<f32>() {
+                                            Ok(_) => {
+                                                lat = Some(attribute.value.clone());
+                                            },
+                                            _ => {
+                                                lat = None;
+                                            }
+                                        }
+                                    },
                                     "lon" => {
-                                        lon = Some(attribute.value.clone());
+                                        match attribute.value.parse::<f32>() {
+                                            Ok(_) => {
+                                                lon = Some(attribute.value.clone());
+                                            },
+                                            _ => {
+                                                lon = None;
+                                            }
+                                        }
                                     },
                                     "isp" => {
                                         isp = Some(attribute.value.clone());
