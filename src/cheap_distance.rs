@@ -1,8 +1,8 @@
 use std::f32::consts;
 
 pub struct EarthLocation {
-    latitude: f32,
-    longitude: f32
+    pub latitude: f32,
+    pub longitude: f32
 }
 
 pub fn compute_distance(origin: EarthLocation, destination: EarthLocation) -> f32 {

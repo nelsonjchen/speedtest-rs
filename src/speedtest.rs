@@ -2,22 +2,23 @@
 use std::io::Read;
 use xml::reader::EventReader;
 use xml::reader::events::XmlEvent::*;
+use ::cheap_distance::{EarthLocation, compute_distance};
 
 #[derive(Debug)]
 pub struct ParseError(String);
 
 pub struct SpeedTestConfig {
     ip: String,
-    lat: String,
-    lon: String,
+    lat: f32,
+    lon: f32,
     isp: String,
 }
 
 impl SpeedTestConfig {
     fn new<R: Read>(parser: &mut EventReader<R>) -> Result<SpeedTestConfig, ParseError> {
         let mut ip: Option<String> = None;
-        let mut lat: Option<String> = None;
-        let mut lon: Option<String> = None;
+        let mut lat: Option<f32> = None;
+        let mut lon: Option<f32> = None;
         let mut isp: Option<String> = None;
         for event in parser.events() {
             match event {
@@ -30,10 +31,10 @@ impl SpeedTestConfig {
                                         ip = Some(attribute.value.clone());
                                     },
                                     "lat" => {
-                                        lat = Some(attribute.value.clone());
-                                    },
+                                        lat = Some(attribute.value.parse::<f32>().unwrap());
+                                        },
                                     "lon" => {
-                                        lon = Some(attribute.value.clone());
+                                        lon = Some(attribute.value.parse::<f32>().unwrap());
                                     },
                                     "isp" => {
                                         isp = Some(attribute.value.clone());
@@ -192,6 +193,10 @@ impl SpeedTestServersConfig {
     }
 
     pub fn closest_server(self, config: SpeedTestConfig) -> Option<SpeedTestServer> {
+        let location = EarthLocation{
+            latitude: config.lat,
+            longitude: config.lon,
+        };
         unimplemented!();
     }
 }
@@ -212,19 +217,19 @@ mod tests {
     #[test]
     fn test_parse_config_xml() {
         let mut parser = EventReader::new(
-            include_bytes!("../tests/data/speedtest-config.php.xml") as &[u8]
+            include_bytes!("../tests/config/config.php.xml") as &[u8]
         );
         let config = SpeedTestConfig::new(&mut parser).unwrap();
         assert_eq!("174.79.12.26", config.ip);
-        assert_eq!("32.9954", config.lat);
-        assert_eq!("-117.0753", config.lon);
+        assert_eq!(32.9954, config.lat);
+        assert_eq!(-117.0753, config.lon);
         assert_eq!("Cox Communications", config.isp);
     }
 
     #[test]
     fn test_parse_speedtest_servers_xml() {
         let mut parser = EventReader::new(
-            include_bytes!("../tests/data/stripped-down-speedtest-servers-static.php.xml") as &[u8]
+            include_bytes!("../tests/config/stripped-servers-static.php.xml") as &[u8]
         );
         let spt_server_config = SpeedTestServersConfig::new(&mut parser).unwrap();
         assert!(spt_server_config.servers.len() > 5);
@@ -236,8 +241,9 @@ mod tests {
     #[test]
     fn test_fastest_server() {
         let mut parser = EventReader::new(
-            include_bytes!("../tests/data/geo-test-speedtest-servers-static.php.xml") as &[u8]
+            include_bytes!("../tests/config/geo-test-servers-static.php.xml") as &[u8]
         );
         let spt_server_config = SpeedTestServersConfig::new(&mut parser).unwrap();
+
     }
 }
