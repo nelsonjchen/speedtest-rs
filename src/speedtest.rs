@@ -9,16 +9,16 @@ pub struct ParseError(String);
 
 pub struct SpeedTestConfig {
     ip: String,
-    lat: f32,
-    lon: f32,
+    lat: String,
+    lon: String,
     isp: String,
 }
 
 impl SpeedTestConfig {
     fn new<R: Read>(parser: &mut EventReader<R>) -> Result<SpeedTestConfig, ParseError> {
         let mut ip: Option<String> = None;
-        let mut lat: Option<f32> = None;
-        let mut lon: Option<f32> = None;
+        let mut lat: Option<String> = None;
+        let mut lon: Option<String> = None;
         let mut isp: Option<String> = None;
         for event in parser.events() {
             match event {
@@ -31,10 +31,10 @@ impl SpeedTestConfig {
                                         ip = Some(attribute.value.clone());
                                     },
                                     "lat" => {
-                                        lat = Some(attribute.value.parse::<f32>().unwrap());
+                                        lat = Some(attribute.value.clone());
                                         },
                                     "lon" => {
-                                        lon = Some(attribute.value.parse::<f32>().unwrap());
+                                        lon = Some(attribute.value.clone());
                                     },
                                     "isp" => {
                                         isp = Some(attribute.value.clone());
@@ -194,8 +194,8 @@ impl SpeedTestServersConfig {
 
     pub fn closest_server(self, config: SpeedTestConfig) -> Option<SpeedTestServer> {
         let location = EarthLocation{
-            latitude: config.lat,
-            longitude: config.lon,
+            latitude: config.lat.parse::<f32>().unwrap(),
+            longitude: config.lon.parse::<f32>().unwrap(),
         };
         unimplemented!();
     }
@@ -221,8 +221,8 @@ mod tests {
         );
         let config = SpeedTestConfig::new(&mut parser).unwrap();
         assert_eq!("174.79.12.26", config.ip);
-        assert_eq!(32.9954, config.lat);
-        assert_eq!(-117.0753, config.lon);
+        assert_eq!("32.9954", config.lat);
+        assert_eq!("-117.0753", config.lon);
         assert_eq!("Cox Communications", config.isp);
     }
 
