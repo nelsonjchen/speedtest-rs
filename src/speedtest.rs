@@ -211,7 +211,11 @@ impl SpeedTestServersConfig {
             latitude: config.lat.parse::<f32>().unwrap(),
             longitude: config.lon.parse::<f32>().unwrap(),
         };
-        unimplemented!();
+        self.servers.iter().fold(None, |acc, ref item|
+            match acc {
+                _ => None
+            }
+        )
     }
 }
 
