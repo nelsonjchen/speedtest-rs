@@ -254,10 +254,16 @@ mod tests {
 
     #[test]
     fn test_fastest_server() {
+        let spt_config = SpeedTestConfig{
+            ip: "127.0.0.1".to_string(),
+            lat: "32.9954".to_string(),
+            lon: "-117.0753".to_string(),
+            isp: "xxxfinity".to_string(),
+        };
         let mut parser = EventReader::new(
             include_bytes!("../tests/config/geo-test-servers-static.php.xml") as &[u8]
         );
         let spt_server_config = SpeedTestServersConfig::new(&mut parser).unwrap();
-
+        spt_server_config.closest_server(spt_config);
     }
 }
