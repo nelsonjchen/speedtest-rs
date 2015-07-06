@@ -5,6 +5,7 @@ version = "0.0.1"
 authors = ["Nelson Chen <crazysim@gmail.com>"]
 
 [dependencies]
+time = "0.1"
 
 [dependencies.xml-rs]
 version = "*"
