@@ -5,7 +5,7 @@ pub struct EarthLocation {
     pub longitude: f32
 }
 
-pub fn compute_distance(origin: EarthLocation, destination: EarthLocation) -> f32 {
+pub fn compute_distance(origin: &EarthLocation, destination: &EarthLocation) -> f32 {
     let radius: f32 = 6371.0;
     let d_lat = to_radians(origin.latitude - destination.latitude);
     let d_long = to_radians(origin.longitude - destination.longitude);
@@ -33,7 +33,7 @@ mod tests {
     fn test_distance() {
         let origin = EarthLocation { latitude: 32.9545, longitude: -117.2333};
         let destination = EarthLocation { latitude: 70.0733, longitude: 29.7497};
-        let distance = compute_distance(origin, destination);
+        let distance = compute_distance(&origin, &destination);
         let diff = (distance - 8255.1).abs();
         println!("distance: {} diff: {}", distance, diff);
         assert!(diff < 0.2);

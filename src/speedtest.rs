@@ -206,16 +206,34 @@ impl SpeedTestServersConfig {
         })
     }
 
-    pub fn closest_server(self, config: SpeedTestConfig) -> Option<SpeedTestServer> {
+    pub fn closest_server(&self, config: &SpeedTestConfig) -> Option<&SpeedTestServer> {
         let location = EarthLocation{
             latitude: config.lat.parse::<f32>().unwrap(),
             longitude: config.lon.parse::<f32>().unwrap(),
         };
-        self.servers.iter().fold(None, |acc, ref item|
-            match acc {
-                _ => None
+        self.servers.iter().fold((None, 0.0), |acc, server|
+            {
+                let server_location = EarthLocation {
+                    latitude: server.lat.parse::<f32>().unwrap(),
+                    longitude: server.lon.parse::<f32>().unwrap(),
+                };
+                match acc {
+                    (None, _) => {
+                        (Some(server), compute_distance(&location, &server_location))
+                    },
+                    (Some(last_server), last_distance) => {
+                        let distance = compute_distance(&location, &server_location);
+                        if last_distance.abs() > distance.abs() {
+                            // This lastest server is closer
+                            (Some(server), distance)
+                        } else {
+                            // Last server was still closer.
+                            (Some(last_server), last_distance)
+                        }
+                    }
+                }
             }
-        )
+        ).0
     }
 }
 
@@ -268,7 +286,7 @@ mod tests {
             include_bytes!("../tests/config/geo-test-servers-static.php.xml") as &[u8]
         );
         let spt_server_config = SpeedTestServersConfig::new(&mut parser).unwrap();
-        let closest_server = spt_server_config.closest_server(spt_config).unwrap();
+        let closest_server = spt_server_config.closest_server(&spt_config).unwrap();
         assert_eq!("Los Angeles, CA", closest_server.name);
     }
 }
