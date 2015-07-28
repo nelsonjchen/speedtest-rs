@@ -1,5 +1,7 @@
 // use xml::{Element, Parser, ElementBuilder};
 use std::io::Read;
+use hyper::Client;
+use hyper::header::{Connection, UserAgent};
 use xml::reader::EventReader;
 use xml::reader::events::XmlEvent::*;
 use ::cheap_distance::{EarthLocation, compute_distance};
@@ -81,6 +83,7 @@ impl SpeedTestConfig {
     }
 }
 
+#[derive(Debug)]
 pub struct SpeedTestServer {
     pub country: String,
     host: String,
@@ -238,13 +241,43 @@ impl SpeedTestServersConfig {
 }
 
 pub fn run_speedtest() {
-    // Download Configuration
-    // Parse Configuration
-    // Download Server
-    // Parse Server List
+    println!("Downloading Configuration");
+    let mut client = Client::new();
+    // Creating an outgoing request.
+    let mut config_res = client.get("http://www.speedtest.net/speedtest-config.php")
+        // set a header
+        .header(Connection::close())
+        .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+        // let 'er go!
+        .send().unwrap();
+    let mut config_body = String::new();
+    config_res.read_to_string(&mut config_body).unwrap();
+
+    println!("Parsing Configuration");
+    let mut config_parser = EventReader::new(config_body.as_bytes());
+    let spt_config = SpeedTestConfig::new(&mut config_parser).unwrap();
+
+    println!("Download Server List");
+    let mut server_res = client.get("http://www.speedtest.net/speedtest-servers-static.php")
+        // set a header
+        .header(Connection::close())
+        .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+        // let 'er go!
+        .send().unwrap();
+    let mut server_body = String::new();
+    server_res.read_to_string(&mut server_body).unwrap();
+
+    println!("Parsing Server List");
+    let mut server_parser = EventReader::new(
+        include_bytes!("../tests/config/stripped-servers-static.php.xml") as &[u8]
+    );
+    let spt_server_config = SpeedTestServersConfig::new(&mut server_parser).unwrap();
+
+    println!("Closest Server");
+    let closest_server = spt_server_config.closest_server(&spt_config).unwrap();
+    println!("Closest Server is {:?}", closest_server);
     // Get closest server
     // Test against server
-    unimplemented!();
 }
 
 #[cfg(test)]
