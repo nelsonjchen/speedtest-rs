@@ -252,10 +252,12 @@ pub fn run_speedtest() {
         .send().unwrap();
     let mut config_body = String::new();
     config_res.read_to_string(&mut config_body).unwrap();
+    println!("Downloaded Configuration");
 
     println!("Parsing Configuration");
     let mut config_parser = EventReader::new(config_body.as_bytes());
     let spt_config = SpeedTestConfig::new(&mut config_parser).unwrap();
+    println!("Parsed Configuration");
 
     println!("Download Server List");
     let mut server_res = client.get("http://www.speedtest.net/speedtest-servers-static.php")
@@ -266,17 +268,18 @@ pub fn run_speedtest() {
         .send().unwrap();
     let mut server_body = String::new();
     server_res.read_to_string(&mut server_body).unwrap();
+    println!("Downloaded Server List");
 
     println!("Parsing Server List");
     let mut server_parser = EventReader::new(
         include_bytes!("../tests/config/stripped-servers-static.php.xml") as &[u8]
     );
     let spt_server_config = SpeedTestServersConfig::new(&mut server_parser).unwrap();
+    println!("Parsed Server List");
 
-    println!("Closest Server");
+    println!("Determining Closest Server");
     let closest_server = spt_server_config.closest_server(&spt_config).unwrap();
-    println!("Closest Server is {:?}", closest_server);
-    // Get closest server
+    println!("Determined Closest Server is {:?}", closest_server);
     // Test against server
 }
 
