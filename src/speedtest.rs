@@ -238,6 +238,12 @@ impl SpeedTestServersConfig {
 }
 
 pub fn run_speedtest() {
+    // Download Configuration
+    // Parse Configuration
+    // Download Server
+    // Parse Server List
+    // Get closest server
+    // Test against server
     unimplemented!();
 }
 
