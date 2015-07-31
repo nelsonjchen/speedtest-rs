@@ -1,5 +1,6 @@
 // use xml::{Element, Parser, ElementBuilder};
 use std::io::Read;
+use std::cmp::Ordering::Less;
 use hyper::Client;
 use hyper::header::{Connection, UserAgent};
 use xml::reader::EventReader;
@@ -83,7 +84,7 @@ impl SpeedTestConfig {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SpeedTestServer {
     pub country: String,
     host: String,
@@ -237,6 +238,28 @@ impl SpeedTestServersConfig {
                 }
             }
         ).0
+    }
+
+    pub fn servers_sorted_by_distance(&self, config: &SpeedTestConfig) -> Option<Vec<SpeedTestServer>> {
+        let location = EarthLocation{
+            latitude: config.lat.parse::<f32>().unwrap(),
+            longitude: config.lon.parse::<f32>().unwrap(),
+        };
+        let mut sorted_servers = self.servers.clone();
+        sorted_servers.sort_by(|a, b| {
+                let a_location = EarthLocation {
+                    latitude: a.lat.parse::<f32>().unwrap(),
+                    longitude: a.lon.parse::<f32>().unwrap(),
+                };
+                let b_location = EarthLocation {
+                    latitude: b.lat.parse::<f32>().unwrap(),
+                    longitude: b.lon.parse::<f32>().unwrap(),
+                };
+                let a_distance = compute_distance(&location, &a_location);
+                let b_distance = compute_distance(&location, &b_location);
+                a_distance.partial_cmp(&b_distance).unwrap_or(Less)
+        });
+        Some(sorted_servers)
     }
 }
 
