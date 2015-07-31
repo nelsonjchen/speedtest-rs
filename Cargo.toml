@@ -7,6 +7,8 @@ authors = ["Nelson Chen <crazysim@gmail.com>"]
 [dependencies]
 time = "0.1"
 hyper = "0.6"
+log = "0.3"
+env_logger = "0.3"
 
 [dependencies.xml-rs]
 version = "*"
