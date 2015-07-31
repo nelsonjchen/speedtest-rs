@@ -241,7 +241,7 @@ impl SpeedTestServersConfig {
 }
 
 pub fn run_speedtest() {
-    println!("Downloading Configuration");
+    info!("Downloading Configuration");
     let mut client = Client::new();
     // Creating an outgoing request.
     let mut config_res = client.get("http://www.speedtest.net/speedtest-config.php")
@@ -252,14 +252,14 @@ pub fn run_speedtest() {
         .send().unwrap();
     let mut config_body = String::new();
     config_res.read_to_string(&mut config_body).unwrap();
-    println!("Downloaded Configuration");
+    info!("Downloaded Configuration");
 
-    println!("Parsing Configuration");
+    info!("Parsing Configuration");
     let mut config_parser = EventReader::new(config_body.as_bytes());
     let spt_config = SpeedTestConfig::new(&mut config_parser).unwrap();
-    println!("Parsed Configuration");
+    info!("Parsed Configuration");
 
-    println!("Download Server List");
+    info!("Download Server List");
     let mut server_res = client.get("http://www.speedtest.net/speedtest-servers-static.php")
         // set a header
         .header(Connection::close())
@@ -268,18 +268,18 @@ pub fn run_speedtest() {
         .send().unwrap();
     let mut server_body = String::new();
     server_res.read_to_string(&mut server_body).unwrap();
-    println!("Downloaded Server List");
+    info!("Downloaded Server List");
 
-    println!("Parsing Server List");
+    info!("Parsing Server List");
     let mut server_parser = EventReader::new(
         include_bytes!("../tests/config/stripped-servers-static.php.xml") as &[u8]
     );
     let spt_server_config = SpeedTestServersConfig::new(&mut server_parser).unwrap();
-    println!("Parsed Server List");
+    info!("Parsed Server List");
 
-    println!("Determining Closest Server");
+    info!("Determining Closest Server");
     let closest_server = spt_server_config.closest_server(&spt_config).unwrap();
-    println!("Determined Closest Server is {:?}", closest_server);
+    info!("Determined Closest Server is {:?}", closest_server);
     // Test against server
 }
 

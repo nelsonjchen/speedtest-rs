@@ -11,5 +11,7 @@ extern crate env_logger;
 
 #[allow(dead_code)]
 fn main() {
+    env_logger::init().unwrap();
+    info!("Starting up...");
     speedtest::run_speedtest();
 }
