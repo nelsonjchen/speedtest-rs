@@ -62,3 +62,4 @@ This is pretty much cribbed from the Python implementation.
   * A `latency.txt` is downloaded from the root of each server. This is timed.
 1. Download and time GETs for `[350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]` with `random(size)x(size).jpg`, like `/random350x350.jpg` from the fastest server.
 1. Upload and time POSTs for `[350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]` where bytes of a rolling `0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ` repeated to the desired size is posted as a request with that `data`. This is timed. It is posted that `url` that is in the server configuration.
+1. REsulting speed is calculated.
