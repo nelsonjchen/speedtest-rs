@@ -210,35 +210,6 @@ impl SpeedTestServersConfig {
         })
     }
 
-    pub fn closest_server(&self, config: &SpeedTestConfig) -> Option<&SpeedTestServer> {
-        let location = EarthLocation{
-            latitude: config.lat.parse::<f32>().unwrap(),
-            longitude: config.lon.parse::<f32>().unwrap(),
-        };
-        self.servers.iter().fold((None, 0.0), |acc, server|
-            {
-                let server_location = EarthLocation {
-                    latitude: server.lat.parse::<f32>().unwrap(),
-                    longitude: server.lon.parse::<f32>().unwrap(),
-                };
-                match acc {
-                    (None, _) => {
-                        (Some(server), compute_distance(&location, &server_location))
-                    },
-                    (Some(last_server), last_distance) => {
-                        let distance = compute_distance(&location, &server_location);
-                        if last_distance.abs() > distance.abs() {
-                            // This lastest server is closer
-                            (Some(server), distance)
-                        } else {
-                            // Last server was still closer.
-                            (Some(last_server), last_distance)
-                        }
-                    }
-                }
-            }
-        ).0
-    }
 
     pub fn servers_sorted_by_distance(&self, config: &SpeedTestConfig) -> Option<Vec<SpeedTestServer>> {
         let location = EarthLocation{
@@ -265,7 +236,7 @@ impl SpeedTestServersConfig {
 
 pub fn run_speedtest() {
     info!("Downloading Configuration");
-    let mut client = Client::new();
+    let client = Client::new();
     // Creating an outgoing request.
     let mut config_res = client.get("http://www.speedtest.net/speedtest-config.php")
         // set a header
@@ -281,6 +252,7 @@ pub fn run_speedtest() {
     let mut config_parser = EventReader::new(config_body.as_bytes());
     let spt_config = SpeedTestConfig::new(&mut config_parser).unwrap();
     info!("Parsed Configuration");
+    info!("IP: {}, ISP: {}", spt_config.ip, spt_config.isp);
 
     info!("Download Server List");
     let mut server_res = client.get("http://www.speedtest.net/speedtest-servers-static.php")
@@ -300,9 +272,12 @@ pub fn run_speedtest() {
     let spt_server_config = SpeedTestServersConfig::new(&mut server_parser).unwrap();
     info!("Parsed Server List");
 
-    info!("Determining Closest Server");
-    let closest_server = spt_server_config.closest_server(&spt_config).unwrap();
-    info!("Determined Closest Server is {:?}", closest_server);
+    let servers_sorted_by_distance = spt_server_config.
+                                     servers_sorted_by_distance(&spt_config).unwrap();
+    info!("Five Closest Servers");
+    for server in &servers_sorted_by_distance[0..5] {
+        info!("Close Server: {:?}", server);
+    }
     // Test against server
 }
 
