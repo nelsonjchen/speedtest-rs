@@ -275,10 +275,16 @@ pub fn run_speedtest() {
     let servers_sorted_by_distance = spt_server_config.
                                      servers_sorted_by_distance(&spt_config).unwrap();
     info!("Five Closest Servers");
-    for server in &servers_sorted_by_distance[0..5] {
+    let five_closest_servers = &servers_sorted_by_distance[0..5];
+    for server in five_closest_servers {
         info!("Close Server: {:?}", server);
     }
+
+    info!("Testing for fastest server");
+
+
     // Test against server
+
 }
 
 #[cfg(test)]
