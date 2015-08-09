@@ -3,6 +3,7 @@ use std::path::Path;
 use std::cmp::Ordering::Less;
 use hyper::Client;
 use hyper::header::{Connection, UserAgent};
+use time::{now, Duration};
 use xml::reader::EventReader;
 use xml::reader::events::XmlEvent::*;
 use ::cheap_distance::{EarthLocation, compute_distance};
@@ -281,24 +282,31 @@ pub fn run_speedtest() {
     }
 
     info!("Testing for fastest server");
-    let fastest_server = five_closest_servers.iter().fold((None, 9999), |fastest_server, &ref server|
-        {
+    let mut fastest_server = None;
+    let mut fastest_latency = Duration::max_value();
+    for server in five_closest_servers {
             let path = Path::new(&server.url);
             let latency_path = format!("{}/latency.txt", path.parent().unwrap().display());
             info!("Downloading: {:?}", latency_path);
-            let mut server_res = client.get(&latency_path)
+            let start_time = now();
+            client.get(&latency_path)
             // set a header
             .header(Connection::close())
             .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
             // let 'er go!
             .send().unwrap();
+            let latency = now() - start_time;
             info!("Completed Downloading: {:?}", latency_path);
+            info!("It took {} ms", latency.num_milliseconds());
 
-            (Some(server), 0)
-        }
-    );
-    info!("Fastest Server is {:?}", fastest_server);
+            if latency < fastest_latency {
+                fastest_server = Some(server);
+                fastest_latency = latency;
+            }
+
+    };
     // Test against server
+    info!("Fastest Server @ {}ms : {:?}", fastest_latency.num_milliseconds(), fastest_server);
 }
 
 #[cfg(test)]
