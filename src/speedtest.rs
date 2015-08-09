@@ -304,8 +304,11 @@ pub fn run_speedtest() {
                 fastest_latency = latency;
             }
     };
-    // Test against server
     info!("Fastest Server @ {}ms : {:?}", fastest_latency.num_milliseconds(), fastest_server);
+    // Test against server
+
+    // Download Speed
+    let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
 }
 
 #[cfg(test)]
