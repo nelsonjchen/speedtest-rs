@@ -303,7 +303,6 @@ pub fn run_speedtest() {
                 fastest_server = Some(server);
                 fastest_latency = latency;
             }
-
     };
     // Test against server
     info!("Fastest Server @ {}ms : {:?}", fastest_latency.num_milliseconds(), fastest_server);
