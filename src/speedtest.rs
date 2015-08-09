@@ -1,5 +1,5 @@
-// use xml::{Element, Parser, ElementBuilder};
 use std::io::Read;
+use std::path::Path;
 use std::cmp::Ordering::Less;
 use hyper::Client;
 use hyper::header::{Connection, UserAgent};
@@ -281,10 +281,16 @@ pub fn run_speedtest() {
     }
 
     info!("Testing for fastest server");
-
-
+    let fastest_server = five_closest_servers.iter().fold(None, |fastest_server, &ref server|
+        {
+            let path = Path::new(&server.url);
+            let latency_path = format!("{}/latency.txt", path.parent().unwrap().display());
+            info!("URL to download is {:?}", latency_path);
+            Some(server)
+        }
+        ).unwrap();
+    info!("Fastest Server is {:?}", fastest_server);
     // Test against server
-
 }
 
 #[cfg(test)]
