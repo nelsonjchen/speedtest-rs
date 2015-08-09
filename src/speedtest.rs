@@ -281,14 +281,22 @@ pub fn run_speedtest() {
     }
 
     info!("Testing for fastest server");
-    let fastest_server = five_closest_servers.iter().fold(None, |fastest_server, &ref server|
+    let fastest_server = five_closest_servers.iter().fold((None, 9999), |fastest_server, &ref server|
         {
             let path = Path::new(&server.url);
             let latency_path = format!("{}/latency.txt", path.parent().unwrap().display());
-            info!("URL to download is {:?}", latency_path);
-            Some(server)
+            info!("Downloading: {:?}", latency_path);
+            let mut server_res = client.get(&latency_path)
+            // set a header
+            .header(Connection::close())
+            .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+            // let 'er go!
+            .send().unwrap();
+            info!("Completed Downloading: {:?}", latency_path);
+
+            (Some(server), 0)
         }
-        ).unwrap();
+    );
     info!("Fastest Server is {:?}", fastest_server);
     // Test against server
 }
