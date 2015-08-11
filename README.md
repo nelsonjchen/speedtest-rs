@@ -61,5 +61,9 @@ This is pretty much cribbed from the Python implementation.
 1. These five servers are tested for latency and the best server is selected.
   * A `latency.txt` is downloaded from the "directory" where the file of the `url` element is located. This is timed.
 1. Download and time GETs for `[350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]` with `random(size)x(size).jpg`, like `/random350x350.jpg` from the fastest server.
+  * This is all done in parallel for all the files with 6 at a time in a queue. When all the downloads are complete, the resulting time is taken. *Trivia: Each dot in the original `speedtest-cli` is a completed file download*
+1. The Download speed is calculated from the sum of all the files and the time to took to download 6 files at a time in parallel from the list.
 1. Upload and time POSTs for `[350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]` where bytes of a rolling `0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ` repeated to the desired size is posted as a request with that `data`. This is timed. It is posted that `url` that is in the server configuration.
-1. REsulting speed is calculated.
+  * Similar operation to the downloads above.
+1. Same calculation as download but ... for upload!?! :scream:
+1. There's some sharing stuff but this isn't bothered with.
