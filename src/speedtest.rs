@@ -1,3 +1,4 @@
+use std::thread;
 use std::io::Read;
 use std::path::Path;
 use std::cmp::Ordering::Less;
@@ -236,7 +237,7 @@ impl SpeedTestServersConfig {
 }
 
 pub fn run_speedtest() {
-    info!("Downloading Configuration");
+    info!("Downloading Configuration from speedtest.net");
     let client = Client::new();
     // Creating an outgoing request.
     let mut config_res = client.get("http://www.speedtest.net/speedtest-config.php")
