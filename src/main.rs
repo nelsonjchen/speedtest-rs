@@ -4,6 +4,7 @@ mod cheap_distance;
 extern crate hyper;
 extern crate xml;
 extern crate time;
+extern crate threadpool;
 
 #[macro_use]
 extern crate log;

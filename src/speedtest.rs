@@ -5,6 +5,7 @@ use std::cmp::Ordering::Less;
 use hyper::Client;
 use hyper::header::{Connection, UserAgent};
 use time::{now, Duration};
+use threadpool::ThreadPool;
 use xml::reader::EventReader;
 use xml::reader::events::XmlEvent::*;
 use ::cheap_distance::{EarthLocation, compute_distance};
@@ -297,7 +298,6 @@ pub fn run_speedtest() {
             // let 'er go!
             .send().unwrap();
             let latency = now() - start_time;
-            info!("Completed Downloading: {:?}", latency_path);
             info!("It took {} ms", latency.num_milliseconds());
 
             if latency < fastest_latency {
