@@ -1,4 +1,3 @@
-use std::thread;
 use std::io::Read;
 use std::path::Path;
 use std::cmp::Ordering::Less;
@@ -306,10 +305,28 @@ pub fn run_speedtest() {
             }
     };
     info!("Fastest Server @ {}ms : {:?}", fastest_latency.num_milliseconds(), fastest_server);
+    let root_path = Path::new(&fastest_server.unwrap().url).parent().unwrap();
+    debug!("Root path is: {}", root_path.display());
     // Test against server
-
+    info!("Testing Download speed");
     // Download Speed
-    let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
+    {
+        let start_time = now();
+        {
+            let pool = ThreadPool::new(6);
+            let dl_sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
+            for dl_size in dl_sizes.iter() {
+                let thread_size = dl_size.clone();
+                let path = root_path.clone();
+                pool.execute(move || {
+                    info!("Downloading {}", thread_size);
+                    let client = Client::new();
+                });
+            }
+        }
+        let latency = now() - start_time;
+        info!("It took {} ms", latency.num_milliseconds());
+    }
 }
 
 #[cfg(test)]
