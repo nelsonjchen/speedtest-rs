@@ -319,6 +319,7 @@ pub fn run_speedtest() {
             let pool = ThreadPool::new(6);
             let dl_sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
 
+            // Pools don't join?!
             let (tx, rx) = channel();
             for dl_size in dl_sizes.iter() {
                 let thread_size = dl_size.clone();
@@ -329,9 +330,11 @@ pub fn run_speedtest() {
                     info!("Downloading {}", thread_size);
                     // let client = Client::new();
                     info!("path: {:?}", path);
+                    // Maybe we'll send results in the future. TODO?
                     tx.send(0).unwrap();
                 });
             }
+            // This will have to do then.
             rx.iter().take(dl_sizes.len()).collect::<Vec<u32>>();
         }
         let latency = now() - start_time;
