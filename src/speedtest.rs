@@ -313,16 +313,27 @@ pub fn run_speedtest() {
     {
         let start_time = now();
         {
+            use std::thread::sleep_ms;
+            use std::sync::mpsc::channel;
+
             let pool = ThreadPool::new(6);
             let dl_sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
+
+            let (tx, rx) = channel();
             for dl_size in dl_sizes.iter() {
                 let thread_size = dl_size.clone();
-                let path = root_path.clone();
+                let path = root_path.to_path_buf().join("lolz");
+                let tx = tx.clone();
                 pool.execute(move || {
+                    sleep_ms(1000);
                     info!("Downloading {}", thread_size);
-                    let client = Client::new();
+                    // let client = Client::new();
+                    info!("path: {:?}", path);
+                    tx.send(0).unwrap();
                 });
             }
+            info!("Taking!");
+            rx.iter().take(dl_sizes.len()).collect::<Vec<u32>>();
         }
         let latency = now() - start_time;
         info!("It took {} ms", latency.num_milliseconds());
