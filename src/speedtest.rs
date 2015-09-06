@@ -328,6 +328,14 @@ pub fn run_speedtest() {
                 pool.execute(move || {
                     info!("Downloading {}", thread_size);
                     let client = Client::new();
+                    let mut res = client.get(path.to_str().unwrap())
+                    // set a header
+                    .header(Connection::close())
+                    .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                    // let 'er go!
+                    .send().unwrap();
+                    let mut server_body: Vec<u8> = vec!();
+                    res.read(&mut server_body).unwrap();
                     info!("path: {:?}", path);
                     // Maybe we'll send results in the future. TODO?
                     tx.send(0).unwrap();
