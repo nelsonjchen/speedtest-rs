@@ -332,7 +332,6 @@ pub fn run_speedtest() {
                     tx.send(0).unwrap();
                 });
             }
-            info!("Taking!");
             rx.iter().take(dl_sizes.len()).collect::<Vec<u32>>();
         }
         let latency = now() - start_time;
