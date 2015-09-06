@@ -323,12 +323,11 @@ pub fn run_speedtest() {
             let (tx, rx) = channel();
             for dl_size in dl_sizes.iter() {
                 let thread_size = dl_size.clone();
-                let path = root_path.to_path_buf().join("lolz");
+                let path = root_path.to_path_buf().join(format!("random{0}x{0}.jpg", dl_size));
                 let tx = tx.clone();
                 pool.execute(move || {
-                    sleep_ms(1000);
                     info!("Downloading {}", thread_size);
-                    // let client = Client::new();
+                    let client = Client::new();
                     info!("path: {:?}", path);
                     // Maybe we'll send results in the future. TODO?
                     tx.send(0).unwrap();
