@@ -313,7 +313,7 @@ pub fn run_speedtest() {
     info!("Testing Download speed");
     // Download Speed
     {
-        let mut total_size: usize = 0;
+        let mut total_size: usize;
         let start_time = now();
         {
             use std::sync::mpsc::channel;
@@ -366,6 +366,7 @@ pub fn run_speedtest() {
         info!("It took {} ms to download {} bytes", latency.num_milliseconds(), total_size);
         info!("{} bytes per second", total_size as i64 / (latency.num_milliseconds() / 1000) );
     }
+    // Test Upload
 }
 
 #[cfg(test)]
