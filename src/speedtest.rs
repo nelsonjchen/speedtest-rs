@@ -346,6 +346,7 @@ pub fn run_speedtest() {
                                 size = size + n
                             }
                             _ => {
+                                tx.send(0).unwrap();
                                 panic!("Something has gone wrong.")
                             }
                         }
