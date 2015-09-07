@@ -313,6 +313,7 @@ pub fn run_speedtest() {
     info!("Testing Download speed");
     // Download Speed
     {
+        let mut total_size: usize = 0;
         let start_time = now();
         {
             use std::sync::mpsc::channel;
@@ -357,10 +358,13 @@ pub fn run_speedtest() {
                 });
             }
             // This will have to do then.
-            rx.iter().take(dl_sizes.len()).collect::<Vec<usize>>();
+            total_size = rx.iter().take(dl_sizes.len()).fold(0, |val, i|{
+                val + i
+            });
         }
         let latency = now() - start_time;
-        info!("It took {} ms", latency.num_milliseconds());
+        info!("It took {} ms to download {} bytes", latency.num_milliseconds(), total_size);
+        info!("{} bytes per second", total_size as i64 / (latency.num_milliseconds() / 1000) );
     }
 }
 
