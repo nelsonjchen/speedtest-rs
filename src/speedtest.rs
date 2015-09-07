@@ -315,7 +315,6 @@ pub fn run_speedtest() {
     {
         let start_time = now();
         {
-            use std::thread::sleep_ms;
             use std::sync::mpsc::channel;
 
             let pool = ThreadPool::new(6);
