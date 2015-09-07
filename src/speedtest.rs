@@ -327,7 +327,7 @@ pub fn run_speedtest() {
                 let path = root_path.to_path_buf().join(format!("random{0}x{0}.jpg", dl_size));
                 let tx = tx.clone();
                 pool.execute(move || {
-                    info!("Downloading {}", thread_size);
+                    info!("Downloading {} of {}", thread_size, path.display());
                     let client = Client::new();
                     let mut res = client.get(path.to_str().unwrap())
                     // set a header
@@ -335,15 +335,28 @@ pub fn run_speedtest() {
                     .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
                     // let 'er go!
                     .send().unwrap();
-                    let mut server_body: Vec<u8> = vec!();
-                    res.read_to_end(&mut server_body).unwrap();
-                    info!("path: {:?}", path);
+                    let mut buffer = [0; 10240];
+                    let mut size: usize = 0;
+                    loop {
+                        match res.read(&mut buffer) {
+                            Ok(0) => {
+                                break;
+                            }
+                            Ok(n) => {
+                                size = size + n
+                            }
+                            _ => {
+                                panic!("Something has gone wrong.")
+                            }
+                        }
+                    }
+                    info!("Done {}, {}", path.display(), size);
                     // Maybe we'll send results in the future. TODO?
-                    tx.send(0).unwrap();
+                    tx.send(size).unwrap();
                 });
             }
             // This will have to do then.
-            rx.iter().take(dl_sizes.len()).collect::<Vec<u32>>();
+            rx.iter().take(dl_sizes.len()).collect::<Vec<usize>>();
         }
         let latency = now() - start_time;
         info!("It took {} ms", latency.num_milliseconds());
