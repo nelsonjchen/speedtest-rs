@@ -290,12 +290,14 @@ pub fn run_speedtest() {
             let latency_path = format!("{}/latency.txt", path.parent().unwrap().display());
             info!("Downloading: {:?}", latency_path);
             let start_time = now();
-            client.get(&latency_path)
+            let mut res = client.get(&latency_path)
             // set a header
             .header(Connection::close())
             .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
             // let 'er go!
             .send().unwrap();
+            let mut server_body: Vec<u8> = vec!();
+            res.read_to_end(&mut server_body).unwrap();
             let latency = now() - start_time;
             info!("It took {} ms", latency.num_milliseconds());
 
@@ -335,7 +337,7 @@ pub fn run_speedtest() {
                     // let 'er go!
                     .send().unwrap();
                     let mut server_body: Vec<u8> = vec!();
-                    res.read(&mut server_body).unwrap();
+                    res.read_to_end(&mut server_body).unwrap();
                     info!("path: {:?}", path);
                     // Maybe we'll send results in the future. TODO?
                     tx.send(0).unwrap();
