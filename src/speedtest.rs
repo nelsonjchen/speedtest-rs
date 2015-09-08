@@ -367,6 +367,63 @@ pub fn run_speedtest() {
         info!("{} bytes per second", total_size as i64 / (latency.num_milliseconds() / 1000) );
     }
     // Test Upload
+    info!("Testing Upload");
+    {
+        let mut total_size: usize;
+        let start_time = now();
+        {
+            use std::sync::mpsc::channel;
+
+            let pool = ThreadPool::new(6);
+            let small_sizes = [250000; 25];
+            let large_sizes = [500000; 25];
+            let dl_sizes = small_sizes.iter().chain(large_sizes.iter()).cloned().collect::<Vec<usize>>();
+
+            // Pools don't join?!
+            let (tx, rx) = channel();
+            for dl_size in dl_sizes.iter() {
+                let thread_size = dl_size.clone();
+                let path = root_path.to_path_buf().join(format!("random{0}x{0}.jpg", dl_size));
+                let tx = tx.clone();
+                pool.execute(move || {
+                    info!("Downloading {} of {}", thread_size, path.display());
+                    let client = Client::new();
+                    let mut res = client.get(path.to_str().unwrap())
+                    // set a header
+                    .header(Connection::close())
+                    .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                    // let 'er go!
+                    .send().unwrap();
+                    let mut buffer = [0; 10240];
+                    let mut size: usize = 0;
+                    loop {
+                        match res.read(&mut buffer) {
+                            Ok(0) => {
+                                break;
+                            }
+                            Ok(n) => {
+                                size = size + n
+                            }
+                            _ => {
+                                tx.send(0).unwrap();
+                                panic!("Something has gone wrong.")
+                            }
+                        }
+                    }
+                    info!("Done {}, {}", path.display(), size);
+                    // Maybe we'll send results in the future. TODO?
+                    tx.send(size).unwrap();
+                });
+            }
+            // This will have to do then.
+            total_size = rx.iter().take(dl_sizes.len()).fold(0, |val, i|{
+                val + i
+            });
+        }
+        let latency = now() - start_time;
+        info!("It took {} ms to download {} bytes", latency.num_milliseconds(), total_size);
+        info!("{} bytes per second", total_size as i64 / (latency.num_milliseconds() / 1000) );
+    }
 }
 
 #[cfg(test)]
