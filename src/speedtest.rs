@@ -319,13 +319,13 @@ pub fn run_speedtest() {
             use std::sync::mpsc::channel;
 
             let pool = ThreadPool::new(6);
-            let dl_sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
+            let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
 
             // Pools don't join?!
             let (tx, rx) = channel();
-            for dl_size in dl_sizes.iter() {
-                let thread_size = dl_size.clone();
-                let path = root_path.to_path_buf().join(format!("random{0}x{0}.jpg", dl_size));
+            for size in sizes.iter() {
+                let thread_size = size.clone();
+                let path = root_path.to_path_buf().join(format!("random{0}x{0}.jpg", size));
                 let tx = tx.clone();
                 pool.execute(move || {
                     info!("Downloading {} of {}", thread_size, path.display());
@@ -358,7 +358,7 @@ pub fn run_speedtest() {
                 });
             }
             // This will have to do then.
-            total_size = rx.iter().take(dl_sizes.len()).fold(0, |val, i|{
+            total_size = rx.iter().take(sizes.len()).fold(0, |val, i|{
                 val + i
             });
         }
@@ -368,6 +368,7 @@ pub fn run_speedtest() {
     }
     // Test Upload
     info!("Testing Upload");
+    let upload_path = Path::new(&fastest_server.unwrap().url);
     {
         let mut total_size: usize;
         let start_time = now();
@@ -383,13 +384,15 @@ pub fn run_speedtest() {
             let (tx, rx) = channel();
             for dl_size in dl_sizes.iter() {
                 let thread_size = dl_size.clone();
-                let path = root_path.to_path_buf().join(format!("random{0}x{0}.jpg", dl_size));
+                let path = upload_path.to_path_buf();
                 let tx = tx.clone();
                 pool.execute(move || {
+                    let body_loop = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().cycle();
                     info!("Downloading {} of {}", thread_size, path.display());
                     let client = Client::new();
-                    let mut res = client.get(path.to_str().unwrap())
+                    let mut res = client.post(path.to_str().unwrap())
                     // set a header
+                    .body(format!("content1={}", body_loop.take(thread_size).collect::<String>()))
                     .header(Connection::close())
                     .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
                     // let 'er go!
