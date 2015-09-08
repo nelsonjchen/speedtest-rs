@@ -1,6 +1,6 @@
 # Speedtest{-cli,-go}, but in rust, Speedtest-Rust
 
-*This is not working at the moment. I'm just stumbling around.*
+*This is not really working at the moment. Download is kinda done. I'm just stumbling around.*
 
 This is a learning exercise for me to learn:
 
@@ -14,7 +14,7 @@ This is a learning exercise for me to learn:
 * Idiomatic Rust
 
 If I get this done, this should be a runtime-free tool that can run against
-speedtest.net. Cross-compile this and maybe it can go anywhere!
+speedtest.net. Cross-compile this and maybe it can go anywhere! I also hope that this is less demanding on resources than
 
 This will be based heavily on:
 
@@ -71,7 +71,7 @@ was done.
 1. Download and time GETs for `[350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]` with `random(size)x(size).jpg`, like `/random350x350.jpg` from the fastest server.
   * This is all done in parallel for all the files with 6 at a time in a queue. When all the downloads are complete, the resulting time is taken. *Trivia: Each dot in the original `speedtest-cli` is a completed file download*
 1. The Download speed is calculated from the sum of all the files and the time to took to download 6 files at a time in parallel from the list.
-1. Upload and time POSTs for `[350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]` where bytes of a rolling `0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ` repeated to the desired size is posted as a request with that `data`. This is timed. It is posted that `url` that is in the server configuration.
+1. Upload and time POSTs for `[250000(25 times), 500000(25 times)]` where bytes of a rolling `0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ` cycled to the desired size is posted as a request with that `data`. This is timed. It is posted that `url` that is in the server configuration.
   * Similar operation to the downloads above.
 1. Same calculation as download but ... for upload!?! :scream:
 1. There's some sharing stuff but this isn't bothered with for now. The `speedtest-cli`
