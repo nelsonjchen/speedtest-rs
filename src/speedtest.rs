@@ -325,10 +325,16 @@ pub fn run_speedtest() {
             let (tx, rx) = channel();
             for size in sizes.iter() {
                 let thread_size = size.clone();
+                let start_time = start_time.clone();
                 let path = root_path.to_path_buf().join(format!("random{0}x{0}.jpg", size));
                 let tx = tx.clone();
                 pool.execute(move || {
                     info!("Downloading {} of {}", thread_size, path.display());
+                    if (now() - start_time) > Duration::seconds(10) {
+                        info!("Canceled Downloading {} of {}", thread_size, path.display());
+                        tx.send(0).unwrap();
+                        return;
+                    }
                     let client = Client::new();
                     let mut res = client.get(path.to_str().unwrap())
                     // set a header
@@ -384,11 +390,17 @@ pub fn run_speedtest() {
             let (tx, rx) = channel();
             for up_size in up_sizes.iter() {
                 let thread_size = up_size.clone();
+                let start_time = start_time.clone();
                 let path = upload_path.to_path_buf();
                 let tx = tx.clone();
                 pool.execute(move || {
-                    let body_loop = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().cycle();
                     info!("Uploading {} to {}", thread_size, path.display());
+                    if (now() - start_time) > Duration::seconds(10) {
+                        info!("Canceled Uploading {} of {}", thread_size, path.display());
+                        tx.send(0).unwrap();
+                        return;
+                    }
+                    let body_loop = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().cycle();
                     let client = Client::new();
                     let body = format!("content1={}", body_loop.take(thread_size).collect::<String>());
                     let mut res = client.post(path.to_str().unwrap())
