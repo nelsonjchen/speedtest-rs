@@ -1,6 +1,8 @@
 # Speedtest{-cli,-go}, but in rust, Speedtest-Rust
 
-*This is not really working at the moment. Download is kinda done. I'm just stumbling around.*
+[![Project Status: Concept - Minimal or no implementation has been done yet.](http://www.repostatus.org/badges/0.1.0/concept.svg)](http://www.repostatus.org/#concept)
+
+*This is not really working at the moment. Download is kinda done. I'm just stumbling around. It's going to need major refactoring anyway.*
 
 This is a learning exercise for me to learn:
 
@@ -13,7 +15,7 @@ This is a learning exercise for me to learn:
 * Some really, really dumb napkin distance calculations
 * Idiomatic Rust
 
-If I get this done, this should be a runtime-free tool that can run against
+If I get this done, this should be a runtime-free tool (with musl especially) that can run against
 speedtest.net. Cross-compile this and maybe it can go anywhere! I also hope that this is less demanding on resources than
 
 This will be based heavily on:
