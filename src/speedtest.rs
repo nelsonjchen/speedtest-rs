@@ -378,21 +378,22 @@ pub fn run_speedtest() {
             let pool = ThreadPool::new(6);
             let small_sizes = [250000; 25];
             let large_sizes = [500000; 25];
-            let dl_sizes = small_sizes.iter().chain(large_sizes.iter()).cloned().collect::<Vec<usize>>();
+            let up_sizes = small_sizes.iter().chain(large_sizes.iter()).cloned().collect::<Vec<usize>>();
 
             // Pools don't join?!
             let (tx, rx) = channel();
-            for dl_size in dl_sizes.iter() {
-                let thread_size = dl_size.clone();
+            for up_size in up_sizes.iter() {
+                let thread_size = up_size.clone();
                 let path = upload_path.to_path_buf();
                 let tx = tx.clone();
                 pool.execute(move || {
                     let body_loop = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().cycle();
-                    info!("Downloading {} of {}", thread_size, path.display());
+                    info!("Uploading {} to {}", thread_size, path.display());
                     let client = Client::new();
+                    let body = format!("content1={}", body_loop.take(thread_size).collect::<String>());
                     let mut res = client.post(path.to_str().unwrap())
                     // set a header
-                    .body(format!("content1={}", body_loop.take(thread_size).collect::<String>()))
+                    .body(body.as_bytes())
                     .header(Connection::close())
                     .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
                     // let 'er go!
@@ -413,18 +414,18 @@ pub fn run_speedtest() {
                             }
                         }
                     }
-                    info!("Done {}, {}", path.display(), size);
+                    info!("Done {}, {}", path.display(), thread_size);
                     // Maybe we'll send results in the future. TODO?
-                    tx.send(size).unwrap();
+                    tx.send(thread_size).unwrap();
                 });
             }
             // This will have to do then.
-            total_size = rx.iter().take(dl_sizes.len()).fold(0, |val, i|{
+            total_size = rx.iter().take(up_sizes.len()).fold(0, |val, i|{
                 val + i
             });
         }
         let latency = now() - start_time;
-        info!("It took {} ms to download {} bytes", latency.num_milliseconds(), total_size);
+        info!("It took {} ms to upload {} bytes", latency.num_milliseconds(), total_size);
         info!("{} bytes per second", total_size as i64 / (latency.num_milliseconds() / 1000) );
     }
 }
