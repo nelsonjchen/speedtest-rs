@@ -372,9 +372,14 @@ pub fn run_speedtest() {
         info!("It took {} ms to download {} bytes", latency.num_milliseconds(), total_size);
         info!("{} bytes per second", total_size as i64 / (latency.num_milliseconds() / 1000) );
     }
+    // test_upload(&fastest_server.unwrap())
+}
+
+#[allow(unused)]
+fn test_upload(fastest_server: &SpeedTestServer) {
     // Test Upload
     info!("Testing Upload");
-    let upload_path = Path::new(&fastest_server.unwrap().url);
+    let upload_path = Path::new(&fastest_server.url);
     {
         let mut total_size: usize;
         let start_time = now();
@@ -440,6 +445,7 @@ pub fn run_speedtest() {
         info!("It took {} ms to upload {} bytes", latency.num_milliseconds(), total_size);
         info!("{} bytes per second", total_size as i64 / (latency.num_milliseconds() / 1000) );
     }
+
 }
 
 #[cfg(test)]
