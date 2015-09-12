@@ -315,7 +315,7 @@ pub fn run_speedtest() {
     {
         use std::sync::{Arc, Mutex, RwLock};
 
-        let mut total_size: usize = 0;
+        let mut total_size: usize = 10;
         let start_time = Arc::new(now());
         {
             use std::sync::mpsc::sync_channel;
@@ -326,10 +326,37 @@ pub fn run_speedtest() {
             let complete = Arc::new(RwLock::new(vec!()));
 
             let (tx, rx) = sync_channel(6);
+            let root_path = root_path.to_path_buf();
             let prod_thread = thread::spawn(move || {
                 for size in &sizes {
+                    let size = size.clone();
+                    let root_path = root_path.clone();
                     let thread = thread::spawn(move || {
-                        0
+                        let path = root_path.to_path_buf().join(format!("random{0}x{0}.jpg", size));
+                        let client = Client::new();
+                        let mut res = client.get(path.to_str().unwrap())
+                        // set a header
+                        .header(Connection::close())
+                        .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                        // let 'er go!
+                        .send().unwrap();
+                        let mut buffer = [0; 10240];
+                        let mut size: usize = 0;
+                        loop {
+                            match res.read(&mut buffer) {
+                                Ok(0) => {
+                                    break;
+                                }
+                                Ok(n) => {
+                                    size = size + n
+                                }
+                                _ => {
+                                    panic!("Something has gone wrong.")
+                                }
+                            }
+                        }
+                        info!("Done {}, {}", path.display(), size);
+                        size
                     });
                     tx.send(thread).unwrap();
                 }
