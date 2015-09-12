@@ -313,7 +313,7 @@ pub fn run_speedtest() {
     info!("Testing Download speed");
     // Download Speed
     {
-        use std::sync::Arc;
+        use std::sync::{Arc, Mutex, RwLock};
 
         let mut total_size: usize = 0;
         let start_time = Arc::new(now());
@@ -323,20 +323,24 @@ pub fn run_speedtest() {
 
             let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
             let len_sizes = sizes.len();
+            let complete = Arc::new(RwLock::new(vec!()));
 
             let (tx, rx) = sync_channel(6);
             let prod_thread = thread::spawn(move || {
                 for size in &sizes {
                     let thread = thread::spawn(move || {
+                        0
                     });
                     tx.send(thread).unwrap();
                 }
 
                 });
             let cons_thread = thread::spawn(move || {
-                len_sizes;
-                rx.recv().unwrap()
-
+                while (*complete).read().unwrap().len() < len_sizes {
+                    let thread = rx.recv().unwrap();
+                    let mut complete = (*complete).write().unwrap();
+                    complete.push(thread.join().unwrap());
+                }
             });
             prod_thread.join().unwrap();
             cons_thread.join().unwrap();
