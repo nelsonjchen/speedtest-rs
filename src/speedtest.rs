@@ -313,62 +313,33 @@ pub fn run_speedtest() {
     info!("Testing Download speed");
     // Download Speed
     {
-        let mut total_size: usize;
-        let start_time = now();
+        use std::sync::Arc;
+
+        let mut total_size: usize = 0;
+        let start_time = Arc::new(now());
         {
-            use std::sync::mpsc::channel;
+            use std::sync::mpsc::sync_channel;
+            use std::thread;
 
-            let pool = ThreadPool::new(6);
             let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
+            let len_sizes = sizes.len();
 
-            // Pools don't join?!
-            let (tx, rx) = channel();
-            for size in sizes.iter() {
-                let thread_size = size.clone();
-                let start_time = start_time.clone();
-                let path = root_path.to_path_buf().join(format!("random{0}x{0}.jpg", size));
-                let tx = tx.clone();
-                pool.execute(move || {
-                    info!("Downloading {} of {}", thread_size, path.display());
-                    if (now() - start_time) > Duration::seconds(10) {
-                        info!("Canceled Downloading {} of {}", thread_size, path.display());
-                        tx.send(0).unwrap();
-                        return;
-                    }
-                    let client = Client::new();
-                    let mut res = client.get(path.to_str().unwrap())
-                    // set a header
-                    .header(Connection::close())
-                    .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-                    // let 'er go!
-                    .send().unwrap();
-                    let mut buffer = [0; 10240];
-                    let mut size: usize = 0;
-                    loop {
-                        match res.read(&mut buffer) {
-                            Ok(0) => {
-                                break;
-                            }
-                            Ok(n) => {
-                                size = size + n
-                            }
-                            _ => {
-                                tx.send(0).unwrap();
-                                panic!("Something has gone wrong.")
-                            }
-                        }
-                    }
-                    info!("Done {}, {}", path.display(), size);
-                    // Maybe we'll send results in the future. TODO?
-                    tx.send(size).unwrap();
+            let (tx, rx) = sync_channel(6);
+            tx.send(1);
+            let prod_thread = thread::spawn(move || {
+                for size in &sizes {
+                    let thread = thread::spawn(move || {});
+                }
+
                 });
-            }
-            // This will have to do then.
-            total_size = rx.iter().take(sizes.len()).fold(0, |val, i|{
-                val + i
-            });
+            let cons_thread = thread::spawn(move || {
+                len_sizes
+
+                });
+            prod_thread.join().unwrap();
+            cons_thread.join().unwrap();
         }
-        let latency = now() - start_time;
+        let latency = now() - *start_time;
         info!("It took {} ms to download {} bytes", latency.num_milliseconds(), total_size);
         info!("{} bytes per second", total_size as i64 / (latency.num_milliseconds() / 1000) );
     }
