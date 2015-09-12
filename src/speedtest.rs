@@ -325,17 +325,19 @@ pub fn run_speedtest() {
             let len_sizes = sizes.len();
 
             let (tx, rx) = sync_channel(6);
-            tx.send(1);
             let prod_thread = thread::spawn(move || {
                 for size in &sizes {
-                    let thread = thread::spawn(move || {});
+                    let thread = thread::spawn(move || {
+                    });
+                    tx.send(thread).unwrap();
                 }
 
                 });
             let cons_thread = thread::spawn(move || {
-                len_sizes
+                len_sizes;
+                rx.recv().unwrap()
 
-                });
+            });
             prod_thread.join().unwrap();
             cons_thread.join().unwrap();
         }
