@@ -315,7 +315,7 @@ pub fn run_speedtest() {
     {
         use std::sync::{Arc, RwLock};
 
-        let mut total_size: usize = 0;
+        let mut total_size;
         let start_time = Arc::new(now());
         {
             use std::sync::mpsc::sync_channel;
@@ -378,7 +378,8 @@ pub fn run_speedtest() {
         }
         let latency = now() - *start_time;
         info!("It took {} ms to download {} bytes", latency.num_milliseconds(), total_size);
-        info!("{} bytes per second", total_size as i64 / (latency.num_milliseconds() / 1000) );
+        let bps = total_size as i64 / (latency.num_milliseconds() / 1000);
+        info!("{} bytes per second", bps );
     }
     // test_upload(&fastest_server.unwrap())
 }
