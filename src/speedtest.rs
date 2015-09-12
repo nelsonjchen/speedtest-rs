@@ -313,9 +313,9 @@ pub fn run_speedtest() {
     info!("Testing Download speed");
     // Download Speed
     {
-        use std::sync::{Arc, Mutex, RwLock};
+        use std::sync::{Arc, RwLock};
 
-        let mut total_size: usize = 10;
+        let mut total_size: usize = 0;
         let start_time = Arc::new(now());
         {
             use std::sync::mpsc::sync_channel;
@@ -362,15 +362,19 @@ pub fn run_speedtest() {
                 }
 
                 });
+            let cons_complete = complete.clone();
             let cons_thread = thread::spawn(move || {
-                while (*complete).read().unwrap().len() < len_sizes {
+                while cons_complete.read().unwrap().len() < len_sizes {
                     let thread = rx.recv().unwrap();
-                    let mut complete = (*complete).write().unwrap();
+                    let mut complete = (*cons_complete).write().unwrap();
                     complete.push(thread.join().unwrap());
                 }
             });
             prod_thread.join().unwrap();
             cons_thread.join().unwrap();
+            total_size = (*complete).read().unwrap().iter().fold(0, |val, i|{
+                val + i
+            });
         }
         let latency = now() - *start_time;
         info!("It took {} ms to download {} bytes", latency.num_milliseconds(), total_size);
