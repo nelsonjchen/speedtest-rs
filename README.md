@@ -28,7 +28,7 @@ For now, it would only support speedtest.net and not Speedtest Mini.
 
 There is also a Go version which is different from the other CLI speedtest clients I've found:
 
-https://github.com/traetox/speedtest/blob/master/speedtestdotnet/actions.go
+https://github.com/traetox/speedtest
 
 It seems different as it appears to just use TCP connections and some protocol. It's probably more suitable to high-speed connections.
 
