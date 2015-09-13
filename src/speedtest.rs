@@ -381,11 +381,90 @@ pub fn run_speedtest() {
         let bps = total_size as i64 / (latency.num_milliseconds() / 1000);
         info!("{} bytes per second", bps );
     }
-    // test_upload(&fastest_server.unwrap())
+
+    test_upload(&fastest_server.unwrap())
+}
+
+fn test_upload(server: &SpeedTestServer) {
+    use std::sync::{Arc, RwLock};
+    use std::sync::mpsc::sync_channel;
+    use std::thread;
+
+    info!("Testing Upload");
+    let upload_path = Path::new(&server.url).to_path_buf().clone();
+    let mut total_size: usize;
+    let start_time = Arc::new(now());
+    let small_sizes = [250000; 25];
+    let large_sizes = [500000; 25];
+    let sizes = small_sizes.iter().chain(large_sizes.iter()).cloned().collect::<Vec<usize>>();
+    let len_sizes = sizes.len();
+    let complete = Arc::new(RwLock::new(vec!()));
+    let (tx, rx) = sync_channel(6);
+
+    let thread_start_time = start_time.clone();
+    let prod_thread = thread::spawn(move || {
+        for size in &sizes {
+            let size = size.clone();
+            let path = upload_path.to_path_buf().clone();
+            let start_time = thread_start_time.clone();
+            let thread = thread::spawn(move || {
+                info!("Uploading {} to {}", size, path.display());
+                if (now() - *start_time) > Duration::seconds(10) {
+                    info!("Canceled Uploading {} of {}", size, path.display());
+                    return 0;
+                }
+                let body_loop = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().cycle();
+                let client = Client::new();
+                let body = format!("content1={}", body_loop.take(size).collect::<String>());
+                let mut res = client.post(path.to_str().unwrap())
+                // set a header
+                .body(body.as_bytes())
+                .header(Connection::close())
+                .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                // let 'er go!
+                .send().unwrap();
+                let mut buffer = [0; 10240];
+                loop {
+                    match res.read(&mut buffer) {
+                        Ok(0) => {
+                            break;
+                        }
+                        Ok(_) => {
+                        }
+                        _ => {
+                            panic!("Something has gone wrong.")
+                        }
+                    }
+                }
+                info!("Done {}, {}", path.display(), size);
+                size
+            });
+            tx.send(thread).unwrap();
+        }
+    });
+
+    let cons_complete = complete.clone();
+
+    let cons_thread = thread::spawn(move || {
+        while cons_complete.read().unwrap().len() < len_sizes {
+            let thread = rx.recv().unwrap();
+            let mut complete = (*cons_complete).write().unwrap();
+            complete.push(thread.join().unwrap());
+        }
+    });
+
+    prod_thread.join().unwrap();
+    cons_thread.join().unwrap();
+    total_size = (*complete).read().unwrap().iter().fold(0, |val, i|{
+        val + i
+    });
+    let latency = now() - *start_time;
+    info!("It took {} ms to upload {} bytes", latency.num_milliseconds(), total_size);
+    info!("{} bytes per second", total_size as i64 / (latency.num_milliseconds() / 1000) );
 }
 
 #[allow(unused)]
-fn test_upload(fastest_server: &SpeedTestServer) {
+fn test_upload_old(fastest_server: &SpeedTestServer) {
     // Test Upload
     info!("Testing Upload");
     let upload_path = Path::new(&fastest_server.url);
