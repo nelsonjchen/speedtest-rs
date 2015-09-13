@@ -7,7 +7,6 @@ use std::thread;
 use hyper::Client;
 use hyper::header::{Connection, UserAgent};
 use time::{now, Duration};
-use threadpool::ThreadPool;
 use xml::reader::EventReader;
 use xml::reader::events::XmlEvent::*;
 use ::cheap_distance::{EarthLocation, compute_distance};
