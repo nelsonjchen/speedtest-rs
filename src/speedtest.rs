@@ -1,6 +1,9 @@
 use std::io::Read;
 use std::path::Path;
 use std::cmp::Ordering::Less;
+use std::sync::{Arc, RwLock};
+use std::sync::mpsc::sync_channel;
+use std::thread;
 use hyper::Client;
 use hyper::header::{Connection, UserAgent};
 use time::{now, Duration};
@@ -313,8 +316,6 @@ pub fn run_speedtest() {
     info!("Testing Download speed");
     // Download Speed
     {
-        use std::sync::{Arc, RwLock};
-
         let mut total_size;
         let start_time = Arc::new(now());
         {
@@ -382,13 +383,10 @@ pub fn run_speedtest() {
         info!("{} bytes per second", bps );
     }
 
-    test_upload(&fastest_server.unwrap())
+    test_upload(&fastest_server.unwrap());
 }
 
 fn test_upload(server: &SpeedTestServer) {
-    use std::sync::{Arc, RwLock};
-    use std::sync::mpsc::sync_channel;
-    use std::thread;
 
     info!("Testing Upload");
     let upload_path = Path::new(&server.url).to_path_buf().clone();
