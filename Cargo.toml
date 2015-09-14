@@ -1,6 +1,6 @@
 [package]
 
-name = "speedtest-rust"
+name = "speedtest-rs"
 version = "0.0.1"
 authors = ["Nelson Chen <crazysim@gmail.com>"]
 

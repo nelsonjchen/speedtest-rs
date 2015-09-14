@@ -1,5 +1,5 @@
 [root]
-name = "speedtest-rust"
+name = "speedtest-rs"
 version = "0.0.1"
 dependencies = [
  "env_logger 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",

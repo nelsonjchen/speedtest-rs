@@ -1,4 +1,4 @@
-# Speedtest{-cli,-go}, but in rust, Speedtest-Rust
+# speedtest-rs
 
 [![Project Status: Concept - Minimal or no implementation has been done yet.](http://www.repostatus.org/badges/0.1.0/concept.svg)](http://www.repostatus.org/#concept)
 [![Build Status](https://travis-ci.org/nelsonjchen/speedtest-rust.svg?branch=master)](https://travis-ci.org/nelsonjchen/speedtest-rust)
