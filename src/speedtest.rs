@@ -295,80 +295,76 @@ pub fn run_speedtest() {
         }
     };
     info!("Fastest Server @ {}ms : {:?}", fastest_latency.num_milliseconds(), fastest_server);
-    let root_path = Path::new(&fastest_server.unwrap().url).parent().unwrap();
-    debug!("Root path is: {}", root_path.display());
-    // Test against server
-    info!("Testing Download speed");
-    // Download Speed
-    {
-        let mut total_size;
-        let start_time = Arc::new(now());
-        {
-            use std::sync::mpsc::sync_channel;
-            use std::thread;
 
-            let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
-            let len_sizes = sizes.len();
-            let complete = Arc::new(RwLock::new(vec!()));
-
-            let (tx, rx) = sync_channel(6);
-            let root_path = root_path.to_path_buf();
-            let prod_thread = thread::spawn(move || {
-                for size in &sizes {
-                    let size = size.clone();
-                    let root_path = root_path.clone();
-                    let thread =
-                        thread::spawn(move || {
-                            let path = root_path.to_path_buf()
-                                                .join(format!("random{0}x{0}.jpg", size));
-                            let client = Client::new();
-                            let mut res = client.get(path.to_str().unwrap())
-                                                .header(Connection::close())
-                                                .header(UserAgent("hyper/speedtest-rust 0.01"
-                                                                      .to_owned()))
-                                                .send()
-                                                .unwrap();
-                            let mut buffer = [0; 10240];
-                            let mut size: usize = 0;
-                            loop {
-                                match res.read(&mut buffer) {
-                                    Ok(0) => {
-                                        break;
-                                    }
-                                    Ok(n) => {
-                                        size = size + n
-                                    }
-                                    _ => {
-                                        panic!("Something has gone wrong.")
-                                    }
-                                }
-                            }
-                            info!("Done {}, {}", path.display(), size);
-                            size
-                        });
-                    tx.send(thread).unwrap();
-                }
-
-            });
-            let cons_complete = complete.clone();
-            let cons_thread = thread::spawn(move || {
-                while cons_complete.read().unwrap().len() < len_sizes {
-                    let thread = rx.recv().unwrap();
-                    let mut complete = (*cons_complete).write().unwrap();
-                    complete.push(thread.join().unwrap());
-                }
-            });
-            prod_thread.join().unwrap();
-            cons_thread.join().unwrap();
-            total_size = (*complete).read().unwrap().iter().fold(0, |val, i| val + i);
-        }
-        let latency = now() - *start_time;
-        info!("It took {} ms to download {} bytes", latency.num_milliseconds(), total_size);
-        let bps = total_size as i64 / (latency.num_milliseconds() / 1000);
-        info!("{} bytes per second", bps );
-    }
-
+    test_download(&fastest_server.unwrap());
     test_upload(&fastest_server.unwrap());
+}
+
+fn test_download(server: &SpeedTestServer) {
+    info!("Testing Download speed");
+    let root_path = Path::new(&server.url).parent().unwrap();
+    debug!("Root path is: {}", root_path.display());
+    let start_time = Arc::new(now());
+    let mut total_size;
+
+    let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
+    let len_sizes = sizes.len();
+    let complete = Arc::new(RwLock::new(vec!()));
+    let (tx, rx) = sync_channel(6);
+    let root_path = root_path.to_path_buf();
+    let prod_thread = thread::spawn(move || {
+        for size in &sizes {
+            let size = size.clone();
+            let root_path = root_path.clone();
+            let thread =
+            thread::spawn(move || {
+                let path = root_path.to_path_buf()
+                .join(format!("random{0}x{0}.jpg", size));
+                let client = Client::new();
+                let mut res = client.get(path.to_str().unwrap())
+                .header(Connection::close())
+                .header(UserAgent("hyper/speedtest-rust 0.01"
+                .to_owned()))
+                .send()
+                .unwrap();
+                let mut buffer = [0; 10240];
+                let mut size: usize = 0;
+                loop {
+                    match res.read(&mut buffer) {
+                        Ok(0) => {
+                            break;
+                        }
+                        Ok(n) => {
+                            size = size + n
+                        }
+                        _ => {
+                            panic!("Something has gone wrong.")
+                        }
+                    }
+                }
+                info!("Done {}, {}", path.display(), size);
+                size
+                });
+                tx.send(thread).unwrap();
+            }
+            });
+
+    let cons_complete = complete.clone();
+
+    let cons_thread = thread::spawn(move || {
+        while cons_complete.read().unwrap().len() < len_sizes {
+            let thread = rx.recv().unwrap();
+            let mut complete = (*cons_complete).write().unwrap();
+            complete.push(thread.join().unwrap());
+        }
+    });
+    prod_thread.join().unwrap();
+    cons_thread.join().unwrap();
+    total_size = (*complete).read().unwrap().iter().fold(0, |val, i| val + i);
+    let latency = now() - *start_time;
+    info!("It took {} ms to download {} bytes", latency.num_milliseconds(), total_size);
+    let bps = total_size as i64 / (latency.num_milliseconds() / 1000);
+    info!("{} bytes per second", bps );
 }
 
 fn test_upload(server: &SpeedTestServer) {
