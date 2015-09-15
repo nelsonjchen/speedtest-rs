@@ -73,7 +73,7 @@ impl SpeedTestConfig {
         }
         match (ip, lat, lon, isp) {
             (Some(ip), Some(lat), Some(lon), Some(isp)) => {
-                return Ok(SpeedTestConfig {
+                Ok(SpeedTestConfig {
                 ip: ip,
                 lat: lat,
                 lon: lon,
@@ -81,7 +81,7 @@ impl SpeedTestConfig {
                 })
             }
             _ => {
-                return Err(ParseError("Configuration is invalid".to_string()));
+                Err(ParseError("Configuration is invalid".to_string()))
             }
         }
     }
