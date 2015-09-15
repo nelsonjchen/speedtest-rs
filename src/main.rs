@@ -1,5 +1,5 @@
 mod speedtest;
-mod cheap_distance;
+mod distance;
 
 extern crate hyper;
 extern crate xml;

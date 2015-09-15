@@ -9,7 +9,7 @@ use hyper::header::{Connection, UserAgent};
 use time::{now, Duration};
 use xml::reader::EventReader;
 use xml::reader::events::XmlEvent::*;
-use ::cheap_distance::{EarthLocation, compute_distance};
+use ::distance::{EarthLocation, compute_distance};
 
 #[derive(Debug)]
 pub struct ParseError(String);
