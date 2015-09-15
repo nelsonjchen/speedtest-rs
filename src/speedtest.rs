@@ -9,7 +9,7 @@ use hyper::header::{Connection, UserAgent};
 use time::{now, Duration};
 use xml::reader::EventReader;
 use xml::reader::events::XmlEvent::*;
-use ::distance::{EarthLocation, compute_distance};
+use distance::{EarthLocation, compute_distance};
 
 #[derive(Debug)]
 pub struct ParseError(String);
@@ -36,51 +36,50 @@ impl SpeedTestConfig {
                                 match attribute.name.local_name.as_ref() {
                                     "ip" => {
                                         ip = Some(attribute.value.clone());
-                                    },
+                                    }
                                     "lat" => {
                                         match attribute.value.parse::<f32>() {
                                             Ok(_) => {
                                                 lat = Some(attribute.value.clone());
-                                            },
+                                            }
                                             _ => {
                                                 lat = None;
                                             }
                                         }
-                                    },
+                                    }
                                     "lon" => {
                                         match attribute.value.parse::<f32>() {
                                             Ok(_) => {
                                                 lon = Some(attribute.value.clone());
-                                            },
+                                            }
                                             _ => {
                                                 lon = None;
                                             }
                                         }
-                                    },
+                                    }
                                     "isp" => {
                                         isp = Some(attribute.value.clone());
-                                    },
-                                    _ => {},
-
+                                    }
+                                    _ => {}
                                 }
                             }
-                        break;
-                        },
+                            break;
+                        }
                         _ => {}
                     }
-                },
+                }
                 _ => {}
             }
         }
         match (ip, lat, lon, isp) {
-            (Some(ip), Some(lat), Some(lon), Some(isp))=> {
-            return Ok(SpeedTestConfig {
+            (Some(ip), Some(lat), Some(lon), Some(isp)) => {
+                return Ok(SpeedTestConfig {
                 ip: ip,
                 lat: lat,
                 lon: lon,
                 isp: isp,
                 })
-            },
+            }
             _ => {
                 return Err(ParseError("Configuration is invalid".to_string()));
             }
@@ -110,7 +109,7 @@ impl SpeedTestServersConfig {
     fn new<R: Read>(parser: &mut EventReader<R>) -> Result<SpeedTestServersConfig, ParseError> {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
 
-        for event in parser.events(){
+        for event in parser.events() {
             match event {
                 StartElement { ref name, ref attributes, ..} => {
                     match name.local_name.as_ref() {
@@ -128,48 +127,38 @@ impl SpeedTestServersConfig {
                                 match attribute.name.local_name.as_ref() {
                                     "country" => {
                                         country = Some(attribute.value.clone());
-                                    },
+                                    }
                                     "host" => {
                                         host = Some(attribute.value.clone());
-                                    },
+                                    }
                                     "id" => {
                                         id = Some(attribute.value.clone());
-                                    },
+                                    }
                                     "lat" => {
                                         lat = Some(attribute.value.clone());
-                                    },
+                                    }
                                     "lon" => {
                                         lon = Some(attribute.value.clone());
-                                    },
+                                    }
                                     "name" => {
                                         name = Some(attribute.value.clone());
-                                    },
+                                    }
                                     "sponsor" => {
                                         sponsor = Some(attribute.value.clone());
-                                    },
+                                    }
                                     "url" => {
                                         url = Some(attribute.value.clone());
-                                    },
+                                    }
                                     "url2" => {
                                         url2 = Some(attribute.value.clone());
-                                    },
+                                    }
                                     _ => {
                                         // eh?
                                     }
                                 }
                             }
-                            match (
-                                country,
-                                host,
-                                id,
-                                lat,
-                                lon,
-                                name,
-                                sponsor,
-                                url,
-                                url2
-                                ) {
-                                    (
+                            match (country, host, id, lat, lon, name, sponsor, url, url2) {
+                                (
                                         Some(country),
                                         Some(host),
                                         Some(id),
@@ -180,20 +169,18 @@ impl SpeedTestServersConfig {
                                         Some(url),
                                         Some(url2)
                                         ) => {
-                                            servers.push(
-                                                SpeedTestServer{
-                                                    country: country,
-                                                    host: host,
-                                                    id: id,
-                                                    lat: lat,
-                                                    lon: lon,
-                                                    name: name,
-                                                    sponsor: sponsor,
-                                                    url: url,
-                                                    url2: url2,
-                                                }
-                                            );
-                                        }
+                                    servers.push(SpeedTestServer {
+                                        country: country,
+                                        host: host,
+                                        id: id,
+                                        lat: lat,
+                                        lon: lon,
+                                        name: name,
+                                        sponsor: sponsor,
+                                        url: url,
+                                        url2: url2,
+                                    });
+                                }
                                 _ => {
                                     // eh
                                 }
@@ -215,24 +202,26 @@ impl SpeedTestServersConfig {
     }
 
 
-    pub fn servers_sorted_by_distance(&self, config: &SpeedTestConfig) -> Option<Vec<SpeedTestServer>> {
-        let location = EarthLocation{
+    pub fn servers_sorted_by_distance(&self,
+                                      config: &SpeedTestConfig)
+                                      -> Option<Vec<SpeedTestServer>> {
+        let location = EarthLocation {
             latitude: config.lat.parse::<f32>().unwrap(),
             longitude: config.lon.parse::<f32>().unwrap(),
         };
         let mut sorted_servers = self.servers.clone();
         sorted_servers.sort_by(|a, b| {
-                let a_location = EarthLocation {
-                    latitude: a.lat.parse::<f32>().unwrap(),
-                    longitude: a.lon.parse::<f32>().unwrap(),
-                };
-                let b_location = EarthLocation {
-                    latitude: b.lat.parse::<f32>().unwrap(),
-                    longitude: b.lon.parse::<f32>().unwrap(),
-                };
-                let a_distance = compute_distance(&location, &a_location);
-                let b_distance = compute_distance(&location, &b_location);
-                a_distance.partial_cmp(&b_distance).unwrap_or(Less)
+            let a_location = EarthLocation {
+                latitude: a.lat.parse::<f32>().unwrap(),
+                longitude: a.lon.parse::<f32>().unwrap(),
+            };
+            let b_location = EarthLocation {
+                latitude: b.lat.parse::<f32>().unwrap(),
+                longitude: b.lon.parse::<f32>().unwrap(),
+            };
+            let a_distance = compute_distance(&location, &a_location);
+            let b_distance = compute_distance(&location, &b_location);
+            a_distance.partial_cmp(&b_distance).unwrap_or(Less)
         });
         Some(sorted_servers)
     }
@@ -243,11 +232,10 @@ pub fn run_speedtest() {
     let client = Client::new();
     // Creating an outgoing request.
     let mut config_res = client.get("http://www.speedtest.net/speedtest-config.php")
-        // set a header
-        .header(Connection::close())
-        .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-        // let 'er go!
-        .send().unwrap();
+                               .header(Connection::close())
+                               .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                               .send()
+                               .unwrap();
     let mut config_body = String::new();
     config_res.read_to_string(&mut config_body).unwrap();
     info!("Downloaded Configuration");
@@ -260,11 +248,10 @@ pub fn run_speedtest() {
 
     info!("Download Server List");
     let mut server_res = client.get("http://www.speedtest.net/speedtest-servers-static.php")
-        // set a header
-        .header(Connection::close())
-        .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-        // let 'er go!
-        .send().unwrap();
+                               .header(Connection::close())
+                               .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                               .send()
+                               .unwrap();
     let mut server_body = String::new();
     server_res.read_to_string(&mut server_body).unwrap();
     info!("Downloaded Server List");
@@ -276,8 +263,8 @@ pub fn run_speedtest() {
     let spt_server_config = SpeedTestServersConfig::new(&mut server_parser).unwrap();
     info!("Parsed Server List");
 
-    let servers_sorted_by_distance = spt_server_config.
-                                     servers_sorted_by_distance(&spt_config).unwrap();
+    let servers_sorted_by_distance = spt_server_config.servers_sorted_by_distance(&spt_config)
+                                                      .unwrap();
     info!("Five Closest Servers");
     let five_closest_servers = &servers_sorted_by_distance[0..5];
     for server in five_closest_servers {
@@ -288,25 +275,24 @@ pub fn run_speedtest() {
     let mut fastest_server = None;
     let mut fastest_latency = Duration::max_value();
     for server in five_closest_servers {
-            let path = Path::new(&server.url);
-            let latency_path = format!("{}/latency.txt", path.parent().unwrap().display());
-            info!("Downloading: {:?}", latency_path);
-            let start_time = now();
-            let mut res = client.get(&latency_path)
-            // set a header
-            .header(Connection::close())
-            .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-            // let 'er go!
-            .send().unwrap();
-            let mut server_body: Vec<u8> = vec!();
-            res.read_to_end(&mut server_body).unwrap();
-            let latency = now() - start_time;
-            info!("It took {} ms", latency.num_milliseconds());
+        let path = Path::new(&server.url);
+        let latency_path = format!("{}/latency.txt", path.parent().unwrap().display());
+        info!("Downloading: {:?}", latency_path);
+        let start_time = now();
+        let mut res = client.get(&latency_path)
+                            .header(Connection::close())
+                            .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                            .send()
+                            .unwrap();
+        let mut server_body: Vec<u8> = vec!();
+        res.read_to_end(&mut server_body).unwrap();
+        let latency = now() - start_time;
+        info!("It took {} ms", latency.num_milliseconds());
 
-            if latency < fastest_latency {
-                fastest_server = Some(server);
-                fastest_latency = latency;
-            }
+        if latency < fastest_latency {
+            fastest_server = Some(server);
+            fastest_latency = latency;
+        }
     };
     info!("Fastest Server @ {}ms : {:?}", fastest_latency.num_milliseconds(), fastest_server);
     let root_path = Path::new(&fastest_server.unwrap().url).parent().unwrap();
@@ -331,37 +317,39 @@ pub fn run_speedtest() {
                 for size in &sizes {
                     let size = size.clone();
                     let root_path = root_path.clone();
-                    let thread = thread::spawn(move || {
-                        let path = root_path.to_path_buf().join(format!("random{0}x{0}.jpg", size));
-                        let client = Client::new();
-                        let mut res = client.get(path.to_str().unwrap())
-                        // set a header
-                        .header(Connection::close())
-                        .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-                        // let 'er go!
-                        .send().unwrap();
-                        let mut buffer = [0; 10240];
-                        let mut size: usize = 0;
-                        loop {
-                            match res.read(&mut buffer) {
-                                Ok(0) => {
-                                    break;
-                                }
-                                Ok(n) => {
-                                    size = size + n
-                                }
-                                _ => {
-                                    panic!("Something has gone wrong.")
+                    let thread =
+                        thread::spawn(move || {
+                            let path = root_path.to_path_buf()
+                                                .join(format!("random{0}x{0}.jpg", size));
+                            let client = Client::new();
+                            let mut res = client.get(path.to_str().unwrap())
+                                                .header(Connection::close())
+                                                .header(UserAgent("hyper/speedtest-rust 0.01"
+                                                                      .to_owned()))
+                                                .send()
+                                                .unwrap();
+                            let mut buffer = [0; 10240];
+                            let mut size: usize = 0;
+                            loop {
+                                match res.read(&mut buffer) {
+                                    Ok(0) => {
+                                        break;
+                                    }
+                                    Ok(n) => {
+                                        size = size + n
+                                    }
+                                    _ => {
+                                        panic!("Something has gone wrong.")
+                                    }
                                 }
                             }
-                        }
-                        info!("Done {}, {}", path.display(), size);
-                        size
-                    });
+                            info!("Done {}, {}", path.display(), size);
+                            size
+                        });
                     tx.send(thread).unwrap();
                 }
 
-                });
+            });
             let cons_complete = complete.clone();
             let cons_thread = thread::spawn(move || {
                 while cons_complete.read().unwrap().len() < len_sizes {
@@ -372,9 +360,7 @@ pub fn run_speedtest() {
             });
             prod_thread.join().unwrap();
             cons_thread.join().unwrap();
-            total_size = (*complete).read().unwrap().iter().fold(0, |val, i|{
-                val + i
-            });
+            total_size = (*complete).read().unwrap().iter().fold(0, |val, i| val + i);
         }
         let latency = now() - *start_time;
         info!("It took {} ms to download {} bytes", latency.num_milliseconds(), total_size);
@@ -414,12 +400,11 @@ fn test_upload(server: &SpeedTestServer) {
                 let client = Client::new();
                 let body = format!("content1={}", body_loop.take(size).collect::<String>());
                 let mut res = client.post(path.to_str().unwrap())
-                // set a header
-                .body(body.as_bytes())
-                .header(Connection::close())
-                .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-                // let 'er go!
-                .send().unwrap();
+                                    .body(body.as_bytes())
+                                    .header(Connection::close())
+                                    .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                                    .send()
+                                    .unwrap();
                 let mut buffer = [0; 10240];
                 loop {
                     match res.read(&mut buffer) {
@@ -452,9 +437,7 @@ fn test_upload(server: &SpeedTestServer) {
 
     prod_thread.join().unwrap();
     cons_thread.join().unwrap();
-    total_size = (*complete).read().unwrap().iter().fold(0, |val, i|{
-        val + i
-    });
+    total_size = (*complete).read().unwrap().iter().fold(0, |val, i| val + i);
     let latency = now() - *start_time;
     info!("It took {} ms to upload {} bytes", latency.num_milliseconds(), total_size);
     info!("{} bytes per second", total_size as i64 / (latency.num_milliseconds() / 1000) );
@@ -467,9 +450,8 @@ mod tests {
 
     #[test]
     fn test_parse_config_xml() {
-        let mut parser = EventReader::new(
-            include_bytes!("../tests/config/config.php.xml") as &[u8]
-        );
+        let mut parser =
+            EventReader::new(include_bytes!("../tests/config/config.php.xml") as &[u8]);
         let config = SpeedTestConfig::new(&mut parser).unwrap();
         assert_eq!("174.79.12.26", config.ip);
         assert_eq!("32.9954", config.lat);
@@ -491,7 +473,7 @@ mod tests {
 
     #[test]
     fn test_fastest_server() {
-        let spt_config = SpeedTestConfig{
+        let spt_config = SpeedTestConfig {
             ip: "127.0.0.1".to_string(),
             lat: "32.9954".to_string(),
             lon: "-117.0753".to_string(),
