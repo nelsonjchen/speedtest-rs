@@ -463,10 +463,6 @@ fn test_upload(server: &SpeedTestServer) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::prelude::*;
-    use std::io::Cursor;
-    use std::string::String;
-    use std::fs::File;
     use xml::reader::EventReader;
 
     #[test]
@@ -504,8 +500,8 @@ mod tests {
         let mut parser = EventReader::new(
             include_bytes!("../tests/config/geo-test-servers-static.php.xml") as &[u8]
         );
-        let spt_server_config = SpeedTestServersConfig::new(&mut parser).unwrap();
-        // let closest_server = spt_server_config.closest_server(&spt_config).unwrap();
-        // assert_eq!("Los Angeles, CA", closest_server.name);
+        let config = SpeedTestServersConfig::new(&mut parser).unwrap();
+        let closest_server = &config.servers_sorted_by_distance(&spt_config).unwrap()[0];
+        assert_eq!("Los Angeles, CA", closest_server.name);
     }
 }
