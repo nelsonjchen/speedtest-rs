@@ -3,7 +3,7 @@
 *`speedtest-cli`, but in Rust with maybe a few extra things!*
 
 [![Project Status: Concept - Minimal or no implementation has been done yet.](http://www.repostatus.org/badges/0.1.0/concept.svg)](http://www.repostatus.org/#concept)
-[![Build Status](https://travis-ci.org/nelsonjchen/speedtest-rust.svg?branch=master)](https://travis-ci.org/nelsonjchen/speedtest-rust)
+[![Build Status](https://travis-ci.org/nelsonjchen/speedtest-rs.svg?branch=master)](https://travis-ci.org/nelsonjchen/speedtest-rs)
 
 *This is not really working at the moment. Download and upload is kinda done. I'm just stumbling around. It's going to need major refactoring anyway.*
 
