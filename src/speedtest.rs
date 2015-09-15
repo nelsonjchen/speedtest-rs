@@ -81,7 +81,7 @@ impl SpeedTestConfig {
                 })
             }
             _ => {
-                Err(ParseError("Configuration is invalid".to_string()))
+                Err(ParseError("Configuration is invalid".to_owned()))
             }
         }
     }
