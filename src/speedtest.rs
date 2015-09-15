@@ -196,7 +196,7 @@ impl SpeedTestServersConfig {
                 }
             }
         }
-        return Ok(SpeedTestServersConfig{
+        Ok(SpeedTestServersConfig{
             servers: servers
         })
     }
