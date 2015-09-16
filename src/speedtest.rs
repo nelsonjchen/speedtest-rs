@@ -257,9 +257,7 @@ pub fn run_speedtest() {
     info!("Downloaded Server List");
 
     info!("Parsing Server List");
-    let mut server_parser = EventReader::new(
-        include_bytes!("../tests/config/stripped-servers-static.php.xml") as &[u8]
-    );
+    let mut server_parser = EventReader::new(server_body.as_bytes());
     let spt_server_config = SpeedTestServersConfig::new(&mut server_parser).unwrap();
     info!("Parsed Server List");
 
