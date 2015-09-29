@@ -303,7 +303,7 @@ fn test_download(server: &SpeedTestServer) {
     let root_path = Path::new(&server.url).parent().unwrap();
     debug!("Root path is: {}", root_path.display());
     let start_time = Arc::new(now());
-    let mut total_size;
+    let total_size;
 
     let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
     let len_sizes = sizes.len();
@@ -369,7 +369,7 @@ fn test_upload(server: &SpeedTestServer) {
 
     info!("Testing Upload");
     let upload_path = Path::new(&server.url).to_path_buf().clone();
-    let mut total_size: usize;
+    let total_size: usize;
     let start_time = Arc::new(now());
     let small_sizes = [250000; 25];
     let large_sizes = [500000; 25];
