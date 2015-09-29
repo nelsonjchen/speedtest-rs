@@ -9,6 +9,9 @@ extern crate time;
 extern crate log;
 extern crate env_logger;
 
+#[macro_use]
+extern crate clap;
+
 #[allow(dead_code)]
 fn main() {
     env_logger::init().unwrap();
