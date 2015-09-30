@@ -27,7 +27,7 @@ fn main() {
                         --list 'Display a list of speedtest.net servers sorted by distance'
                         --server [SERVER] 'Specify a server ID to test against'
                         --mini [MINI] 'URL of the Speedtest Mini server'
-                        --source [SOURCE] 'Source IP address to bind to'
+                        --source [SOURCE] 'Source IP address to bind to (NOT SUPPORTED)'
                         --timeout [TIMEOUT] 'HTTP timeout in seconds. Default 10'"
                     )
                     .get_matches();
