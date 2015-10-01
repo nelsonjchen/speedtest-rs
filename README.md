@@ -15,6 +15,7 @@ This is a learning exercise for me to learn:
 * XML Parsing in Rust
 * Sockets in Rust
 * Threads with Rust
+* CLI apps with Rust
 * Some really, really dumb napkin distance calculations
 * Idiomatic Rust
 * what speedtest-cli do anyway?!
