@@ -26,8 +26,7 @@ fn main() {
                         --simple 'Suppress verbose output, only show basic information'
                         --list 'Display a list of speedtest.net servers sorted by distance'
                         --server [SERVER] 'Specify a server ID to test against'
-                        --mini [MINI] 'URL of the Speedtest Mini server'
-                        --timeout [TIMEOUT] 'HTTP timeout in seconds. Default 10'"
+                        --mini [MINI] 'URL of the Speedtest Mini server'"
                     )
                     .get_matches();
     info!("Starting up...");
