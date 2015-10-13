@@ -227,7 +227,12 @@ impl SpeedTestServersConfig {
     }
 }
 
-pub fn run_speedtest() {
+#[derive(Debug)]
+pub enum SpeedTestError {
+    ConfigDownloadFailed,
+}
+
+pub fn download_configuration() -> Result<String, SpeedTestError> {
     info!("Downloading Configuration from speedtest.net");
     let client = Client::new();
     // Creating an outgoing request.
@@ -239,7 +244,13 @@ pub fn run_speedtest() {
     let mut config_body = String::new();
     config_res.read_to_string(&mut config_body).unwrap();
     info!("Downloaded Configuration");
+    Ok(config_body)
+}
 
+pub fn run_speedtest() {
+    let config_body = download_configuration().unwrap();
+
+    let client = Client::new();
     info!("Parsing Configuration");
     let mut config_parser = EventReader::new(config_body.as_bytes());
     let spt_config = SpeedTestConfig::new(&mut config_parser).unwrap();
@@ -366,7 +377,6 @@ fn test_download(server: &SpeedTestServer) {
 }
 
 fn test_upload(server: &SpeedTestServer) {
-
     info!("Testing Upload");
     let upload_path = Path::new(&server.url).to_path_buf().clone();
     let total_size: usize;
