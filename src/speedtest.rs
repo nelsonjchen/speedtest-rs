@@ -227,20 +227,28 @@ impl SpeedTestServersConfig {
     }
 }
 
+use hyper::error::Error as HyperError;
+
 #[derive(Debug)]
 pub enum SpeedTestError {
     ConfigDownloadFailed,
+    Hyper(HyperError),
+}
+
+impl From<HyperError> for SpeedTestError {
+    fn from(err: HyperError) -> SpeedTestError {
+        SpeedTestError::Hyper(err)
+    }
 }
 
 pub fn download_configuration() -> Result<String, SpeedTestError> {
     info!("Downloading Configuration from speedtest.net");
     let client = Client::new();
     // Creating an outgoing request.
-    let mut config_res = client.get("http://www.speedtest.net/speedtest-config.php")
+    let mut config_res = try!(client.get("http://www.speedtest.net/speedtest-config.php")
                                .header(Connection::close())
                                .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-                               .send()
-                               .unwrap();
+                               .send());
     let mut config_body = String::new();
     config_res.read_to_string(&mut config_body).unwrap();
     info!("Downloaded Configuration");
