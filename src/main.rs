@@ -32,3 +32,8 @@ fn main() {
     info!("Starting up...");
     speedtest::run_speedtest();
 }
+
+fn list_servers() {
+    println!("Retrieving speedtest.net configuration...");
+    println!("Retrieving speedtest.net server list...");
+}
