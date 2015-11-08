@@ -7,7 +7,7 @@ extern crate env_logger;
 #[macro_use]
 extern crate clap;
 
-use clap::{App};
+// use clap::{App};
 use speedtest_rs::speedtest::run_speedtest;
 
 #[allow(dead_code)]
