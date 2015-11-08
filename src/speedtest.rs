@@ -223,21 +223,7 @@ impl SpeedTestServersConfig {
     }
 }
 
-use hyper::error::Error as HyperError;
-
-#[derive(Debug)]
-pub enum SpeedTestError {
-    ConfigDownloadFailed,
-    Hyper(HyperError),
-}
-
-impl From<HyperError> for SpeedTestError {
-    fn from(err: HyperError) -> SpeedTestError {
-        SpeedTestError::Hyper(err)
-    }
-}
-
-pub fn download_configuration() -> Result<String, SpeedTestError> {
+pub fn download_configuration() -> ::Result<String> {
     info!("Downloading Configuration from speedtest.net");
     let client = Client::new();
     // Creating an outgoing request.
