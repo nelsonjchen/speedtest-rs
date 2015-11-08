@@ -1,16 +1,16 @@
 use hyper::error::Error as HyperError;
-use self::SpeedTestError::*;
+use self::Error::*;
 
-pub type Result<T> = ::std::result::Result<T, SpeedTestError>;
+pub type Result<T> = ::std::result::Result<T, Error>;
 
 #[derive(Debug)]
-pub enum SpeedTestError {
+pub enum Error {
     ConfigDownloadFailed,
     Hyper(HyperError),
 }
 
-impl From<HyperError> for SpeedTestError {
-    fn from(err: HyperError) -> SpeedTestError {
-        SpeedTestError::Hyper(err)
+impl From<HyperError> for Error {
+    fn from(err: HyperError) -> Error {
+        Hyper(err)
     }
 }
