@@ -74,10 +74,10 @@ impl SpeedTestConfig {
         match (ip, lat, lon, isp) {
             (Some(ip), Some(lat), Some(lon), Some(isp)) => {
                 Ok(SpeedTestConfig {
-                ip: ip,
-                lat: lat,
-                lon: lon,
-                isp: isp,
+                    ip: ip,
+                    lat: lat,
+                    lon: lon,
+                    isp: isp,
                 })
             }
             _ => {
@@ -158,17 +158,15 @@ impl SpeedTestServersConfig {
                                 }
                             }
                             match (country, host, id, lat, lon, name, sponsor, url, url2) {
-                                (
-                                        Some(country),
-                                        Some(host),
-                                        Some(id),
-                                        Some(lat),
-                                        Some(lon),
-                                        Some(name),
-                                        Some(sponsor),
-                                        Some(url),
-                                        Some(url2)
-                                        ) => {
+                                (Some(country),
+                                 Some(host),
+                                 Some(id),
+                                 Some(lat),
+                                 Some(lon),
+                                 Some(name),
+                                 Some(sponsor),
+                                 Some(url),
+                                 Some(url2)) => {
                                     servers.push(SpeedTestServer {
                                         country: country,
                                         host: host,
@@ -196,9 +194,7 @@ impl SpeedTestServersConfig {
                 }
             }
         }
-        Ok(SpeedTestServersConfig{
-            servers: servers
-        })
+        Ok(SpeedTestServersConfig { servers: servers })
     }
 
 
@@ -246,9 +242,9 @@ pub fn download_configuration() -> Result<String, SpeedTestError> {
     let client = Client::new();
     // Creating an outgoing request.
     let mut config_res = try!(client.get("http://www.speedtest.net/speedtest-config.php")
-                               .header(Connection::close())
-                               .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-                               .send());
+                                    .header(Connection::close())
+                                    .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                                    .send());
     let mut config_body = String::new();
     config_res.read_to_string(&mut config_body).unwrap();
     info!("Downloaded Configuration");
@@ -301,7 +297,7 @@ pub fn run_speedtest() {
                             .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
                             .send()
                             .unwrap();
-        let mut server_body: Vec<u8> = vec!();
+        let mut server_body: Vec<u8> = vec![];
         res.read_to_end(&mut server_body).unwrap();
         let latency = now() - start_time;
         info!("It took {} ms", latency.num_milliseconds());
@@ -310,8 +306,10 @@ pub fn run_speedtest() {
             fastest_server = Some(server);
             fastest_latency = latency;
         }
-    };
-    info!("Fastest Server @ {}ms : {:?}", fastest_latency.num_milliseconds(), fastest_server);
+    }
+    info!("Fastest Server @ {}ms : {:?}",
+          fastest_latency.num_milliseconds(),
+          fastest_server);
 
     test_download(&fastest_server.unwrap());
     test_upload(&fastest_server.unwrap());
@@ -326,24 +324,22 @@ fn test_download(server: &SpeedTestServer) {
 
     let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
     let len_sizes = sizes.len();
-    let complete = Arc::new(RwLock::new(vec!()));
+    let complete = Arc::new(RwLock::new(vec![]));
     let (tx, rx) = sync_channel(6);
     let root_path = root_path.to_path_buf();
     let prod_thread = thread::spawn(move || {
         for size in &sizes {
             let size = size.clone();
             let root_path = root_path.clone();
-            let thread =
-            thread::spawn(move || {
+            let thread = thread::spawn(move || {
                 let path = root_path.to_path_buf()
-                .join(format!("random{0}x{0}.jpg", size));
+                                    .join(format!("random{0}x{0}.jpg", size));
                 let client = Client::new();
                 let mut res = client.get(path.to_str().unwrap())
-                .header(Connection::close())
-                .header(UserAgent("hyper/speedtest-rust 0.01"
-                .to_owned()))
-                .send()
-                .unwrap();
+                                    .header(Connection::close())
+                                    .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                                    .send()
+                                    .unwrap();
                 let mut buffer = [0; 10240];
                 let mut size: usize = 0;
                 loop {
@@ -361,10 +357,10 @@ fn test_download(server: &SpeedTestServer) {
                 }
                 info!("Done {}, {}", path.display(), size);
                 size
-                });
-                tx.send(thread).unwrap();
-            }
             });
+            tx.send(thread).unwrap();
+        }
+    });
 
     let cons_complete = complete.clone();
 
@@ -379,9 +375,11 @@ fn test_download(server: &SpeedTestServer) {
     cons_thread.join().unwrap();
     total_size = (*complete).read().unwrap().iter().fold(0, |val, i| val + i);
     let latency = now() - *start_time;
-    info!("It took {} ms to download {} bytes", latency.num_milliseconds(), total_size);
+    info!("It took {} ms to download {} bytes",
+          latency.num_milliseconds(),
+          total_size);
     let bps = total_size as i64 / (latency.num_milliseconds() / 1000);
-    info!("{} bytes per second", bps );
+    info!("{} bytes per second", bps);
 }
 
 fn test_upload(server: &SpeedTestServer) {
@@ -393,7 +391,7 @@ fn test_upload(server: &SpeedTestServer) {
     let large_sizes = [500000; 25];
     let sizes = small_sizes.iter().chain(large_sizes.iter()).cloned().collect::<Vec<usize>>();
     let len_sizes = sizes.len();
-    let complete = Arc::new(RwLock::new(vec!()));
+    let complete = Arc::new(RwLock::new(vec![]));
     let (tx, rx) = sync_channel(6);
 
     let thread_start_time = start_time.clone();
@@ -423,8 +421,7 @@ fn test_upload(server: &SpeedTestServer) {
                         Ok(0) => {
                             break;
                         }
-                        Ok(_) => {
-                        }
+                        Ok(_) => {}
                         _ => {
                             panic!("Something has gone wrong.")
                         }
@@ -451,8 +448,11 @@ fn test_upload(server: &SpeedTestServer) {
     cons_thread.join().unwrap();
     total_size = (*complete).read().unwrap().iter().fold(0, |val, i| val + i);
     let latency = now() - *start_time;
-    info!("It took {} ms to upload {} bytes", latency.num_milliseconds(), total_size);
-    info!("{} bytes per second", total_size as i64 / (latency.num_milliseconds() / 1000) );
+    info!("It took {} ms to upload {} bytes",
+          latency.num_milliseconds(),
+          total_size);
+    info!("{} bytes per second",
+          total_size as i64 / (latency.num_milliseconds() / 1000));
 }
 
 #[cfg(test)]
@@ -473,9 +473,11 @@ mod tests {
 
     #[test]
     fn test_parse_speedtest_servers_xml() {
-        let mut parser = EventReader::new(
-            include_bytes!("../tests/config/stripped-servers-static.php.xml") as &[u8]
-        );
+        let mut parser =
+            EventReader::new(include_bytes!("../tests/confi\
+                                             g/stripped-ser\
+                                             vers-static.\
+                                             php.xml") as &[u8]);
         let spt_server_config = SpeedTestServersConfig::new(&mut parser).unwrap();
         assert!(spt_server_config.servers.len() > 5);
         let server = spt_server_config.servers.get(1).unwrap();
@@ -491,9 +493,11 @@ mod tests {
             lon: "-117.0753".to_string(),
             isp: "xxxfinity".to_string(),
         };
-        let mut parser = EventReader::new(
-            include_bytes!("../tests/config/geo-test-servers-static.php.xml") as &[u8]
-        );
+        let mut parser =
+            EventReader::new(include_bytes!("../tests/confi\
+                                             g/geo-test-ser\
+                                             vers-static.\
+                                             php.xml") as &[u8]);
         let config = SpeedTestServersConfig::new(&mut parser).unwrap();
         let closest_server = &config.servers_sorted_by_distance(&spt_config).unwrap()[0];
         assert_eq!("Los Angeles, CA", closest_server.name);

@@ -28,8 +28,14 @@ mod tests {
 
     #[test]
     fn test_distance() {
-        let origin = EarthLocation { latitude: 32.9545, longitude: -117.2333 };
-        let destination = EarthLocation { latitude: 70.0733, longitude: 29.7497 };
+        let origin = EarthLocation {
+            latitude: 32.9545,
+            longitude: -117.2333,
+        };
+        let destination = EarthLocation {
+            latitude: 70.0733,
+            longitude: 29.7497,
+        };
         let distance = compute_distance(&origin, &destination);
         let diff = (distance - 8255.1).abs();
         println!("distance: {} diff: {}", distance, diff);
