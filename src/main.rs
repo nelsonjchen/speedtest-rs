@@ -1,9 +1,4 @@
-mod speedtest;
-mod distance;
-
-extern crate hyper;
-extern crate xml;
-extern crate time;
+extern crate speedtest_rs;
 
 #[macro_use]
 extern crate log;
@@ -13,6 +8,7 @@ extern crate env_logger;
 extern crate clap;
 
 use clap::{App};
+use speedtest_rs::speedtest::run_speedtest;
 
 #[allow(dead_code)]
 fn main() {
@@ -30,7 +26,7 @@ fn main() {
                     )
                     .get_matches();
     info!("Starting up...");
-    speedtest::run_speedtest();
+    run_speedtest();
 }
 
 fn list_servers() {
