@@ -1,8 +1,7 @@
 use hyper::error::Error as HyperError;
-
-pub type Result<T> = ::std::result::Result<T, Error>;
-
 use self::SpeedTestError::*;
+
+pub type Result<T> = ::std::result::Result<T, SpeedTestError>;
 
 #[derive(Debug)]
 pub enum SpeedTestError {
