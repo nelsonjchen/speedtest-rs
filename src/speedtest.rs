@@ -240,8 +240,6 @@ pub fn download_configuration() -> ::Result<String> {
 
 pub fn get_configuration() -> ::Result<SpeedTestConfig> {
     let config_body = try!(download_configuration());
-
-    let client = Client::new();
     info!("Parsing Configuration");
     let mut config_parser = EventReader::new(config_body.as_bytes());
     let spt_config = SpeedTestConfig::new(&mut config_parser);
@@ -250,13 +248,8 @@ pub fn get_configuration() -> ::Result<SpeedTestConfig> {
 }
 
 pub fn run_speedtest() {
-    let config_body = download_configuration().unwrap();
-
     let client = Client::new();
-    info!("Parsing Configuration");
-    let mut config_parser = EventReader::new(config_body.as_bytes());
-    let spt_config = SpeedTestConfig::new(&mut config_parser).unwrap();
-    info!("Parsed Configuration");
+    let spt_config = get_configuration().unwrap();
     info!("IP: {}, ISP: {}", spt_config.ip, spt_config.isp);
 
     info!("Download Server List");
