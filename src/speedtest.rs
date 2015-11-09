@@ -6,6 +6,7 @@ use std::sync::mpsc::sync_channel;
 use std::thread;
 use hyper::Client;
 use hyper::header::{Connection, UserAgent};
+use hyper::client::Response;
 use time::{now, Duration};
 use xml::reader::EventReader;
 use xml::reader::events::XmlEvent::*;
@@ -224,24 +225,21 @@ impl SpeedTestServersConfig {
     }
 }
 
-pub fn download_configuration() -> ::Result<String> {
+pub fn download_configuration() -> ::Result<Response> {
     info!("Downloading Configuration from speedtest.net");
     let client = Client::new();
     // Creating an outgoing request.
-    let mut config_res = try!(client.get("http://www.speedtest.net/speedtest-config.php")
-                                    .header(Connection::close())
-                                    .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-                                    .send());
-    let mut config_body = String::new();
-    config_res.read_to_string(&mut config_body).unwrap();
-    info!("Downloaded Configuration");
-    Ok(config_body)
+    let res = try!(client.get("http://www.speedtest.net/speedtest-config.php")
+                         .header(Connection::close())
+                         .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                         .send());
+    Ok(res)
 }
 
 pub fn get_configuration() -> ::Result<SpeedTestConfig> {
     let config_body = try!(download_configuration());
     info!("Parsing Configuration");
-    let mut config_parser = EventReader::new(config_body.as_bytes());
+    let mut config_parser = EventReader::new(config_body);
     let spt_config = SpeedTestConfig::new(&mut config_parser);
     info!("Parsed Configuration");
     spt_config
