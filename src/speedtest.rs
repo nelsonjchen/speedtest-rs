@@ -10,6 +10,7 @@ use time::{now, Duration};
 use xml::reader::EventReader;
 use xml::reader::events::XmlEvent::*;
 use distance::{EarthLocation, compute_distance};
+use error::Error;
 
 #[derive(Debug)]
 pub struct ParseError(String);
@@ -22,7 +23,7 @@ pub struct SpeedTestConfig {
 }
 
 impl SpeedTestConfig {
-    fn new<R: Read>(parser: &mut EventReader<R>) -> Result<SpeedTestConfig, ParseError> {
+    fn new<R: Read>(parser: &mut EventReader<R>) -> ::Result<SpeedTestConfig> {
         let mut ip: Option<String> = None;
         let mut lat: Option<String> = None;
         let mut lon: Option<String> = None;
@@ -81,7 +82,7 @@ impl SpeedTestConfig {
                 })
             }
             _ => {
-                Err(ParseError("Configuration is invalid".to_owned()))
+                Err(Error::ConfigParseError)
             }
         }
     }
@@ -235,6 +236,17 @@ pub fn download_configuration() -> ::Result<String> {
     config_res.read_to_string(&mut config_body).unwrap();
     info!("Downloaded Configuration");
     Ok(config_body)
+}
+
+pub fn get_configuration() -> ::Result<SpeedTestConfig> {
+    let config_body = try!(download_configuration());
+
+    let client = Client::new();
+    info!("Parsing Configuration");
+    let mut config_parser = EventReader::new(config_body.as_bytes());
+    let spt_config = SpeedTestConfig::new(&mut config_parser);
+    info!("Parsed Configuration");
+    spt_config
 }
 
 pub fn run_speedtest() {
