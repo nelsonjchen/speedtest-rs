@@ -18,16 +18,15 @@ pub struct ParseError(String);
 
 pub struct SpeedTestConfig {
     ip: String,
-    lat: String,
-    lon: String,
+    location: EarthLocation,
     isp: String,
 }
 
 impl SpeedTestConfig {
     fn new<R: Read>(parser: &mut EventReader<R>) -> ::Result<SpeedTestConfig> {
         let mut ip: Option<String> = None;
-        let mut lat: Option<String> = None;
-        let mut lon: Option<String> = None;
+        let mut lat: Option<f32> = None;
+        let mut lon: Option<f32> = None;
         let mut isp: Option<String> = None;
         for event in parser.events() {
             match event {
@@ -40,24 +39,10 @@ impl SpeedTestConfig {
                                         ip = Some(attribute.value.clone());
                                     }
                                     "lat" => {
-                                        match attribute.value.parse::<f32>() {
-                                            Ok(_) => {
-                                                lat = Some(attribute.value.clone());
-                                            }
-                                            _ => {
-                                                lat = None;
-                                            }
-                                        }
+                                        lat = attribute.value.parse::<f32>().ok()
                                     }
                                     "lon" => {
-                                        match attribute.value.parse::<f32>() {
-                                            Ok(_) => {
-                                                lon = Some(attribute.value.clone());
-                                            }
-                                            _ => {
-                                                lon = None;
-                                            }
-                                        }
+                                        lon = attribute.value.parse::<f32>().ok()
                                     }
                                     "isp" => {
                                         isp = Some(attribute.value.clone());
@@ -75,10 +60,12 @@ impl SpeedTestConfig {
         }
         match (ip, lat, lon, isp) {
             (Some(ip), Some(lat), Some(lon), Some(isp)) => {
-                Ok(SpeedTestConfig {
+                Ok(SpeedTestConfig{
                     ip: ip,
-                    lat: lat,
-                    lon: lon,
+                    location: EarthLocation{
+                        latitude: lat,
+                        longitude: lon,
+                    },
                     isp: isp,
                 })
             }
@@ -203,10 +190,7 @@ impl SpeedTestServersConfig {
     pub fn servers_sorted_by_distance(&self,
                                       config: &SpeedTestConfig)
                                       -> Option<Vec<SpeedTestServer>> {
-        let location = EarthLocation {
-            latitude: config.lat.parse::<f32>().unwrap(),
-            longitude: config.lon.parse::<f32>().unwrap(),
-        };
+        let location = &config.location;
         let mut sorted_servers = self.servers.clone();
         sorted_servers.sort_by(|a, b| {
             let a_location = EarthLocation {
