@@ -60,9 +60,9 @@ impl SpeedTestConfig {
         }
         match (ip, lat, lon, isp) {
             (Some(ip), Some(lat), Some(lon), Some(isp)) => {
-                Ok(SpeedTestConfig{
+                Ok(SpeedTestConfig {
                     ip: ip,
-                    location: EarthLocation{
+                    location: EarthLocation {
                         latitude: lat,
                         longitude: lon,
                     },
@@ -81,8 +81,7 @@ pub struct SpeedTestServer {
     pub country: String,
     host: String,
     id: String,
-    lat: String,
-    lon: String,
+    location: EarthLocation,
     name: String,
     sponsor: String,
     url: String,
@@ -106,8 +105,8 @@ impl SpeedTestServersConfig {
                             let mut country: Option<String> = None;
                             let mut host: Option<String> = None;
                             let mut id: Option<String> = None;
-                            let mut lat: Option<String> = None;
-                            let mut lon: Option<String> = None;
+                            let mut lat: Option<f32> = None;
+                            let mut lon: Option<f32> = None;
                             let mut name: Option<String> = None;
                             let mut sponsor: Option<String> = None;
                             let mut url: Option<String> = None;
@@ -124,10 +123,10 @@ impl SpeedTestServersConfig {
                                         id = Some(attribute.value.clone());
                                     }
                                     "lat" => {
-                                        lat = Some(attribute.value.clone());
+                                        lat = attribute.value.parse::<f32>().ok()
                                     }
                                     "lon" => {
-                                        lon = Some(attribute.value.clone());
+                                        lon = attribute.value.parse::<f32>().ok()
                                     }
                                     "name" => {
                                         name = Some(attribute.value.clone());
@@ -160,8 +159,10 @@ impl SpeedTestServersConfig {
                                         country: country,
                                         host: host,
                                         id: id,
-                                        lat: lat,
-                                        lon: lon,
+                                        location: EarthLocation {
+                                            latitude: lat,
+                                            longitude: lon,
+                                        },
                                         name: name,
                                         sponsor: sponsor,
                                         url: url,
@@ -187,25 +188,15 @@ impl SpeedTestServersConfig {
     }
 
 
-    pub fn servers_sorted_by_distance(&self,
-                                      config: &SpeedTestConfig)
-                                      -> Option<Vec<SpeedTestServer>> {
+    pub fn servers_sorted_by_distance(&self, config: &SpeedTestConfig) -> Vec<SpeedTestServer> {
         let location = &config.location;
         let mut sorted_servers = self.servers.clone();
         sorted_servers.sort_by(|a, b| {
-            let a_location = EarthLocation {
-                latitude: a.lat.parse::<f32>().unwrap(),
-                longitude: a.lon.parse::<f32>().unwrap(),
-            };
-            let b_location = EarthLocation {
-                latitude: b.lat.parse::<f32>().unwrap(),
-                longitude: b.lon.parse::<f32>().unwrap(),
-            };
-            let a_distance = compute_distance(&location, &a_location);
-            let b_distance = compute_distance(&location, &b_location);
+            let a_distance = compute_distance(&location, &a.location);
+            let b_distance = compute_distance(&location, &b.location);
             a_distance.partial_cmp(&b_distance).unwrap_or(Less)
         });
-        Some(sorted_servers)
+        sorted_servers
     }
 }
 
@@ -255,8 +246,7 @@ pub fn run_speedtest() {
     info!("IP: {}, ISP: {}", spt_config.ip, spt_config.isp);
     let spt_server_config = get_server_list().unwrap();
 
-    let servers_sorted_by_distance = spt_server_config.servers_sorted_by_distance(&spt_config)
-                                                      .unwrap();
+    let servers_sorted_by_distance = spt_server_config.servers_sorted_by_distance(&spt_config);
     info!("Five Closest Servers");
     let five_closest_servers = &servers_sorted_by_distance[0..5];
     for server in five_closest_servers {
@@ -438,6 +428,7 @@ fn test_upload(server: &SpeedTestServer) {
 mod tests {
     use super::*;
     use xml::reader::EventReader;
+    use distance::EarthLocation;
 
     #[test]
     fn test_parse_config_xml() {
@@ -445,8 +436,11 @@ mod tests {
             EventReader::new(include_bytes!("../tests/config/config.php.xml") as &[u8]);
         let config = SpeedTestConfig::new(&mut parser).unwrap();
         assert_eq!("174.79.12.26", config.ip);
-        assert_eq!("32.9954", config.lat);
-        assert_eq!("-117.0753", config.lon);
+        assert_eq!(EarthLocation {
+                       latitude: 32.9954,
+                       longitude: -117.0753,
+                   },
+                   config.location);
         assert_eq!("Cox Communications", config.isp);
     }
 
@@ -468,8 +462,10 @@ mod tests {
     fn test_fastest_server() {
         let spt_config = SpeedTestConfig {
             ip: "127.0.0.1".to_string(),
-            lat: "32.9954".to_string(),
-            lon: "-117.0753".to_string(),
+            location: EarthLocation {
+                latitude: 32.9954,
+                longitude: -117.0753,
+            },
             isp: "xxxfinity".to_string(),
         };
         let mut parser =
@@ -478,7 +474,7 @@ mod tests {
                                              vers-static.\
                                              php.xml") as &[u8]);
         let config = SpeedTestServersConfig::new(&mut parser).unwrap();
-        let closest_server = &config.servers_sorted_by_distance(&spt_config).unwrap()[0];
+        let closest_server = &config.servers_sorted_by_distance(&spt_config)[0];
         assert_eq!("Los Angeles, CA", closest_server.name);
     }
 }

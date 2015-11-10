@@ -1,5 +1,6 @@
 use std::f32::consts;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct EarthLocation {
     pub latitude: f32,
     pub longitude: f32,
