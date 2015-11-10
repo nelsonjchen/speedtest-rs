@@ -31,11 +31,16 @@ fn main() {
     let server_list = speedtest::get_server_list().unwrap();
     let server_list_sorted = server_list.servers_sorted_by_distance(&config);
 
-    if matches.is_present("--list") {
+    if matches.is_present("list") {
         println!("LISTING");
         for server in server_list_sorted {
-            println!("{:?}", server);
-            return;
+            println!("{:4} {} ({}, {}) [distance TODO]",
+             server.id,
+             server.sponsor,
+         server.name,
+     server.country,
+ );
         }
+        return;
     }
 }

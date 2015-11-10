@@ -80,10 +80,10 @@ impl SpeedTestConfig {
 pub struct SpeedTestServer {
     pub country: String,
     host: String,
-    id: String,
+    pub id: u32,
     location: EarthLocation,
-    name: String,
-    sponsor: String,
+    pub name: String,
+    pub sponsor: String,
     url: String,
     url2: String,
 }
@@ -104,7 +104,7 @@ impl SpeedTestServersConfig {
                         "server" => {
                             let mut country: Option<String> = None;
                             let mut host: Option<String> = None;
-                            let mut id: Option<String> = None;
+                            let mut id: Option<u32> = None;
                             let mut lat: Option<f32> = None;
                             let mut lon: Option<f32> = None;
                             let mut name: Option<String> = None;
@@ -120,7 +120,7 @@ impl SpeedTestServersConfig {
                                         host = Some(attribute.value.clone());
                                     }
                                     "id" => {
-                                        id = Some(attribute.value.clone());
+                                        id = attribute.value.parse::<u32>().ok()
                                     }
                                     "lat" => {
                                         lat = attribute.value.parse::<f32>().ok()
