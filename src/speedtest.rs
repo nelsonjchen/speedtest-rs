@@ -208,6 +208,7 @@ pub fn download_configuration() -> ::Result<Response> {
                          .header(Connection::close())
                          .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
                          .send());
+    info!("Downloaded Configuration from speedtest.net");
     Ok(res)
 }
 
@@ -233,10 +234,10 @@ pub fn download_server_list() -> ::Result<Response> {
 
 pub fn get_server_list() -> ::Result<SpeedTestServersConfig> {
     let config_body = try!(download_server_list());
-    info!("Parsing Configuration");
+    info!("Parsing Server List");
     let mut config_parser = EventReader::new(config_body);
     let spt_config = SpeedTestServersConfig::new(&mut config_parser);
-    info!("Parsed Configuration");
+    info!("Parsed Server List");
     spt_config
 }
 
