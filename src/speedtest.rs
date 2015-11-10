@@ -9,7 +9,7 @@ use hyper::header::{Connection, UserAgent};
 use hyper::client::Response;
 use time::{now, Duration};
 use xml::reader::EventReader;
-use xml::reader::events::XmlEvent::*;
+use xml::reader::XmlEvent::StartElement;
 use distance::{EarthLocation, compute_distance};
 use error::Error;
 
@@ -23,14 +23,14 @@ pub struct SpeedTestConfig {
 }
 
 impl SpeedTestConfig {
-    fn new<R: Read>(parser: &mut EventReader<R>) -> ::Result<SpeedTestConfig> {
+    fn new<R: Read>(parser: EventReader<R>) -> ::Result<SpeedTestConfig> {
         let mut ip: Option<String> = None;
         let mut lat: Option<f32> = None;
         let mut lon: Option<f32> = None;
         let mut isp: Option<String> = None;
-        for event in parser.events() {
+        for event in parser {
             match event {
-                StartElement { ref name, ref attributes, ..} => {
+                Ok(StartElement { ref name, ref attributes, ..}) => {
                     match name.local_name.as_ref() {
                         "client" => {
                             for attribute in attributes {
@@ -94,12 +94,12 @@ pub struct SpeedTestServersConfig {
 
 
 impl SpeedTestServersConfig {
-    fn new<R: Read>(parser: &mut EventReader<R>) -> ::Result<SpeedTestServersConfig> {
+    fn new<R: Read>(parser:EventReader<R>) -> ::Result<SpeedTestServersConfig> {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
 
-        for event in parser.events() {
+        for event in parser {
             match event {
-                StartElement { ref name, ref attributes, ..} => {
+                Ok(StartElement { ref name, ref attributes, ..}) => {
                     match name.local_name.as_ref() {
                         "server" => {
                             let mut country: Option<String> = None;
@@ -215,8 +215,8 @@ pub fn download_configuration() -> ::Result<Response> {
 pub fn get_configuration() -> ::Result<SpeedTestConfig> {
     let config_body = try!(download_configuration());
     info!("Parsing Configuration");
-    let mut config_parser = EventReader::new(config_body);
-    let spt_config = SpeedTestConfig::new(&mut config_parser);
+    let config_parser = EventReader::new(config_body);
+    let spt_config = SpeedTestConfig::new(config_parser);
     info!("Parsed Configuration");
     spt_config
 }
@@ -235,8 +235,8 @@ pub fn download_server_list() -> ::Result<Response> {
 pub fn get_server_list() -> ::Result<SpeedTestServersConfig> {
     let config_body = try!(download_server_list());
     info!("Parsing Server List");
-    let mut config_parser = EventReader::new(config_body);
-    let spt_config = SpeedTestServersConfig::new(&mut config_parser);
+    let config_parser = EventReader::new(config_body);
+    let spt_config = SpeedTestServersConfig::new(config_parser);
     info!("Parsed Server List");
     spt_config
 }
@@ -433,9 +433,9 @@ mod tests {
 
     #[test]
     fn test_parse_config_xml() {
-        let mut parser =
+        let parser =
             EventReader::new(include_bytes!("../tests/config/config.php.xml") as &[u8]);
-        let config = SpeedTestConfig::new(&mut parser).unwrap();
+        let config = SpeedTestConfig::new(parser).unwrap();
         assert_eq!("174.79.12.26", config.ip);
         assert_eq!(EarthLocation {
                        latitude: 32.9954,
@@ -447,12 +447,12 @@ mod tests {
 
     #[test]
     fn test_parse_speedtest_servers_xml() {
-        let mut parser =
+        let parser =
             EventReader::new(include_bytes!("../tests/confi\
                                              g/stripped-ser\
                                              vers-static.\
                                              php.xml") as &[u8]);
-        let spt_server_config = SpeedTestServersConfig::new(&mut parser).unwrap();
+        let spt_server_config = SpeedTestServersConfig::new(parser).unwrap();
         assert!(spt_server_config.servers.len() > 5);
         let server = spt_server_config.servers.get(1).unwrap();
         assert!(server.url2.len() > 0);
@@ -469,12 +469,12 @@ mod tests {
             },
             isp: "xxxfinity".to_string(),
         };
-        let mut parser =
+        let parser =
             EventReader::new(include_bytes!("../tests/confi\
                                              g/geo-test-ser\
                                              vers-static.\
                                              php.xml") as &[u8]);
-        let config = SpeedTestServersConfig::new(&mut parser).unwrap();
+        let config = SpeedTestServersConfig::new(parser).unwrap();
         let closest_server = &config.servers_sorted_by_distance(&spt_config)[0];
         assert_eq!("Los Angeles, CA", closest_server.name);
     }
