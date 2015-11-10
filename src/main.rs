@@ -9,6 +9,7 @@ extern crate clap;
 
 use clap::App;
 // use speedtest_rs::speedtest::run_speedtest;
+use speedtest_rs::speedtest;
 
 #[allow(dead_code)]
 fn main() {
@@ -23,4 +24,17 @@ fn main() {
                                         distance'")
                       .get_matches();
 
+    println!("Retrieving speedtest.net configuration...", );
+    let config = speedtest::get_configuration().unwrap();
+    println!("Retrieving speedtest.net server list...", );
+    let server_list = speedtest::get_server_list().unwrap();
+    let server_list_sorted = server_list.servers_sorted_by_distance(&config);
+
+    if matches.is_present("--list") {
+        println!("LISTING");
+        for server in server_list_sorted {
+            println!("{:?}", server);
+            return;
+        }
+    }
 }
