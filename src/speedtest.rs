@@ -108,7 +108,7 @@ pub struct SpeedTestServersConfig {
 
 
 impl SpeedTestServersConfig {
-    fn new<R: Read>(parser: &mut EventReader<R>) -> Result<SpeedTestServersConfig, ParseError> {
+    fn new<R: Read>(parser: &mut EventReader<R>) -> ::Result<SpeedTestServersConfig> {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
 
         for event in parser.events() {
@@ -245,25 +245,31 @@ pub fn get_configuration() -> ::Result<SpeedTestConfig> {
     spt_config
 }
 
+pub fn download_server_list() -> ::Result<Response> {
+    info!("Download Server List");
+    let client = Client::new();
+    let server_res = try!(client.get("http://www.speedtest.net/speedtest-servers-static.php")
+                                    .header(Connection::close())
+                                    .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                                    .send());
+    info!("Downloaded Server List");
+    Ok(server_res)
+}
+
+pub fn get_server_list() -> ::Result<SpeedTestServersConfig> {
+    let config_body = try!(download_server_list());
+    info!("Parsing Configuration");
+    let mut config_parser = EventReader::new(config_body);
+    let spt_config = SpeedTestServersConfig::new(&mut config_parser);
+    info!("Parsed Configuration");
+    spt_config
+}
+
 pub fn run_speedtest() {
     let client = Client::new();
     let spt_config = get_configuration().unwrap();
     info!("IP: {}, ISP: {}", spt_config.ip, spt_config.isp);
-
-    info!("Download Server List");
-    let mut server_res = client.get("http://www.speedtest.net/speedtest-servers-static.php")
-                               .header(Connection::close())
-                               .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-                               .send()
-                               .unwrap();
-    let mut server_body = String::new();
-    server_res.read_to_string(&mut server_body).unwrap();
-    info!("Downloaded Server List");
-
-    info!("Parsing Server List");
-    let mut server_parser = EventReader::new(server_body.as_bytes());
-    let spt_server_config = SpeedTestServersConfig::new(&mut server_parser).unwrap();
-    info!("Parsed Server List");
+    let spt_server_config = get_server_list().unwrap();
 
     let servers_sorted_by_distance = spt_server_config.servers_sorted_by_distance(&spt_config)
                                                       .unwrap();
