@@ -288,7 +288,7 @@ fn test_download(server: &SpeedTestServer) {
     info!("Testing Download speed");
     let root_path = Path::new(&server.url).parent().unwrap();
     debug!("Root path is: {}", root_path.display());
-    let start_time = Arc::new(now());
+    let start_time = now();
     let total_size;
 
     let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
@@ -343,7 +343,7 @@ fn test_download(server: &SpeedTestServer) {
     prod_thread.join().unwrap();
     cons_thread.join().unwrap();
     total_size = (*complete).read().unwrap().iter().fold(0, |val, i| val + i);
-    let latency = now() - *start_time;
+    let latency = now() - start_time;
     info!("It took {} ms to download {} bytes",
           latency.num_milliseconds(),
           total_size);
