@@ -249,9 +249,9 @@ pub fn download_server_list() -> ::Result<Response> {
     info!("Download Server List");
     let client = Client::new();
     let server_res = try!(client.get("http://www.speedtest.net/speedtest-servers-static.php")
-                                    .header(Connection::close())
-                                    .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-                                    .send());
+                                .header(Connection::close())
+                                .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                                .send());
     info!("Downloaded Server List");
     Ok(server_res)
 }
