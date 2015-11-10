@@ -94,7 +94,7 @@ pub struct SpeedTestServersConfig {
 
 
 impl SpeedTestServersConfig {
-    fn new<R: Read>(parser:EventReader<R>) -> ::Result<SpeedTestServersConfig> {
+    fn new<R: Read>(parser: EventReader<R>) -> ::Result<SpeedTestServersConfig> {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
 
         for event in parser {
@@ -433,8 +433,7 @@ mod tests {
 
     #[test]
     fn test_parse_config_xml() {
-        let parser =
-            EventReader::new(include_bytes!("../tests/config/config.php.xml") as &[u8]);
+        let parser = EventReader::new(include_bytes!("../tests/config/config.php.xml") as &[u8]);
         let config = SpeedTestConfig::new(parser).unwrap();
         assert_eq!("174.79.12.26", config.ip);
         assert_eq!(EarthLocation {
