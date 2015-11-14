@@ -28,18 +28,19 @@ fn main() {
     println!("Retrieving speedtest.net configuration...", );
     let config = speedtest::get_configuration().unwrap();
     println!("Retrieving speedtest.net server list...", );
-    let server_list = speedtest::get_server_list().unwrap();
+    let server_list = speedtest::get_server_list_with_config(Some(&config)).unwrap();
     let server_list_sorted = server_list.servers_sorted_by_distance(&config);
 
     if matches.is_present("list") {
         println!("LISTING");
         for server in server_list_sorted {
-            println!("{:4} {} ({}, {}) [distance TODO]",
+            println!("{:4}) {} ({}, {}) [{:.2} km]",
              server.id,
              server.sponsor,
-         server.name,
-     server.country,
- );
+             server.name,
+             server.country,
+             server.distance.unwrap(),
+         );
         }
         return;
     }

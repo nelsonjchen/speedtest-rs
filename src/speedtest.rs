@@ -13,6 +13,8 @@ use xml::reader::XmlEvent::StartElement;
 use distance::{EarthLocation, compute_distance};
 use error::Error;
 
+use distance;
+
 #[derive(Debug)]
 pub struct ParseError(String);
 
@@ -79,13 +81,14 @@ impl SpeedTestConfig {
 #[derive(Clone, Debug)]
 pub struct SpeedTestServer {
     pub country: String,
-    host: String,
+    pub host: String,
     pub id: u32,
-    location: EarthLocation,
+    pub location: EarthLocation,
+    pub distance: Option<f32>,
     pub name: String,
     pub sponsor: String,
-    url: String,
-    url2: String,
+    pub url: String,
+    pub url2: String,
 }
 
 pub struct SpeedTestServersConfig {
@@ -95,6 +98,12 @@ pub struct SpeedTestServersConfig {
 
 impl SpeedTestServersConfig {
     fn new<R: Read>(parser: EventReader<R>) -> ::Result<SpeedTestServersConfig> {
+        SpeedTestServersConfig::new_with_config(parser, None)
+    }
+
+    fn new_with_config<R: Read>(parser: EventReader<R>,
+                                config: Option<&SpeedTestConfig>)
+                                -> ::Result<SpeedTestServersConfig> {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
 
         for event in parser {
@@ -155,19 +164,31 @@ impl SpeedTestServersConfig {
                                  Some(sponsor),
                                  Some(url),
                                  Some(url2)) => {
-                                    servers.push(SpeedTestServer {
+                                    let location = EarthLocation {
+                                        latitude: lat,
+                                        longitude: lon,
+                                    };
+                                    let distance = match config {
+                                        Some(config) => {
+                                            Some(distance::compute_distance(&config.location,
+                                                                            &location))
+                                        }
+                                        None => {
+                                            None
+                                        }
+                                    };
+                                    let server = SpeedTestServer {
                                         country: country,
                                         host: host,
                                         id: id,
-                                        location: EarthLocation {
-                                            latitude: lat,
-                                            longitude: lon,
-                                        },
+                                        location: location,
+                                        distance: distance,
                                         name: name,
                                         sponsor: sponsor,
                                         url: url,
                                         url2: url2,
-                                    });
+                                    };
+                                    servers.push(server);
                                 }
                                 _ => {
                                     // eh
@@ -237,6 +258,23 @@ pub fn get_server_list() -> ::Result<SpeedTestServersConfig> {
     info!("Parsing Server List");
     let config_parser = EventReader::new(config_body);
     let spt_config = SpeedTestServersConfig::new(config_parser);
+    info!("Parsed Server List");
+    spt_config
+}
+
+pub fn get_server_list_with_config(config: Option<&SpeedTestConfig>)
+                                   -> ::Result<SpeedTestServersConfig> {
+    let config_body = try!(download_server_list());
+    info!("Parsing Server List");
+    let config_parser = EventReader::new(config_body);
+    let spt_config = match config {
+        Some(config) => {
+            SpeedTestServersConfig::new_with_config(config_parser, Some(config))
+        }
+        None => {
+            SpeedTestServersConfig::new(config_parser)
+        }
+    };
     info!("Parsed Server List");
     spt_config
 }
