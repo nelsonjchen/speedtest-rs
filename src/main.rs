@@ -41,4 +41,5 @@ fn main() {
         return;
     }
     println!("Testing from {} ({})...", config.isp, config.ip);
+    println!("Selecting best server based on latency...");
 }

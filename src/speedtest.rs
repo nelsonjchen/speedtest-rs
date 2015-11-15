@@ -279,23 +279,12 @@ pub fn get_server_list_with_config(config: Option<&SpeedTestConfig>)
     spt_config
 }
 
-pub fn run_speedtest() {
-    let client = Client::new();
-    let spt_config = get_configuration().unwrap();
-    info!("IP: {}, ISP: {}", spt_config.ip, spt_config.isp);
-    let spt_server_config = get_server_list().unwrap();
-
-    let servers_sorted_by_distance = spt_server_config.servers_sorted_by_distance(&spt_config);
-    info!("Five Closest Servers");
-    let five_closest_servers = &servers_sorted_by_distance[0..5];
-    for server in five_closest_servers {
-        info!("Close Server: {:?}", server);
-    }
-
+pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer]) -> &SpeedTestServer {
     info!("Testing for fastest server");
+    let client = Client::new();
     let mut fastest_server = None;
     let mut fastest_latency = Duration::max_value();
-    for server in five_closest_servers {
+    for server in servers {
         let path = Path::new(&server.url);
         let latency_path = format!("{}/latency.txt", path.parent().unwrap().display());
         info!("Downloading: {:?}", latency_path);
@@ -318,9 +307,25 @@ pub fn run_speedtest() {
     info!("Fastest Server @ {}ms : {:?}",
           fastest_latency.num_milliseconds(),
           fastest_server);
+    fastest_server.unwrap()
+}
 
-    test_download(&fastest_server.unwrap());
-    test_upload(&fastest_server.unwrap());
+pub fn run_speedtest() {
+    let spt_config = get_configuration().unwrap();
+    info!("IP: {}, ISP: {}", spt_config.ip, spt_config.isp);
+    let spt_server_config = get_server_list().unwrap();
+
+    let servers_sorted_by_distance = spt_server_config.servers_sorted_by_distance(&spt_config);
+    info!("Five Closest Servers");
+    let five_closest_servers = &servers_sorted_by_distance[0..5];
+    for server in five_closest_servers {
+        info!("Close Server: {:?}", server);
+    }
+
+    let fastest_server = get_best_server_based_on_latency(five_closest_servers);
+
+    test_download(&fastest_server);
+    test_upload(&fastest_server);
 }
 
 fn test_download(server: &SpeedTestServer) {
