@@ -279,7 +279,13 @@ pub fn get_server_list_with_config(config: Option<&SpeedTestConfig>)
     spt_config
 }
 
-pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer]) -> ::Result<&SpeedTestServer> {
+pub struct SpeedTestLatencyTestResult<'a> {
+    pub server: &'a SpeedTestServer,
+    pub latency: Duration,
+}
+
+pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer])
+                                        -> ::Result<SpeedTestLatencyTestResult> {
     info!("Testing for fastest server");
     let client = Client::new();
     let mut fastest_server = None;
@@ -307,7 +313,10 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer]) -> ::Result
     info!("Fastest Server @ {}ms : {:?}",
           fastest_latency.num_milliseconds(),
           fastest_server);
-    fastest_server.ok_or(Error::LatencyTestClosestError)
+    Ok(SpeedTestLatencyTestResult {
+        server: try!(fastest_server.ok_or(Error::LatencyTestClosestError)),
+        latency: fastest_latency,
+    })
 }
 
 pub fn run_speedtest() {
@@ -322,7 +331,7 @@ pub fn run_speedtest() {
         info!("Close Server: {:?}", server);
     }
 
-    let fastest_server = get_best_server_based_on_latency(five_closest_servers).unwrap();
+    let fastest_server = get_best_server_based_on_latency(five_closest_servers).unwrap().server;
 
     test_download(&fastest_server);
     test_upload(&fastest_server);

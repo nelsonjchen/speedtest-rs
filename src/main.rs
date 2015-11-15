@@ -42,4 +42,16 @@ fn main() {
     }
     println!("Testing from {} ({})...", config.isp, config.ip);
     println!("Selecting best server based on latency...");
+    info!("Five Closest Servers");
+    let five_closest_servers = &server_list_sorted[0..5];
+    for server in five_closest_servers {
+        info!("Close Server: {:?}", server);
+    }
+    let best_server = speedtest::get_best_server_based_on_latency(five_closest_servers).unwrap();
+    println!("Hosted by {} {} [{:.2} km]: {:?} ms",
+             best_server.server.sponsor,
+             best_server.server.name,
+             best_server.server.distance.unwrap(),
+             best_server.latency.num_milliseconds(),
+         );
 }
