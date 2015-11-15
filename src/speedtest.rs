@@ -308,9 +308,12 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer])
             info!("Sampled {} ms", latency_measurement.num_milliseconds());
             latency_measurements.push(latency_measurement);
         }
+        // Divide by the double to get the non-RTT time but the trip time.
+        // NOT PING or RTT
+        // https://github.com/sivel/speedtest-cli/pull/199
         let latency = latency_measurements.iter().fold(Duration::zero(), |a, &i| a + i) /
-                      latency_measurements.iter().count() as i32;
-        info!("Averaged to {} ms", latency.num_milliseconds());
+                      (latency_measurements.iter().count() as i32) * 2;
+        info!("Trip calculated to {} ms", latency.num_milliseconds());
 
         if latency < fastest_latency {
             fastest_server = Some(server);
