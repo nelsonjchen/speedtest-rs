@@ -40,4 +40,5 @@ fn main() {
         }
         return;
     }
+    println!("Testing from {} ({})...", config.isp, config.ip);
 }

@@ -19,9 +19,9 @@ use distance;
 pub struct ParseError(String);
 
 pub struct SpeedTestConfig {
-    ip: String,
+    pub ip: String,
     location: EarthLocation,
-    isp: String,
+    pub isp: String,
 }
 
 impl SpeedTestConfig {
