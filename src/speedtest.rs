@@ -286,7 +286,9 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer]) -> ::Result
     let mut fastest_latency = Duration::max_value();
     for server in servers {
         let path = Path::new(&server.url);
-        let latency_path = format!("{}/latency.txt", path.parent().unwrap().display());
+        let latency_path = format!("{}/latency.txt",
+                                   try!(path.parent().ok_or(Error::LatencyTestInvalidPath))
+                                       .display());
         info!("Downloading: {:?}", latency_path);
         let start_time = now();
         let res = try!(client.get(&latency_path)
@@ -305,7 +307,7 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer]) -> ::Result
     info!("Fastest Server @ {}ms : {:?}",
           fastest_latency.num_milliseconds(),
           fastest_server);
-    Ok(fastest_server.unwrap())
+    fastest_server.ok_or(Error::LatencyTestClosestError)
 }
 
 pub fn run_speedtest() {

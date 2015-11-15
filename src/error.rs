@@ -8,6 +8,8 @@ pub enum Error {
     ConfigDownloadFailed,
     ConfigParseError,
     ServerListParseError,
+    LatencyTestInvalidPath,
+    LatencyTestClosestError,
     Hyper(HyperError),
 }
 
