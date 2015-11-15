@@ -279,7 +279,7 @@ pub fn get_server_list_with_config(config: Option<&SpeedTestConfig>)
     spt_config
 }
 
-pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer]) -> &SpeedTestServer {
+pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer]) -> ::Result<&SpeedTestServer> {
     info!("Testing for fastest server");
     let client = Client::new();
     let mut fastest_server = None;
@@ -289,13 +289,11 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer]) -> &SpeedTe
         let latency_path = format!("{}/latency.txt", path.parent().unwrap().display());
         info!("Downloading: {:?}", latency_path);
         let start_time = now();
-        let mut res = client.get(&latency_path)
-                            .header(Connection::close())
-                            .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-                            .send()
-                            .unwrap();
-        let mut server_body: Vec<u8> = vec![];
-        res.read_to_end(&mut server_body).unwrap();
+        let res = try!(client.get(&latency_path)
+                             .header(Connection::close())
+                             .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                             .send());
+        res.bytes().last();
         let latency = now() - start_time;
         info!("It took {} ms", latency.num_milliseconds());
 
@@ -307,7 +305,7 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer]) -> &SpeedTe
     info!("Fastest Server @ {}ms : {:?}",
           fastest_latency.num_milliseconds(),
           fastest_server);
-    fastest_server.unwrap()
+    Ok(fastest_server.unwrap())
 }
 
 pub fn run_speedtest() {
@@ -322,7 +320,7 @@ pub fn run_speedtest() {
         info!("Close Server: {:?}", server);
     }
 
-    let fastest_server = get_best_server_based_on_latency(five_closest_servers);
+    let fastest_server = get_best_server_based_on_latency(five_closest_servers).unwrap();
 
     test_download(&fastest_server);
     test_upload(&fastest_server);
