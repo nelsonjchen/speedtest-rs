@@ -296,14 +296,21 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer])
                                    try!(path.parent().ok_or(Error::LatencyTestInvalidPath))
                                        .display());
         info!("Downloading: {:?}", latency_path);
-        let start_time = now();
-        let res = try!(client.get(&latency_path)
-                             .header(Connection::close())
-                             .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-                             .send());
-        res.bytes().last();
-        let latency = now() - start_time;
-        info!("It took {} ms", latency.num_milliseconds());
+        let mut latency_measurements = vec![];
+        for _ in (0..3) {
+            let start_time = now();
+            let res = try!(client.get(&latency_path)
+                                 .header(Connection::close())
+                                 .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                                 .send());
+            res.bytes().last();
+            let latency_measurement = now() - start_time;
+            info!("Sampled {} ms", latency_measurement.num_milliseconds());
+            latency_measurements.push(latency_measurement);
+        }
+        let latency = latency_measurements.iter().fold(Duration::zero(), |a, &i| a + i) /
+                      latency_measurements.iter().count() as i32;
+        info!("Averaged to {} ms", latency.num_milliseconds());
 
         if latency < fastest_latency {
             fastest_server = Some(server);
