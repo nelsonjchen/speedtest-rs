@@ -361,46 +361,49 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ()
     let total_size;
 
     let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
-    let len_sizes = sizes.len();
+    let times_to_run_each_file = 4;
+    let len_sizes = sizes.len() * times_to_run_each_file;
     let complete = Arc::new(RwLock::new(vec![]));
     let (tx, rx) = sync_channel(6);
     let root_path = root_path.to_path_buf();
     let farc = Arc::new(f);
     let prod_thread = thread::spawn(move || {
         for size in &sizes {
-            let size = size.clone();
-            let root_path = root_path.clone();
-            let farc = farc.clone();
-            let thread = thread::spawn(move || {
-                let path = root_path.to_path_buf()
-                                    .join(format!("random{0}x{0}.jpg", size));
-                let client = Client::new();
-                let mut res = client.get(path.to_str().unwrap())
-                                    .header(Connection::close())
-                                    .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
-                                    .send()
-                                    .unwrap();
-                let mut buffer = [0; 10240];
-                let mut size: usize = 0;
-                loop {
-                    match res.read(&mut buffer) {
-                        Ok(0) => {
-                            break;
-                        }
-                        Ok(n) => {
-                            size = size + n
-                        }
-                        _ => {
-                            panic!("Something has gone wrong.")
+            for _ in 0..times_to_run_each_file {
+                let size = size.clone();
+                let root_path = root_path.clone();
+                let farc = farc.clone();
+                let thread = thread::spawn(move || {
+                    let path = root_path.to_path_buf()
+                                        .join(format!("random{0}x{0}.jpg", size));
+                    let client = Client::new();
+                    let mut res = client.get(path.to_str().unwrap())
+                                        .header(Connection::close())
+                                        .header(UserAgent("hyper/speedtest-rust 0.01".to_owned()))
+                                        .send()
+                                        .unwrap();
+                    let mut buffer = [0; 10240];
+                    let mut size: usize = 0;
+                    loop {
+                        match res.read(&mut buffer) {
+                            Ok(0) => {
+                                break;
+                            }
+                            Ok(n) => {
+                                size = size + n
+                            }
+                            _ => {
+                                panic!("Something has gone wrong.")
+                            }
                         }
                     }
-                }
-                info!("Done {}, {}", path.display(), size);
-                let f = farc.clone();
-                f();
-                size
-            });
-            tx.send(thread).unwrap();
+                    info!("Done {}, {}", path.display(), size);
+                    let f = farc.clone();
+                    f();
+                    size
+                });
+                tx.send(thread).unwrap();
+            }
         }
     });
 
