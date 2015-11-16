@@ -47,12 +47,20 @@ fn main() {
     for server in five_closest_servers {
         info!("Close Server: {:?}", server);
     }
-    let best_server = speedtest::get_best_server_based_on_latency(five_closest_servers).unwrap();
+    let latecy_test_result = speedtest::get_best_server_based_on_latency(five_closest_servers)
+                                 .unwrap();
     println!("Hosted by {} ({}) [{:.2} km]: {}.{} ms",
-             best_server.server.sponsor,
-             best_server.server.name,
-             best_server.server.distance.unwrap(),
-             best_server.latency.num_milliseconds(),
-             best_server.latency.num_microseconds().unwrap() % 1000,
+             latecy_test_result.server.sponsor,
+             latecy_test_result.server.name,
+             latecy_test_result.server.distance.unwrap(),
+             latecy_test_result.latency.num_milliseconds(),
+             latecy_test_result.latency.num_microseconds().unwrap() % 1000,
          );
+    let best_server = latecy_test_result.server;
+    print!("Testing download speed");
+    speedtest::test_download_with_progress(best_server, print_dot);
+}
+
+fn print_dot() {
+    print!(".");
 }

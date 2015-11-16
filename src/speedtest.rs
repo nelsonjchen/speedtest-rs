@@ -347,7 +347,13 @@ pub fn run_speedtest() {
     test_upload(&fastest_server);
 }
 
-fn test_download(server: &SpeedTestServer) {
+pub fn test_download(server: &SpeedTestServer) {
+    test_download_with_progress(server, || {});
+}
+
+pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ()
+    where F: Fn() -> () + Send + Sync + 'static
+{
     info!("Testing Download speed");
     let root_path = Path::new(&server.url).parent().unwrap();
     debug!("Root path is: {}", root_path.display());
@@ -359,10 +365,12 @@ fn test_download(server: &SpeedTestServer) {
     let complete = Arc::new(RwLock::new(vec![]));
     let (tx, rx) = sync_channel(6);
     let root_path = root_path.to_path_buf();
+    let farc = Arc::new(f);
     let prod_thread = thread::spawn(move || {
         for size in &sizes {
             let size = size.clone();
             let root_path = root_path.clone();
+            let farc = farc.clone();
             let thread = thread::spawn(move || {
                 let path = root_path.to_path_buf()
                                     .join(format!("random{0}x{0}.jpg", size));
@@ -388,6 +396,8 @@ fn test_download(server: &SpeedTestServer) {
                     }
                 }
                 info!("Done {}, {}", path.display(), size);
+                let f = farc.clone();
+                f();
                 size
             });
             tx.send(thread).unwrap();
