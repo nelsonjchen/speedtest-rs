@@ -28,7 +28,7 @@ fn main() {
     let config = speedtest::get_configuration().unwrap();
     println!("Retrieving speedtest.net server list...", );
     let server_list = speedtest::get_server_list_with_config(Some(&config)).unwrap();
-    let server_list_sorted = server_list.servers_sorted_by_distance(&config);
+    let mut server_list_sorted = server_list.servers_sorted_by_distance(&config);
 
     if matches.is_present("list") {
         for server in server_list_sorted {
@@ -45,11 +45,11 @@ fn main() {
     println!("Testing from {} ({})...", config.isp, config.ip);
     println!("Selecting best server based on latency...");
     info!("Five Closest Servers");
-    let five_closest_servers = &server_list_sorted[0..5];
-    for server in five_closest_servers {
+    server_list_sorted.truncate(5);
+    for server in &server_list_sorted {
         info!("Close Server: {:?}", server);
     }
-    let latecy_test_result = speedtest::get_best_server_based_on_latency(five_closest_servers)
+    let latecy_test_result = speedtest::get_best_server_based_on_latency(&server_list_sorted[..])
                                  .unwrap();
     println!("Hosted by {} ({}) [{:.2} km]: {}.{} ms",
              latecy_test_result.server.sponsor,
