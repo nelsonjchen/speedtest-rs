@@ -343,15 +343,19 @@ pub fn run_speedtest() {
 
     let fastest_server = get_best_server_based_on_latency(five_closest_servers).unwrap().server;
 
-    test_download(&fastest_server);
     test_upload(&fastest_server);
 }
 
-pub fn test_download(server: &SpeedTestServer) {
-    test_download_with_progress(server, || {});
+pub struct SpeedMeasurement {
+    pub size: usize,
+    pub duration: Duration,
 }
 
-pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ()
+pub fn test_download(server: &SpeedTestServer) -> ::Result<SpeedMeasurement> {
+    test_download_with_progress(server, || {})
+}
+
+pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Result<SpeedMeasurement>
     where F: Fn() -> () + Send + Sync + 'static
 {
     info!("Testing Download speed");
@@ -419,12 +423,10 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ()
     prod_thread.join().unwrap();
     cons_thread.join().unwrap();
     total_size = (*complete).read().unwrap().iter().fold(0, |val, i| val + i);
-    let latency = now() - start_time;
-    info!("It took {} ms to download {} bytes",
-          latency.num_milliseconds(),
-          total_size);
-    let bps = total_size as i64 / (latency.num_milliseconds() / 1000);
-    info!("{} bytes per second", bps);
+    Ok(SpeedMeasurement {
+        size: total_size,
+        duration: now() - start_time,
+    })
 }
 
 fn test_upload(server: &SpeedTestServer) {

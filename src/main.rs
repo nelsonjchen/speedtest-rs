@@ -59,8 +59,12 @@ fn main() {
          );
     let best_server = latecy_test_result.server;
     print!("Testing download speed");
-    speedtest::test_download_with_progress(best_server, print_dot);
+    let download_measurement = speedtest::test_download_with_progress(best_server, print_dot)
+                                   .unwrap();
     println!("");
+    println!("Download: {:.2} Mbit/s",
+             (download_measurement.size / 100) as f32 /
+             download_measurement.duration.num_milliseconds() as f32)
 }
 
 fn print_dot() {
