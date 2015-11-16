@@ -329,23 +329,6 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer])
     })
 }
 
-pub fn run_speedtest() {
-    let spt_config = get_configuration().unwrap();
-    info!("IP: {}, ISP: {}", spt_config.ip, spt_config.isp);
-    let spt_server_config = get_server_list().unwrap();
-
-    let servers_sorted_by_distance = spt_server_config.servers_sorted_by_distance(&spt_config);
-    info!("Five Closest Servers");
-    let five_closest_servers = &servers_sorted_by_distance[0..5];
-    for server in five_closest_servers {
-        info!("Close Server: {:?}", server);
-    }
-
-    let fastest_server = get_best_server_based_on_latency(five_closest_servers).unwrap().server;
-
-    test_upload(&fastest_server);
-}
-
 pub struct SpeedMeasurement {
     pub size: usize,
     pub duration: Duration,
@@ -429,7 +412,13 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Resul
     })
 }
 
-fn test_upload(server: &SpeedTestServer) {
+pub fn test_upload(server: &SpeedTestServer) -> ::Result<SpeedMeasurement> {
+    test_upload_with_progress(server, || {})
+}
+
+pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Result<SpeedMeasurement>
+    where F: Fn() -> () + Send + Sync + 'static
+{
     info!("Testing Upload");
     let upload_path = Path::new(&server.url).to_path_buf().clone();
     let total_size: usize;
@@ -442,11 +431,13 @@ fn test_upload(server: &SpeedTestServer) {
     let (tx, rx) = sync_channel(6);
 
     let thread_start_time = start_time.clone();
+    let farc = Arc::new(f);
     let prod_thread = thread::spawn(move || {
         for size in &sizes {
             let size = size.clone();
             let path = upload_path.to_path_buf().clone();
             let start_time = thread_start_time.clone();
+            let farc = farc.clone();
             let thread = thread::spawn(move || {
                 info!("Uploading {} to {}", size, path.display());
                 if (now() - *start_time) > Duration::seconds(10) {
@@ -474,6 +465,8 @@ fn test_upload(server: &SpeedTestServer) {
                         }
                     }
                 }
+                let f = farc.clone();
+                f();
                 info!("Done {}, {}", path.display(), size);
                 size
             });
@@ -500,6 +493,10 @@ fn test_upload(server: &SpeedTestServer) {
           total_size);
     info!("{} bytes per second",
           total_size as i64 / (latency.num_milliseconds() / 1000));
+    Ok(SpeedMeasurement {
+        size: total_size,
+        duration: now() - *start_time,
+    })
 }
 
 #[cfg(test)]

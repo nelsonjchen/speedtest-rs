@@ -64,7 +64,13 @@ fn main() {
     println!("");
     println!("Download: {:.2} Mbit/s",
              (download_measurement.size / 100) as f32 /
-             download_measurement.duration.num_milliseconds() as f32)
+             download_measurement.duration.num_milliseconds() as f32);
+    print!("Testing upload speed");
+    let upload_measurement = speedtest::test_upload_with_progress(best_server, print_dot).unwrap();
+    println!("");
+    println!("Upload: {:.2} Mbit/s",
+             (upload_measurement.size / 100) as f32 /
+             upload_measurement.duration.num_milliseconds() as f32);
 }
 
 fn print_dot() {
