@@ -20,6 +20,7 @@ fn main() {
                       .about("Command line interface for testing internet bandwidth using \
                               speedtest.net.")
                       .arg(Arg::with_name("list")
+                               .long("list")
                                .help("Display a list of speedtest.net servers sorted by distance"))
                       .get_matches();
 
