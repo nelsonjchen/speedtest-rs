@@ -10,6 +10,7 @@ extern crate clap;
 use clap::{App, Arg};
 // use speedtest_rs::speedtest::run_speedtest;
 use speedtest_rs::speedtest;
+use std::io::{self, Write};
 
 #[allow(dead_code)]
 fn main() {
@@ -59,8 +60,10 @@ fn main() {
     let best_server = latecy_test_result.server;
     print!("Testing download speed");
     speedtest::test_download_with_progress(best_server, print_dot);
+    println!("");
 }
 
 fn print_dot() {
     print!(".");
+    io::stdout().flush().unwrap();
 }
