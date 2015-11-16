@@ -1,11 +1,11 @@
 # speedtest-rs
 
-*`speedtest-cli`, but in Rust with maybe a few extra things!*
+*`speedtest-cli`, but in Rust with lacking a few things (for now)!*
 
-[![Project Status: Concept - Minimal or no implementation has been done yet.](http://www.repostatus.org/badges/0.1.0/concept.svg)](http://www.repostatus.org/#concept)
+[![Project Status: Wip - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/0.1.0/wip.svg)](http://www.repostatus.org/#wip)
 [![Build Status](https://travis-ci.org/nelsonjchen/speedtest-rs.svg?branch=master)](https://travis-ci.org/nelsonjchen/speedtest-rs)
 
-*This is not really working at the moment. Download and upload is kinda done. I'm just stumbling around. It's going to need major refactoring anyway.*
+*This is working at the moment. Download and upload is done. There is some separation of concerns between the GUI and the backend. It is by no means ready for the public.*
 
 This is a learning exercise for me to learn:
 
@@ -19,11 +19,12 @@ This is a learning exercise for me to learn:
 * Some really, really dumb napkin distance calculations
 * Idiomatic Rust
 * what speedtest-cli do anyway?!
+* Can I make a version that's more efficient in space and time than the Python or Go versions?
 
-If I get this done, this should be a runtime-free tool (with musl especially) that can run against
-speedtest.net. Cross-compile this and maybe it can go anywhere! I also hope that this is less demanding on resources than
+Plans may include a runtime-free tool (with musl especially) that can run against
+speedtest.net. Cross-compile this and maybe it can go anywhere! I also hope that this is less demanding on resources than the Python or Go versions.
 
-This will be based heavily on:
+This is currently based heavily on the popular Python implementation:
 
 https://github.com/sivel/speedtest-cli
 
@@ -33,9 +34,9 @@ There is also a Go version which is different from the other CLI speedtest clien
 
 https://github.com/traetox/speedtest
 
-It seems different as it appears to just use TCP connections and some protocol. It's probably more suitable to high-speed connections.
+It seems different as it appears to just use TCP connections and some protocol. It's probably more suitable to high-speed connections. I'll probably offer it as an alternative option that is also built-in.
 
-# How this speedtest would work.
+# How this speedtest works
 
 This is pretty much cribbed from the Python implementation.
 
@@ -76,7 +77,7 @@ was done.
   * A `latency.txt` is downloaded from the "directory" where the file of the `url` element is located. This is timed and three samples are made and then averaged. Samples that aren't `200` or `test=test` will have a sample of "1 hour" recorded. I think this is just a sentinel to say "don't use this server".
   * TCP version just uses some `PING` and `PONG`. (TODO)
 1. Download and time GETs for `[350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000]` with `random(size)x(size).jpg`, like `/random350x350.jpg` from the fastest server.
-  * All this is put into a queue with a capacity of 6 handled by two threads producing and consuming the queue. Each download is launched in its own thread. Smaller downloads must complete before the queue is advanced. If the test has already been running for more than 10 seconds, then the larger files downloads are not initiated. When all the downloads are complete, the resulting time is taken. *Trivia: Each dot in the original `speedtest-cli` is a file download that in the beginning has started and at the latter half is when the downloads are complete which is also when the trickling starts happening*
+  * All this is each put into a queue four times with a capacity of 6 handled by two threads producing and consuming the queue. Each download is launched in its own thread. Smaller downloads must complete before the queue is advanced. If the test has already been running for more than 10 seconds, then the larger files downloads are not initiated. When all the downloads are complete, the resulting time is taken. *Trivia: Each dot in the original `speedtest-cli` is a file download that in the beginning has started and at the latter half is when the downloads are complete which is also when the trickling starts happening*
 1. The Download speed is calculated from the sum of all the files and the time to took to download 6 files at a time in parallel from the list.
 1. Upload and time POSTs for `[250000(25 times), 500000(25 times)]` where bytes of a rolling `0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ` cycled to the desired size is posted as a request with that `data`. This is timed. It is posted that `url` that is in the server configuration.
   * Similar operation with a queue and all that stuff to the downloads above. Also note the 10 second limit as well.
@@ -84,5 +85,3 @@ was done.
 1. There's some sharing stuff but this isn't bothered with for now. The `speedtest-cli`
 
 Note that some of these operations are different on one particular [Go version of the speedtest](https://github.com/traetox/speedtest/blob/master/speedtestdotnet/actions.go). In that version, tests are done to find an amount of data that can run for a default of 3 seconds. In particular, `speedtest-cli` tests with what Ookla calls the ["HTTP Legacy Fallback"](http://www.ookla.com/support/a84541858) for hosts that cannot establish a direct TCP connection.
-
-That's not done here for now so I guess maybe I'll modify the tool with an option to do both?
