@@ -1,11 +1,13 @@
 # speedtest-rs
 
-*`speedtest-cli`, but in Rust with lacking a few things (for now)!*
+*a tool like `speedtest-cli`, but in Rust and lacking a few things (for now)!*
 
 [![Project Status: Wip - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/0.1.0/wip.svg)](http://www.repostatus.org/#wip)
 [![Build Status](https://travis-ci.org/nelsonjchen/speedtest-rs.svg?branch=master)](https://travis-ci.org/nelsonjchen/speedtest-rs)
 
-*This is working at the moment. Download and upload is done. There is some separation of concerns between the GUI and the backend. It is by no means ready for the public.*
+This is working at the moment. Download and upload testing is done. There is some separation of concerns between the GUI and the backend so this *might* be reusable in other crates.
+
+## Purpose
 
 This is a learning exercise for me to learn:
 
@@ -36,9 +38,7 @@ https://github.com/traetox/speedtest
 
 It seems different as it appears to just use TCP connections and some protocol. It's probably more suitable to high-speed connections. I'll probably offer it as an alternative option that is also built-in.
 
-# How this speedtest works
-
-This is pretty much cribbed from the Python implementation.
+## How this speedtest works like `speedtest-cli` and a bit about speedtest.net in general and about `speedtest-go`
 
 1. "http://www.speedtest.net/speedtest-config.php" is downloaded.
 1. The `client` attributes are read.
@@ -82,6 +82,6 @@ was done.
 1. Upload and time POSTs for `[250000(25 times), 500000(25 times)]` where bytes of a rolling `0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ` cycled to the desired size is posted as a request with that `data`. This is timed. It is posted that `url` that is in the server configuration.
   * Similar operation with a queue and all that stuff to the downloads above. Also note the 10 second limit as well.
 1. Same calculation as download but ... for upload!?! :scream:
-1. There's some sharing stuff but this isn't bothered with for now. The `speedtest-cli`
+1. There's some sharing stuff but that hasn't been investigated yet. It it probably pretty simply.
 
 Note that some of these operations are different on one particular [Go version of the speedtest](https://github.com/traetox/speedtest/blob/master/speedtestdotnet/actions.go). In that version, tests are done to find an amount of data that can run for a default of 3 seconds. In particular, `speedtest-cli` tests with what Ookla calls the ["HTTP Legacy Fallback"](http://www.ookla.com/support/a84541858) for hosts that cannot establish a direct TCP connection.
