@@ -24,7 +24,7 @@ fn main() {
                                .help("Display a list of speedtest.net servers sorted by distance"))
                       .arg(Arg::with_name("bytes")
                                .long("bytes")
-                               .help(" Display values in bytes instead of bits."))
+                               .help("Display values in bytes instead of bits."))
                       .arg(Arg::with_name("simple")
                                .long("simple")
                                .help("Suppress verbose output, only show basic informatio"))
