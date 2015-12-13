@@ -42,12 +42,8 @@ impl SpeedTestConfig {
                                     "ip" => {
                                         ip = Some(attribute.value.clone());
                                     }
-                                    "lat" => {
-                                        lat = attribute.value.parse::<f32>().ok()
-                                    }
-                                    "lon" => {
-                                        lon = attribute.value.parse::<f32>().ok()
-                                    }
+                                    "lat" => lat = attribute.value.parse::<f32>().ok(),
+                                    "lon" => lon = attribute.value.parse::<f32>().ok(),
                                     "isp" => {
                                         isp = Some(attribute.value.clone());
                                     }
@@ -73,9 +69,7 @@ impl SpeedTestConfig {
                     isp: isp,
                 })
             }
-            _ => {
-                Err(Error::ConfigParseError)
-            }
+            _ => Err(Error::ConfigParseError),
         }
     }
 }
@@ -130,15 +124,9 @@ impl SpeedTestServersConfig {
                                     "host" => {
                                         host = Some(attribute.value.clone());
                                     }
-                                    "id" => {
-                                        id = attribute.value.parse::<u32>().ok()
-                                    }
-                                    "lat" => {
-                                        lat = attribute.value.parse::<f32>().ok()
-                                    }
-                                    "lon" => {
-                                        lon = attribute.value.parse::<f32>().ok()
-                                    }
+                                    "id" => id = attribute.value.parse::<u32>().ok(),
+                                    "lat" => lat = attribute.value.parse::<f32>().ok(),
+                                    "lon" => lon = attribute.value.parse::<f32>().ok(),
                                     "name" => {
                                         name = Some(attribute.value.clone());
                                     }
@@ -175,9 +163,7 @@ impl SpeedTestServersConfig {
                                             Some(distance::compute_distance(&config.location,
                                                                             &location))
                                         }
-                                        None => {
-                                            None
-                                        }
+                                        None => None,
                                     };
                                     let server = SpeedTestServer {
                                         country: country,
@@ -270,12 +256,8 @@ pub fn get_server_list_with_config(config: Option<&SpeedTestConfig>)
     info!("Parsing Server List");
     let config_parser = EventReader::new(config_body);
     let spt_config = match config {
-        Some(config) => {
-            SpeedTestServersConfig::new_with_config(config_parser, Some(config))
-        }
-        None => {
-            SpeedTestServersConfig::new(config_parser)
-        }
+        Some(config) => SpeedTestServersConfig::new_with_config(config_parser, Some(config)),
+        None => SpeedTestServersConfig::new(config_parser),
     };
     info!("Parsed Server List");
     spt_config
@@ -299,7 +281,7 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer])
                                        .display());
         info!("Downloading: {:?}", latency_path);
         let mut latency_measurements = vec![];
-        for _ in (0..3) {
+        for _ in 0..3 {
             let start_time = now();
             let res = try!(client.get(&latency_path)
                                  .header(Connection::close())
@@ -378,12 +360,8 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Resul
                             Ok(0) => {
                                 break;
                             }
-                            Ok(n) => {
-                                size = size + n
-                            }
-                            _ => {
-                                panic!("Something has gone wrong.")
-                            }
+                            Ok(n) => size = size + n,
+                            _ => panic!("Something has gone wrong."),
                         }
                     }
                     info!("Done {}, {}", path.display(), size);
@@ -462,9 +440,7 @@ pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Result<
                             break;
                         }
                         Ok(_) => {}
-                        _ => {
-                            panic!("Something has gone wrong.")
-                        }
+                        _ => panic!("Something has gone wrong."),
                     }
                 }
                 let f = farc.clone();
