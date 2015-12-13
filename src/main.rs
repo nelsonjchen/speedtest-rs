@@ -127,5 +127,4 @@ fn print_dot() {
     io::stdout().flush().unwrap();
 }
 
-fn do_nothing() {
-}
+fn do_nothing() {}
