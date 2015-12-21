@@ -480,7 +480,13 @@ pub struct ShareUrlRequest<'a, 'b, 'c> {
     pub latency_measurement: &'c SpeedTestLatencyTestResult<'c>,
 }
 
-pub fn get_share_url(request: ShareUrlRequest) {
+impl<'a, 'b, 'c> ShareUrlRequest<'a, 'b, 'c> {
+    pub fn hash(&self) -> String {
+        "".to_owned()
+    }
+}
+
+pub fn get_share_url(request: &ShareUrlRequest) -> u32 {
     info!("Generating share URL");
     let download = request.download_measurement.size as i64 /
                    (request.download_measurement.duration.num_milliseconds() / 1000);
@@ -492,6 +498,11 @@ pub fn get_share_url(request: ShareUrlRequest) {
     info!("Server parameter is {:?}", server);
     let ping = request.latency_measurement.latency;
     info!("Ping parameter is {:?}", ping);
+    0
+}
+
+pub fn construct_share_form(request: ShareUrlRequest) -> String {
+    "".to_owned()
 }
 
 #[cfg(test)]
@@ -499,6 +510,51 @@ mod tests {
     use super::*;
     use xml::reader::EventReader;
     use distance::EarthLocation;
+    use time::Duration;
+
+    #[test]
+    fn test_share_url_hash() {
+        let download_measurement = SpeedMeasurement {
+            size: (6096 * 1000) as usize,
+            duration: Duration::seconds(1),
+        };
+        println!("Download: {:?}", download_measurement);
+        let upload_measurement = SpeedMeasurement {
+            size: (1861 * 1000) as usize,
+            duration: Duration::seconds(1),
+        };
+        println!("Upload: {:?}", upload_measurement);
+        let server = SpeedTestServer {
+            country: "".to_owned(),
+            host: "".to_owned(),
+            id: 5116,
+            location: EarthLocation {
+                latitude: 0.0,
+                longitude: 0.0,
+            },
+            distance: None,
+            name: "".to_owned(),
+            sponsor: "".to_owned(),
+            url: "".to_owned(),
+            url2: "".to_owned(),
+        };
+        println!("Server: {:?}", server);
+        let latency_measurement = SpeedTestLatencyTestResult {
+            server: &server,
+            latency: Duration::milliseconds(26),
+        };
+        println!("Latency: {:?}", latency_measurement);
+        let request = ShareUrlRequest {
+            download_measurement: &download_measurement,
+            upload_measurement: &upload_measurement,
+            server: &server,
+            latency_measurement: &latency_measurement,
+        };
+        assert_eq!(request.hash(), "e0d55e3bdcae377637c9cfea06783e5");
+    }
+
+    #[test]
+    fn test_construct_share_form() {}
 
     #[test]
     fn test_parse_config_xml() {
