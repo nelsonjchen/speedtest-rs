@@ -14,6 +14,7 @@ use distance::{EarthLocation, compute_distance};
 use error::Error;
 use crypto::md5::Md5;
 use crypto::digest::Digest;
+use url::form_urlencoded;
 
 use distance;
 
@@ -501,7 +502,7 @@ impl<'a, 'b, 'c> ShareUrlRequest<'a, 'b, 'c> {
     }
 }
 
-pub fn get_share_url(request: &ShareUrlRequest) -> u32 {
+pub fn get_share_url(request: &ShareUrlRequest) -> String {
     info!("Generating share URL");
     let download = request.download_measurement.size as i64 /
                    (request.download_measurement.duration.num_milliseconds() / 1000);
@@ -513,11 +514,19 @@ pub fn get_share_url(request: &ShareUrlRequest) -> u32 {
     info!("Server parameter is {:?}", server);
     let ping = request.latency_measurement.latency;
     info!("Ping parameter is {:?}", ping);
-    0
+    "".to_owned()
 }
 
 pub fn construct_share_form(request: ShareUrlRequest) -> String {
-    "".to_owned()
+    form_urlencoded::serialize([("download", request.download_measurement.kbps().to_string()),
+                                ("ping",
+                                 request.latency_measurement.latency.num_milliseconds().to_string()),
+                                ("upload", request.upload_measurement.kbps().to_string()),
+                                ("promo", "".to_owned()),
+                                ("startmode", "pingselect".to_owned()),
+                                ("recommendedserverid", request.server.id.to_string()),
+                                ("hash", request.hash())]
+                                   .iter())
 }
 
 #[cfg(test)]
