@@ -12,6 +12,8 @@ use xml::reader::EventReader;
 use xml::reader::XmlEvent::StartElement;
 use distance::{EarthLocation, compute_distance};
 use error::Error;
+use crypto::md5::Md5;
+use crypto::digest::Digest;
 
 use distance;
 
@@ -313,6 +315,12 @@ pub struct SpeedMeasurement {
     pub duration: Duration,
 }
 
+impl SpeedMeasurement {
+    pub fn kbps(&self) -> u32 {
+        ((self.size as i64 / (self.duration.num_milliseconds() / 1000)) as u32) / 1000
+    }
+}
+
 pub fn test_download(server: &SpeedTestServer) -> ::Result<SpeedMeasurement> {
     test_download_with_progress(server, || {})
 }
@@ -482,7 +490,14 @@ pub struct ShareUrlRequest<'a, 'b, 'c> {
 
 impl<'a, 'b, 'c> ShareUrlRequest<'a, 'b, 'c> {
     pub fn hash(&self) -> String {
-        "".to_owned()
+        let mut md5 = Md5::new();
+        let hashed_str = &format!("{}-{}-{}-{}",
+                                  self.latency_measurement.latency.num_milliseconds(),
+                                  self.upload_measurement.kbps(),
+                                  self.download_measurement.kbps(),
+                                  "297aae72")[..];
+        md5.input_str(hashed_str);
+        md5.result_str()
     }
 }
 
@@ -550,7 +565,7 @@ mod tests {
             server: &server,
             latency_measurement: &latency_measurement,
         };
-        assert_eq!(request.hash(), "e0d55e3bdcae377637c9cfea06783e5");
+        assert_eq!(request.hash(), "e0d55e3bdcae377637c9cfea06783e50");
     }
 
     #[test]
