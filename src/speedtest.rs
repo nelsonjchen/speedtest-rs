@@ -474,10 +474,10 @@ pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Result<
 
 #[derive(Debug)]
 pub struct ShareUrlRequest<'a, 'b, 'c> {
-    download_measurement: &'a SpeedMeasurement,
-    upload_measurement: &'b SpeedMeasurement,
-    server: &'c SpeedTestServer,
-    latency_measurement: &'c SpeedTestLatencyTestResult<'c>,
+    pub download_measurement: &'a SpeedMeasurement,
+    pub upload_measurement: &'b SpeedMeasurement,
+    pub server: &'c SpeedTestServer,
+    pub latency_measurement: &'c SpeedTestLatencyTestResult<'c>,
 }
 
 pub fn get_share_url(request: ShareUrlRequest) {

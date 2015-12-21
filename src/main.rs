@@ -126,6 +126,13 @@ fn main() {
     }
 
     if matches.is_present("share") {
+        let request = speedtest::ShareUrlRequest {
+            download_measurement: &download_measurement,
+            upload_measurement: &upload_measurement,
+            server: &best_server,
+            latency_measurement: &latecy_test_result,
+        };
+        info!("Share Request {:?}", request);
         println!("Share results:");
     }
 }
