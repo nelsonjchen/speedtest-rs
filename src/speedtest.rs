@@ -256,6 +256,7 @@ pub fn get_server_list_with_config(config: Option<&SpeedTestConfig>)
     spt_config
 }
 
+#[derive(Debug)]
 pub struct SpeedTestLatencyTestResult<'a> {
     pub server: &'a SpeedTestServer,
     pub latency: Duration,
@@ -306,6 +307,7 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer])
     })
 }
 
+#[derive(Debug)]
 pub struct SpeedMeasurement {
     pub size: usize,
     pub duration: Duration,
@@ -470,6 +472,7 @@ pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Result<
     })
 }
 
+#[derive(Debug)]
 pub struct ShareUrlRequest<'a, 'b, 'c> {
     download_measurement: &'a SpeedMeasurement,
     upload_measurement: &'b SpeedMeasurement,
@@ -477,8 +480,18 @@ pub struct ShareUrlRequest<'a, 'b, 'c> {
     latency_measurement: &'c SpeedTestLatencyTestResult<'c>,
 }
 
-pub fn get_share_url() {
+pub fn get_share_url(request: ShareUrlRequest) {
     info!("Generating share URL");
+    let download = request.download_measurement.size as i64 /
+                   (request.download_measurement.duration.num_milliseconds() / 1000);
+    info!("Download parameter is {:?}", download);
+    let upload = request.upload_measurement.size as i64 /
+                 (request.upload_measurement.duration.num_milliseconds() / 1000);
+    info!("Upload parameter is {:?}", upload);
+    let server = request.server.id;
+    info!("Server parameter is {:?}", server);
+    let ping = request.latency_measurement.latency;
+    info!("Ping parameter is {:?}", ping);
 }
 
 #[cfg(test)]
