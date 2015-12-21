@@ -124,6 +124,10 @@ fn main() {
                  (upload_measurement.size / 100) as f32 /
                  upload_measurement.duration.num_milliseconds() as f32);
     }
+
+    if matches.is_present("share") {
+        println!("Share results:");
+    }
 }
 
 fn print_dot() {

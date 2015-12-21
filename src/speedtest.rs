@@ -470,6 +470,10 @@ pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Result<
     })
 }
 
+pub fn get_share_url() {
+    info!("Generating share URL");
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
