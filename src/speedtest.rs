@@ -470,6 +470,13 @@ pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Result<
     })
 }
 
+pub struct ShareUrlRequest<'a, 'b, 'c> {
+    download_measurement: &'a SpeedMeasurement,
+    upload_measurement: &'b SpeedMeasurement,
+    server: &'c SpeedTestServer,
+    latency_measurement: &'c SpeedTestLatencyTestResult<'c>,
+}
+
 pub fn get_share_url() {
     info!("Generating share URL");
 }
