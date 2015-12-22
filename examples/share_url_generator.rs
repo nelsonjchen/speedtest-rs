@@ -74,4 +74,12 @@ fn main() {
         latency: Duration::milliseconds(ping),
     };
     println!("Latency: {:?}", latency_measurement);
+    let request = speedtest::ShareUrlRequest {
+        download_measurement: &download_measurement,
+        upload_measurement: &upload_measurement,
+        server: &server,
+        latency_measurement: &latency_measurement,
+    };
+    let url = speedtest::get_share_url(&request);
+    println!("URL: {}", url);
 }
