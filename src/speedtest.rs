@@ -5,7 +5,7 @@ use std::sync::{Arc, RwLock};
 use std::sync::mpsc::sync_channel;
 use std::thread;
 use hyper::Client;
-use hyper::header::{Connection, UserAgent, Referer};
+use hyper::header::{Connection, UserAgent, Referer, ContentType};
 use hyper::client::Response;
 use time::{now, Duration};
 use xml::reader::EventReader;
@@ -532,14 +532,15 @@ pub fn get_share_url(request: &ShareUrlRequest) -> String {
 
     let client = Client::new();
     let res = client.post("http://www.speedtest.net/api/api.php")
-                    .header(Connection::close())
                     .header(UserAgent(USER_AGENT.to_owned()))
                     .header(Referer("http://c.speedtest.net/flash/speedtest.swf".to_owned()))
+                    .header(ContentType::form_url_encoded())
                     .body(body.as_bytes())
                     .send();
     let mut encode_return = String::new();
     res.unwrap().read_to_string(&mut encode_return).unwrap();
-    encode_return
+    let response_id = parse_share_request_response_id(encode_return.as_bytes()).unwrap();
+    format!("http://www.speedtest.net/result/{}.png", response_id)
 }
 
 pub fn construct_share_form(request: ShareUrlRequest) -> String {
