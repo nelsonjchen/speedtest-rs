@@ -84,7 +84,6 @@ pub struct SpeedTestServer {
     pub name: String,
     pub sponsor: String,
     pub url: String,
-    pub url2: String,
 }
 
 pub struct SpeedTestServersConfig {
@@ -115,7 +114,6 @@ impl SpeedTestServersConfig {
                             let mut name: Option<String> = None;
                             let mut sponsor: Option<String> = None;
                             let mut url: Option<String> = None;
-                            let mut url2: Option<String> = None;
                             for attribute in attributes {
                                 match attribute.name.local_name.as_ref() {
                                     "country" => {
@@ -136,15 +134,12 @@ impl SpeedTestServersConfig {
                                     "url" => {
                                         url = Some(attribute.value.clone());
                                     }
-                                    "url2" => {
-                                        url2 = Some(attribute.value.clone());
-                                    }
                                     _ => {
                                         // eh?
                                     }
                                 }
                             }
-                            match (country, host, id, lat, lon, name, sponsor, url, url2) {
+                            match (country, host, id, lat, lon, name, sponsor, url) {
                                 (Some(country),
                                  Some(host),
                                  Some(id),
@@ -152,8 +147,7 @@ impl SpeedTestServersConfig {
                                  Some(lon),
                                  Some(name),
                                  Some(sponsor),
-                                 Some(url),
-                                 Some(url2)) => {
+                                 Some(url)) => {
                                     let location = EarthLocation {
                                         latitude: lat,
                                         longitude: lon,
@@ -174,7 +168,6 @@ impl SpeedTestServersConfig {
                                         name: name,
                                         sponsor: sponsor,
                                         url: url,
-                                        url2: url2,
                                     };
                                     servers.push(server);
                                 }
@@ -233,7 +226,7 @@ pub fn get_configuration() -> ::Result<SpeedTestConfig> {
 pub fn download_server_list() -> ::Result<Response> {
     info!("Download Server List");
     let client = Client::new();
-    let server_res = try!(client.get("http://www.speedtest.net/speedtest-servers-static.php")
+    let server_res = try!(client.get("http://www.speedtest.net/speedtest-servers.php")
                                 .header(Connection::close())
                                 .header(UserAgent(USER_AGENT.to_owned()))
                                 .send());
@@ -506,7 +499,7 @@ mod tests {
         let spt_server_config = SpeedTestServersConfig::new(parser).unwrap();
         assert!(spt_server_config.servers.len() > 5);
         let server = spt_server_config.servers.get(1).unwrap();
-        assert!(server.url2.len() > 0);
+        assert!(server.url.len() > 0);
         assert!(server.country.len() > 0);
     }
 
