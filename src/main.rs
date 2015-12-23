@@ -133,7 +133,7 @@ fn main() {
             latency_measurement: &latecy_test_result,
         };
         info!("Share Request {:?}", request);
-        println!("Share results:");
+        println!("Share results: {}", speedtest::get_share_url(&request));
     }
 }
 
