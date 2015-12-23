@@ -533,14 +533,14 @@ pub fn construct_share_form(request: ShareUrlRequest) -> String {
                                    .iter())
 }
 
-pub fn parse_share_request_response_id(input: &[u8]) -> String {
+pub fn parse_share_request_response_id(input: &[u8]) -> Option<String> {
     let pairs = form_urlencoded::parse(input);
     for pair in pairs.iter() {
         if pair.0 == "resultid" {
-            return pair.1.clone();
+            return Some(pair.1.clone());
         }
     }
-    return "".to_owned();
+    return None;
 }
 
 #[cfg(test)]
@@ -553,7 +553,8 @@ mod tests {
     #[test]
     fn test_parse_share_request_response_id() {
         let resp = "resultid=4932415710&date=12%2F21%2F2015&time=5%3A10+AM&rating=0⏎".as_bytes();
-        assert_eq!(parse_share_request_response_id(resp), "4932415710");
+        assert_eq!(parse_share_request_response_id(resp),
+                   Some("4932415710".to_owned()));
     }
 
     #[test]
