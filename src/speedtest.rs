@@ -5,7 +5,7 @@ use std::sync::{Arc, RwLock};
 use std::sync::mpsc::sync_channel;
 use std::thread;
 use hyper::Client;
-use hyper::header::{Connection, UserAgent};
+use hyper::header::{Connection, UserAgent, Referer};
 use hyper::client::Response;
 use time::{now, Duration};
 use xml::reader::EventReader;
@@ -514,11 +514,32 @@ pub fn get_share_url(request: &ShareUrlRequest) -> String {
     info!("Server parameter is {:?}", server);
     let ping = request.latency_measurement.latency;
     info!("Ping parameter is {:?}", ping);
-    "".to_owned()
-    // let res = client.get("http://www.speedtest.net/speedtest-config.php")
-    //                      .header(Connection::close())
-    //                      .header(UserAgent(USER_AGENT.to_owned()))
-    //                      .send();
+
+    let pairs = [("download",
+                  format!("{}", request.download_measurement.kbps())),
+                 ("ping", format!("{}", ping.num_milliseconds())),
+                 ("upload", format!("{}", request.upload_measurement.kbps())),
+                 ("promo", format!("")),
+                 ("startmode", format!("pingselect")),
+                 ("recommendedserverid", format!("{}", server)),
+                 ("accuracy", format!("1")),
+                 ("serverid", format!("{}", server)),
+                 ("hash", request.hash())];
+
+    let body = form_urlencoded::serialize(pairs.iter());
+
+    info!("Share Body Request: {:?}", body);
+
+    let client = Client::new();
+    let res = client.post("http://www.speedtest.net/api/api.php")
+                    .header(Connection::close())
+                    .header(UserAgent(USER_AGENT.to_owned()))
+                    .header(Referer("http://c.speedtest.net/flash/speedtest.swf".to_owned()))
+                    .body(body.as_bytes())
+                    .send();
+    let mut encode_return = String::new();
+    res.unwrap().read_to_string(&mut encode_return).unwrap();
+    encode_return
 }
 
 pub fn construct_share_form(request: ShareUrlRequest) -> String {
