@@ -65,7 +65,6 @@ fn main() {
         name: "".to_owned(),
         sponsor: "".to_owned(),
         url: "".to_owned(),
-        url2: "".to_owned(),
     };
     println!("Server: {:?}", server);
     let ping = value_t!(matches.value_of("ping"), u32).unwrap() as i64;
