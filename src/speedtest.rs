@@ -318,7 +318,7 @@ pub struct SpeedMeasurement {
 
 impl SpeedMeasurement {
     pub fn kbps(&self) -> u32 {
-        ((self.size as i64 / (self.duration.num_milliseconds() / 1000)) as u32) / 1000
+        ((self.size as i64 / (self.duration.num_milliseconds() / 1000)) as u32) / 100
     }
 }
 
@@ -504,11 +504,9 @@ impl<'a, 'b, 'c> ShareUrlRequest<'a, 'b, 'c> {
 
 pub fn get_share_url(request: &ShareUrlRequest) -> String {
     info!("Generating share URL");
-    let download = request.download_measurement.size as i64 /
-                   (request.download_measurement.duration.num_milliseconds() / 1000);
+    let download = request.download_measurement.kbps();
     info!("Download parameter is {:?}", download);
-    let upload = request.upload_measurement.size as i64 /
-                 (request.upload_measurement.duration.num_milliseconds() / 1000);
+    let upload = request.upload_measurement.kbps();
     info!("Upload parameter is {:?}", upload);
     let server = request.server.id;
     info!("Server parameter is {:?}", server);
