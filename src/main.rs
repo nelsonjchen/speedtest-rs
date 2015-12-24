@@ -24,7 +24,7 @@ fn main() {
                                .help("Display a list of speedtest.net servers sorted by distance"))
                       .arg(Arg::with_name("share")
                                .long("share")
-                               .help("Generate and provide a URL to the speedtest.net share \
+                               .help("Generate and provide an URL to the speedtest.net share \
                                       results image"))
                       .arg(Arg::with_name("bytes")
                                .long("bytes")

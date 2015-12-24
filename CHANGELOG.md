@@ -1,3 +1,10 @@
+## 0.0.4 (Dec 24, 2015)
+
+### Features
+
+* Added `--share` to generate and provide an URL to the speedtest.net share
+  results image.
+
 ## 0.0.3 (Dec 23, 2015)
 
 ### Fixes
