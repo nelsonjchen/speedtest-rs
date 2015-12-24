@@ -580,12 +580,12 @@ mod tests {
     #[test]
     fn test_share_url_hash() {
         let download_measurement = SpeedMeasurement {
-            size: (6096 * 1000) as usize,
+            size: (6096 * 100) as usize,
             duration: Duration::seconds(1),
         };
         println!("Download: {:?}", download_measurement);
         let upload_measurement = SpeedMeasurement {
-            size: (1861 * 1000) as usize,
+            size: (1861 * 100) as usize,
             duration: Duration::seconds(1),
         };
         println!("Upload: {:?}", upload_measurement);
@@ -601,7 +601,6 @@ mod tests {
             name: "".to_owned(),
             sponsor: "".to_owned(),
             url: "".to_owned(),
-            url2: "".to_owned(),
         };
         println!("Server: {:?}", server);
         let latency_measurement = SpeedTestLatencyTestResult {
