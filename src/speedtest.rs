@@ -544,8 +544,14 @@ pub fn get_share_url(request: &ShareUrlRequest) -> String {
 pub fn construct_share_form(request: ShareUrlRequest) -> String {
     form_urlencoded::serialize([("download", request.download_measurement.kbps().to_string()),
                                 ("ping",
-                                 request.latency_measurement.latency.num_milliseconds().to_string()),
-                                ("upload", request.upload_measurement.kbps().to_string()),
+                                 request.latency_measurement
+                                        .latency
+                                        .num_milliseconds()
+                                        .to_string()),
+                                ("upload",
+                                 request.upload_measurement
+                                        .kbps()
+                                        .to_string()),
                                 ("promo", "".to_owned()),
                                 ("startmode", "pingselect".to_owned()),
                                 ("recommendedserverid", request.server.id.to_string()),
