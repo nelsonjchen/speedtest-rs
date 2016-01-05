@@ -143,12 +143,9 @@ impl SpeedTestServersConfig {
                             latitude: lat,
                             longitude: lon,
                         };
-                        let distance = match config {
-                            Some(config) => {
-                                Some(distance::compute_distance(&config.location, &location))
-                            }
-                            None => None,
-                        };
+                        let distance = config.map(|config| {
+                            distance::compute_distance(&config.location, &location)
+                        });
                         let server = SpeedTestServer {
                             country: country,
                             host: host,
