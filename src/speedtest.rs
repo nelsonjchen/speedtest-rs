@@ -98,93 +98,74 @@ impl SpeedTestServersConfig {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
 
         for event in parser {
-            match event {
-                Ok(StartElement { ref name, ref attributes, ..}) => {
-                    match name.local_name.as_ref() {
-                        "server" => {
-                            let mut country: Option<String> = None;
-                            let mut host: Option<String> = None;
-                            let mut id: Option<u32> = None;
-                            let mut lat: Option<f32> = None;
-                            let mut lon: Option<f32> = None;
-                            let mut name: Option<String> = None;
-                            let mut sponsor: Option<String> = None;
-                            let mut url: Option<String> = None;
-                            for attribute in attributes {
-                                match attribute.name.local_name.as_ref() {
-                                    "country" => {
-                                        country = Some(attribute.value.clone());
-                                    }
-                                    "host" => {
-                                        host = Some(attribute.value.clone());
-                                    }
-                                    "id" => id = attribute.value.parse::<u32>().ok(),
-                                    "lat" => lat = attribute.value.parse::<f32>().ok(),
-                                    "lon" => lon = attribute.value.parse::<f32>().ok(),
-                                    "name" => {
-                                        name = Some(attribute.value.clone());
-                                    }
-                                    "sponsor" => {
-                                        sponsor = Some(attribute.value.clone());
-                                    }
-                                    "url" => {
-                                        url = Some(attribute.value.clone());
-                                    }
-                                    _ => {
-                                        // eh?
-                                    }
-                                }
+            if let Ok(StartElement { ref name, ref attributes, ..}) = event {
+                if name.local_name == "server" {
+                    let mut country: Option<String> = None;
+                    let mut host: Option<String> = None;
+                    let mut id: Option<u32> = None;
+                    let mut lat: Option<f32> = None;
+                    let mut lon: Option<f32> = None;
+                    let mut name: Option<String> = None;
+                    let mut sponsor: Option<String> = None;
+                    let mut url: Option<String> = None;
+                    for attribute in attributes {
+                        match attribute.name.local_name.as_ref() {
+                            "country" => {
+                                country = Some(attribute.value.clone());
                             }
-                            match (country, host, id, lat, lon, name, sponsor, url) {
-                                (Some(country),
-                                 Some(host),
-                                 Some(id),
-                                 Some(lat),
-                                 Some(lon),
-                                 Some(name),
-                                 Some(sponsor),
-                                 Some(url)) => {
-                                    let location = EarthLocation {
-                                        latitude: lat,
-                                        longitude: lon,
-                                    };
-                                    let distance = match config {
-                                        Some(config) => {
-                                            Some(distance::compute_distance(&config.location,
-                                                                            &location))
-                                        }
-                                        None => None,
-                                    };
-                                    let server = SpeedTestServer {
-                                        country: country,
-                                        host: host,
-                                        id: id,
-                                        location: location,
-                                        distance: distance,
-                                        name: name,
-                                        sponsor: sponsor,
-                                        url: url,
-                                    };
-                                    servers.push(server);
-                                }
-                                _ => {
-                                    // eh
-                                }
+                            "host" => {
+                                host = Some(attribute.value.clone());
                             }
-                        }
-                        _ => {
-                            // I don't care about other tags.
+                            "id" => id = attribute.value.parse::<u32>().ok(),
+                            "lat" => lat = attribute.value.parse::<f32>().ok(),
+                            "lon" => lon = attribute.value.parse::<f32>().ok(),
+                            "name" => {
+                                name = Some(attribute.value.clone());
+                            }
+                            "sponsor" => {
+                                sponsor = Some(attribute.value.clone());
+                            }
+                            "url" => {
+                                url = Some(attribute.value.clone());
+                            }
+                            _ => {}
                         }
                     }
-                }
-                _ => {
-                    // not using other parts of the xml library right now.
+                    if let (Some(country),
+                            Some(host),
+                            Some(id),
+                            Some(lat),
+                            Some(lon),
+                            Some(name),
+                            Some(sponsor),
+                            Some(url)) = (country, host, id, lat, lon, name, sponsor, url) {
+                        let location = EarthLocation {
+                            latitude: lat,
+                            longitude: lon,
+                        };
+                        let distance = match config {
+                            Some(config) => {
+                                Some(distance::compute_distance(&config.location, &location))
+                            }
+                            None => None,
+                        };
+                        let server = SpeedTestServer {
+                            country: country,
+                            host: host,
+                            id: id,
+                            location: location,
+                            distance: distance,
+                            name: name,
+                            sponsor: sponsor,
+                            url: url,
+                        };
+                        servers.push(server);
+                    }
                 }
             }
         }
         Ok(SpeedTestServersConfig { servers: servers })
     }
-
 
     pub fn servers_sorted_by_distance(&self, config: &SpeedTestConfig) -> Vec<SpeedTestServer> {
         let location = &config.location;
