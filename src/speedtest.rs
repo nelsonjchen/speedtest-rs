@@ -61,18 +61,17 @@ impl SpeedTestConfig {
                 _ => {}
             }
         }
-        match (ip, lat, lon, isp) {
-            (Some(ip), Some(lat), Some(lon), Some(isp)) => {
-                Ok(SpeedTestConfig {
-                    ip: ip,
-                    location: EarthLocation {
-                        latitude: lat,
-                        longitude: lon,
-                    },
-                    isp: isp,
-                })
-            }
-            _ => Err(Error::ConfigParseError),
+        if let (Some(ip), Some(lat), Some(lon), Some(isp)) = (ip, lat, lon, isp) {
+            Ok(SpeedTestConfig {
+                ip: ip,
+                location: EarthLocation {
+                    latitude: lat,
+                    longitude: lon,
+                },
+                isp: isp,
+            })
+        } else {
+            Err(Error::ConfigParseError)
         }
     }
 }
