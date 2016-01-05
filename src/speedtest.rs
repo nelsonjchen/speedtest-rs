@@ -36,29 +36,23 @@ impl SpeedTestConfig {
         let mut lon: Option<f32> = None;
         let mut isp: Option<String> = None;
         for event in parser {
-            match event {
-                Ok(StartElement { ref name, ref attributes, ..}) => {
-                    match name.local_name.as_ref() {
-                        "client" => {
-                            for attribute in attributes {
-                                match attribute.name.local_name.as_ref() {
-                                    "ip" => {
-                                        ip = Some(attribute.value.clone());
-                                    }
-                                    "lat" => lat = attribute.value.parse::<f32>().ok(),
-                                    "lon" => lon = attribute.value.parse::<f32>().ok(),
-                                    "isp" => {
-                                        isp = Some(attribute.value.clone());
-                                    }
-                                    _ => {}
-                                }
+            if let Ok(StartElement { ref name, ref attributes, ..}) = event {
+                if name.local_name == "client" {
+                    for attribute in attributes {
+                        match attribute.name.local_name.as_ref() {
+                            "ip" => {
+                                ip = Some(attribute.value.clone());
                             }
-                            break;
+                            "lat" => lat = attribute.value.parse::<f32>().ok(),
+                            "lon" => lon = attribute.value.parse::<f32>().ok(),
+                            "isp" => {
+                                isp = Some(attribute.value.clone());
+                            }
+                            _ => {}
                         }
-                        _ => {}
                     }
+                    break;
                 }
-                _ => {}
             }
         }
         if let (Some(ip), Some(lat), Some(lon), Some(isp)) = (ip, lat, lon, isp) {
