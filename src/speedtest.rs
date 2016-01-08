@@ -303,7 +303,7 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Resul
     info!("Testing Download speed");
     let root_path = Path::new(&server.url).parent().unwrap();
     debug!("Root path is: {}", root_path.display());
-    let start_time = now();
+    let start_time = Arc::new(now());
     let total_size;
 
     let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
@@ -312,16 +312,22 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Resul
     let complete = Arc::new(RwLock::new(vec![]));
     let (tx, rx) = sync_channel(6);
     let root_path = root_path.to_path_buf();
+    let thread_start_time = start_time.clone();
     let farc = Arc::new(f);
     let prod_thread = thread::spawn(move || {
         for size in &sizes {
             for _ in 0..times_to_run_each_file {
                 let size = size.clone();
                 let root_path = root_path.clone();
+                let start_time = thread_start_time.clone();
                 let farc = farc.clone();
                 let thread = thread::spawn(move || {
                     let path = root_path.to_path_buf()
                                         .join(format!("random{0}x{0}.jpg", size));
+                    if (now() - *start_time) > Duration::seconds(10) {
+                        info!("Canceled Downloading {} of {}", size, path.display());
+                        return 0;
+                    }
                     let client = Client::new();
                     let mut res = client.get(path.to_str().unwrap())
                                         .header(Connection::close())
@@ -363,7 +369,7 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Resul
     total_size = (*complete).read().unwrap().iter().fold(0, |val, i| val + i);
     Ok(SpeedMeasurement {
         size: total_size,
-        duration: now() - start_time,
+        duration: now() - *start_time,
     })
 }
 
