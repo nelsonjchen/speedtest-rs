@@ -1,3 +1,9 @@
+## 0.0.5 (Jan 15, 2016)
+
+### Fixes
+
+* Also applied omitted 10 second test run limit to download.
+
 ## 0.0.4 (Dec 24, 2015)
 
 ### Features
