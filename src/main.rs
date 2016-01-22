@@ -120,7 +120,7 @@ fn main() {
                  (upload_measurement.size / 800) as f32 /
                  upload_measurement.duration.num_milliseconds() as f32);
     } else {
-        println!("Upload: {:.2} Mbyte/s",
+        println!("Upload: {:.2} Mbit/s",
                  (upload_measurement.size / 100) as f32 /
                  upload_measurement.duration.num_milliseconds() as f32);
     }
