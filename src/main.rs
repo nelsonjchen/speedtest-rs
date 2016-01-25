@@ -97,12 +97,10 @@ fn main() {
 
     if matches.is_present("bytes") {
         println!("Download: {:.2} Mbyte/s",
-                 (download_measurement.size / 800) as f32 /
-                 download_measurement.duration.num_milliseconds() as f32);
+                 ((download_measurement.kbps() / 8) as f32 / 1000.00));
     } else {
         println!("Download: {:.2} Mbit/s",
-                 (download_measurement.size / 100) as f32 /
-                 download_measurement.duration.num_milliseconds() as f32);
+                 (download_measurement.kbps()) as f32 / 1000.00);
     }
 
     let upload_measurement;
@@ -117,12 +115,10 @@ fn main() {
 
     if matches.is_present("bytes") {
         println!("Upload: {:.2} Mbyte/s",
-                 (upload_measurement.size / 800) as f32 /
-                 upload_measurement.duration.num_milliseconds() as f32);
+                 ((upload_measurement.kbps() / 8) as f32 / 1000.00));
     } else {
         println!("Upload: {:.2} Mbit/s",
-                 (upload_measurement.size / 100) as f32 /
-                 upload_measurement.duration.num_milliseconds() as f32);
+                 (upload_measurement.kbps() as f32 / 1000.00));
     }
 
     if matches.is_present("share") {
