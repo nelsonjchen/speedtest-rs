@@ -289,7 +289,7 @@ pub struct SpeedMeasurement {
 
 impl SpeedMeasurement {
     pub fn kbps(&self) -> u32 {
-        ((self.size as i64 / (self.duration.num_milliseconds() / 1000)) as u32) / 100
+        (self.size as u32 * 8) / self.duration.num_milliseconds() as u32
     }
 }
 
@@ -597,7 +597,7 @@ mod tests {
             server: &server,
             latency_measurement: &latency_measurement,
         };
-        assert_eq!(request.hash(), "e0d55e3bdcae377637c9cfea06783e50");
+        assert_eq!(request.hash(), "f10eb3dd8d3c38a221e823d859680045");
     }
 
     #[test]
