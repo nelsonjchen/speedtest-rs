@@ -1,3 +1,13 @@
+## 0.0.6 (Jan 25, 2016)
+
+### Fixes
+
+* Correct issue with confusion on maths used to calculate bits and bytes. I
+  should probably code when I'm awake and not when I'm tired, exhausted, and
+  delirious. Fix was put in while I'm delirious so who knows if this works!
+* Fixed issue where not using `--bytes` results in "Mbytes/s" output even
+  though output is "Mbit/s".
+
 ## 0.0.5 (Jan 15, 2016)
 
 ### Fixes
