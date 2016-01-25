@@ -1,6 +1,6 @@
 [root]
 name = "speedtest-rs"
-version = "0.0.5"
+version = "0.0.6"
 dependencies = [
  "clap 1.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",

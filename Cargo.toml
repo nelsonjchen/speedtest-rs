@@ -1,6 +1,6 @@
 [package]
 name = "speedtest-rs"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["Nelson Chen <crazysim@gmail.com>"]
 exclude = [
     "tests/config/*",
