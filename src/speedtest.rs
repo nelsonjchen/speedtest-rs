@@ -324,6 +324,8 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Resul
                 let thread = thread::spawn(move || {
                     let path = root_path.to_path_buf()
                                         .join(format!("random{0}x{0}.jpg", size));
+                    let f = farc.clone();
+                    f();
                     if (now() - *start_time) > Duration::seconds(10) {
                         info!("Canceled Downloading {} of {}", size, path.display());
                         return 0;
@@ -346,8 +348,6 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Resul
                         }
                     }
                     info!("Done {}, {}", path.display(), size);
-                    let f = farc.clone();
-                    f();
                     size
                 });
                 tx.send(thread).unwrap();
@@ -401,6 +401,8 @@ pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Result<
             let farc = farc.clone();
             let thread = thread::spawn(move || {
                 info!("Uploading {} to {}", size, path.display());
+                let f = farc.clone();
+                f();
                 if (now() - *start_time) > Duration::seconds(10) {
                     info!("Canceled Uploading {} of {}", size, path.display());
                     return 0;
@@ -424,8 +426,6 @@ pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Result<
                         _ => panic!("Something has gone wrong."),
                     }
                 }
-                let f = farc.clone();
-                f();
                 info!("Done {}, {}", path.display(), size);
                 size
             });
