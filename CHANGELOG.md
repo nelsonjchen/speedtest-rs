@@ -1,3 +1,10 @@
+## 0.0.7 (Jan 27, 2016)
+
+### Fixes
+
+* Update progress bar behavior to be more like `speedtest-cli` by displaying
+  attempts to upload a file piece instead of completion.
+
 ## 0.0.6 (Jan 25, 2016)
 
 ### Fixes
