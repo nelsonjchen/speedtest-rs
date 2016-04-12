@@ -18,3 +18,7 @@ clap = "1.5"
 xml-rs = "0.3"
 rust-crypto = "0.2"
 url = "0.5"
+
+[[bin]]
+doc = false
+name = "speedtest-rs"
