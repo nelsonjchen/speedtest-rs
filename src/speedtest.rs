@@ -14,7 +14,7 @@ use distance::{EarthLocation, compute_distance};
 use error::Error;
 use crypto::md5::Md5;
 use crypto::digest::Digest;
-use url::form_urlencoded;
+use url;
 
 use distance;
 
@@ -36,7 +36,7 @@ impl SpeedTestConfig {
         let mut lon: Option<f32> = None;
         let mut isp: Option<String> = None;
         for event in parser {
-            if let Ok(StartElement { ref name, ref attributes, ..}) = event {
+            if let Ok(StartElement { ref name, ref attributes, .. }) = event {
                 if name.local_name == "client" {
                     for attribute in attributes {
                         match attribute.name.local_name.as_ref() {
@@ -98,7 +98,7 @@ impl SpeedTestServersConfig {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
 
         for event in parser {
-            if let Ok(StartElement { ref name, ref attributes, ..}) = event {
+            if let Ok(StartElement { ref name, ref attributes, .. }) = event {
                 if name.local_name == "server" {
                     let mut country: Option<String> = None;
                     let mut host: Option<String> = None;
@@ -143,9 +143,10 @@ impl SpeedTestServersConfig {
                             latitude: lat,
                             longitude: lon,
                         };
-                        let distance = config.map(|config| {
-                            distance::compute_distance(&config.location, &location)
-                        });
+                        let distance =
+                            config.map(|config| {
+                                distance::compute_distance(&config.location, &location)
+                            });
                         let server = SpeedTestServer {
                             country: country,
                             host: host,
@@ -181,9 +182,9 @@ pub fn download_configuration() -> ::Result<Response> {
     let client = Client::new();
     // Creating an outgoing request.
     let res = try!(client.get("http://www.speedtest.net/speedtest-config.php")
-                         .header(Connection::close())
-                         .header(UserAgent(USER_AGENT.to_owned()))
-                         .send());
+        .header(Connection::close())
+        .header(UserAgent(USER_AGENT.to_owned()))
+        .send());
     info!("Downloaded Configuration from speedtest.net");
     Ok(res)
 }
@@ -201,9 +202,9 @@ pub fn download_server_list() -> ::Result<Response> {
     info!("Download Server List");
     let client = Client::new();
     let server_res = try!(client.get("http://www.speedtest.net/speedtest-servers.php")
-                                .header(Connection::close())
-                                .header(UserAgent(USER_AGENT.to_owned()))
-                                .send());
+        .header(Connection::close())
+        .header(UserAgent(USER_AGENT.to_owned()))
+        .send());
     info!("Downloaded Server List");
     Ok(server_res)
 }
@@ -252,9 +253,9 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer])
         for _ in 0..3 {
             let start_time = now();
             let res = try!(client.get(&latency_path)
-                                 .header(Connection::close())
-                                 .header(UserAgent(USER_AGENT.to_owned()))
-                                 .send());
+                .header(Connection::close())
+                .header(UserAgent(USER_AGENT.to_owned()))
+                .send());
             res.bytes().last();
             let latency_measurement = now() - start_time;
             info!("Sampled {} ms", latency_measurement.num_milliseconds());
@@ -323,7 +324,7 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Resul
                 let farc = farc.clone();
                 let thread = thread::spawn(move || {
                     let path = root_path.to_path_buf()
-                                        .join(format!("random{0}x{0}.jpg", size));
+                        .join(format!("random{0}x{0}.jpg", size));
                     let f = farc.clone();
                     f();
                     if (now() - *start_time) > Duration::seconds(10) {
@@ -332,10 +333,10 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Resul
                     }
                     let client = Client::new();
                     let mut res = client.get(path.to_str().unwrap())
-                                        .header(Connection::close())
-                                        .header(UserAgent(USER_AGENT.to_owned()))
-                                        .send()
-                                        .unwrap();
+                        .header(Connection::close())
+                        .header(UserAgent(USER_AGENT.to_owned()))
+                        .send()
+                        .unwrap();
                     let mut buffer = [0; 10240];
                     let mut size: usize = 0;
                     loop {
@@ -411,11 +412,11 @@ pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Result<
                 let client = Client::new();
                 let body = format!("content1={}", body_loop.take(size).collect::<String>());
                 let mut res = client.post(path.to_str().unwrap())
-                                    .body(body.as_bytes())
-                                    .header(Connection::close())
-                                    .header(UserAgent(USER_AGENT.to_owned()))
-                                    .send()
-                                    .unwrap();
+                    .body(body.as_bytes())
+                    .header(Connection::close())
+                    .header(UserAgent(USER_AGENT.to_owned()))
+                    .send()
+                    .unwrap();
                 let mut buffer = [0; 10240];
                 loop {
                     match res.read(&mut buffer) {
@@ -490,8 +491,7 @@ pub fn get_share_url(request: &ShareUrlRequest) -> String {
     let ping = request.latency_measurement.latency;
     info!("Ping parameter is {:?}", ping);
 
-    let pairs = [("download",
-                  format!("{}", request.download_measurement.kbps())),
+    let pairs = [("download", format!("{}", request.download_measurement.kbps())),
                  ("ping", format!("{}", ping.num_milliseconds())),
                  ("upload", format!("{}", request.upload_measurement.kbps())),
                  ("promo", format!("")),
@@ -501,17 +501,19 @@ pub fn get_share_url(request: &ShareUrlRequest) -> String {
                  ("serverid", format!("{}", server)),
                  ("hash", request.hash())];
 
-    let body = form_urlencoded::serialize(pairs.iter());
+    let body = url::form_urlencoded::Serializer::new(String::new())
+        .extend_pairs(pairs.iter())
+        .finish();
 
     info!("Share Body Request: {:?}", body);
 
     let client = Client::new();
     let res = client.post("http://www.speedtest.net/api/api.php")
-                    .header(UserAgent(USER_AGENT.to_owned()))
-                    .header(Referer("http://c.speedtest.net/flash/speedtest.swf".to_owned()))
-                    .header(ContentType::form_url_encoded())
-                    .body(body.as_bytes())
-                    .send();
+        .header(UserAgent(USER_AGENT.to_owned()))
+        .header(Referer("http://c.speedtest.net/flash/speedtest.swf".to_owned()))
+        .header(ContentType::form_url_encoded())
+        .body(body.as_bytes())
+        .send();
     let mut encode_return = String::new();
     res.unwrap().read_to_string(&mut encode_return).unwrap();
     let response_id = parse_share_request_response_id(encode_return.as_bytes()).unwrap();
@@ -519,28 +521,30 @@ pub fn get_share_url(request: &ShareUrlRequest) -> String {
 }
 
 pub fn construct_share_form(request: ShareUrlRequest) -> String {
-    form_urlencoded::serialize([("download", request.download_measurement.kbps().to_string()),
-                                ("ping",
-                                 request.latency_measurement
-                                        .latency
-                                        .num_milliseconds()
-                                        .to_string()),
-                                ("upload",
-                                 request.upload_measurement
-                                        .kbps()
-                                        .to_string()),
-                                ("promo", "".to_owned()),
-                                ("startmode", "pingselect".to_owned()),
-                                ("recommendedserverid", request.server.id.to_string()),
-                                ("hash", request.hash())]
-                                   .iter())
+    url::form_urlencoded::Serializer::new(String::new())
+        .extend_pairs([("download", request.download_measurement.kbps().to_string()),
+                       ("ping",
+                        request.latency_measurement
+                           .latency
+                           .num_milliseconds()
+                           .to_string()),
+                       ("upload",
+                        request.upload_measurement
+                           .kbps()
+                           .to_string()),
+                       ("promo", "".to_owned()),
+                       ("startmode", "pingselect".to_owned()),
+                       ("recommendedserverid", request.server.id.to_string()),
+                       ("hash", request.hash())]
+            .iter())
+        .finish()
 }
 
 pub fn parse_share_request_response_id(input: &[u8]) -> Option<String> {
-    let pairs = form_urlencoded::parse(input);
-    for pair in pairs.iter() {
+    let pairs = url::form_urlencoded::parse (input);
+    for pair in pairs {
         if pair.0 == "resultid" {
-            return Some(pair.1.clone());
+            return Some(pair.1.into_owned().to_string());
         }
     }
     return None;
