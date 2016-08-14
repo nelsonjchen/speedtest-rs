@@ -1,3 +1,11 @@
+## 0.0.8 (Aug 14, 2016)
+
+Maintenance and Progress Release
+
+### Fixes
+
+* Updated dependencies. In particular, updated to the new `url` crate API.
+
 ## 0.0.7 (Jan 27, 2016)
 
 ### Fixes
