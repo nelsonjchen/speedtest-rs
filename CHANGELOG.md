@@ -1,3 +1,13 @@
+## 0.0.9 (Dec 22, 2016)
+
+Swap out usage of hyper directly with reqwest.
+
+### Features
+
+* `speedtest-rs` now uses the platform's native TLS implementation. Compile
+  issues on Windows or Mac due to OpenSSL issues or sheanigans are no
+  longer an issue.
+
 ## 0.0.8 (Aug 14, 2016)
 
 Maintenance and Progress Release
