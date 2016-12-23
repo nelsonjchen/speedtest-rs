@@ -1,24 +1,22 @@
 [package]
-name = "speedtest-rs"
-version = "0.0.8"
-authors = ["Nelson Chen <crazysim@gmail.com>"]
-exclude = [
-    "tests/config/*",
-]
+authors = ["Nelson Chen <nelson@mindflakes.com>"]
 description = "Speedtest.net testing utility and crate"
+exclude = ["tests/config/*"]
 license = "MIT"
+name = "speedtest-rs"
 repository = "https://github.com/nelsonjchen/speedtest-rs"
-
-[dependencies]
-time = "0.1"
-hyper = "0.9"
-log = "0.3"
-env_logger = "0.3"
-clap = "1.5"
-xml-rs = "0.3"
-rust-crypto = "0.2"
-url = "1.2"
+version = "0.0.8"
 
 [[bin]]
 doc = false
 name = "speedtest-rs"
+
+[dependencies]
+clap = "1.5"
+env_logger = "0.3"
+log = "0.3"
+reqwest = "0.2.0"
+rust-crypto = "0.2"
+time = "0.1"
+url = "1.2"
+xml-rs = "0.3"

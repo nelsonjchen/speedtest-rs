@@ -1,5 +1,5 @@
-use hyper::error::Error as HyperError;
 use self::Error::*;
+use reqwest::Error as ReqwestError;
 
 pub type Result<T> = ::std::result::Result<T, Error>;
 
@@ -10,11 +10,11 @@ pub enum Error {
     ServerListParseError,
     LatencyTestInvalidPath,
     LatencyTestClosestError,
-    Hyper(HyperError),
+    Reqwest(ReqwestError),
 }
 
-impl From<HyperError> for Error {
-    fn from(err: HyperError) -> Error {
-        Hyper(err)
+impl From<ReqwestError> for Error {
+    fn from(err: ReqwestError) -> Error {
+        Reqwest(err)
     }
 }
