@@ -16,23 +16,21 @@ use std::io::{self, Write};
 fn main() {
     env_logger::init().unwrap();
     let matches = App::new("speedtest-rs")
-                      .version(&crate_version!()[..])
-                      .about("Command line interface for testing internet bandwidth using \
-                              speedtest.net.")
-                      .arg(Arg::with_name("list")
-                               .long("list")
-                               .help("Display a list of speedtest.net servers sorted by distance"))
-                      .arg(Arg::with_name("share")
-                               .long("share")
-                               .help("Generate and provide an URL to the speedtest.net share \
-                                      results image"))
-                      .arg(Arg::with_name("bytes")
-                               .long("bytes")
-                               .help("Display values in bytes instead of bits."))
-                      .arg(Arg::with_name("simple")
-                               .long("simple")
-                               .help("Suppress verbose output, only show basic informatio"))
-                      .get_matches();
+        .version(&crate_version!()[..])
+        .about("Command line interface for testing internet bandwidth using speedtest.net.")
+        .arg(Arg::with_name("list")
+            .long("list")
+            .help("Display a list of speedtest.net servers sorted by distance"))
+        .arg(Arg::with_name("share")
+            .long("share")
+            .help("Generate and provide an URL to the speedtest.net share results image"))
+        .arg(Arg::with_name("bytes")
+            .long("bytes")
+            .help("Display values in bytes instead of bits."))
+        .arg(Arg::with_name("simple")
+            .long("simple")
+            .help("Suppress verbose output, only show basic informatio"))
+        .get_matches();
 
     if !matches.is_present("simple") {
         println!("Retrieving speedtest.net configuration...");
@@ -66,7 +64,7 @@ fn main() {
         info!("Close Server: {:?}", server);
     }
     let latecy_test_result = speedtest::get_best_server_based_on_latency(&server_list_sorted[..])
-                                 .unwrap();
+        .unwrap();
     if !matches.is_present("simple") {
         println!("Hosted by {} ({}) [{:.2} km]: {}.{} ms",
              latecy_test_result.server.sponsor,
@@ -88,11 +86,11 @@ fn main() {
     if !matches.is_present("simple") {
         print!("Testing download speed");
         download_measurement = speedtest::test_download_with_progress(best_server, print_dot)
-                                   .unwrap();
+            .unwrap();
         println!("");
     } else {
         download_measurement = speedtest::test_download_with_progress(best_server, do_nothing)
-                                   .unwrap();
+            .unwrap();
     }
 
     if matches.is_present("bytes") {

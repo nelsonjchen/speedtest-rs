@@ -526,13 +526,13 @@ pub fn construct_share_form(request: ShareUrlRequest) -> String {
         .extend_pairs([("download", request.download_measurement.kbps().to_string()),
                        ("ping",
                         request.latency_measurement
-                           .latency
-                           .num_milliseconds()
-                           .to_string()),
+                            .latency
+                            .num_milliseconds()
+                            .to_string()),
                        ("upload",
                         request.upload_measurement
-                           .kbps()
-                           .to_string()),
+                            .kbps()
+                            .to_string()),
                        ("promo", "".to_owned()),
                        ("startmode", "pingselect".to_owned()),
                        ("recommendedserverid", request.server.id.to_string()),
@@ -542,7 +542,7 @@ pub fn construct_share_form(request: ShareUrlRequest) -> String {
 }
 
 pub fn parse_share_request_response_id(input: &[u8]) -> Option<String> {
-    let pairs = url::form_urlencoded::parse (input);
+    let pairs = url::form_urlencoded::parse(input);
     for pair in pairs {
         if pair.0 == "resultid" {
             return Some(pair.1.into_owned().to_string());
