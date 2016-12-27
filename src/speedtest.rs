@@ -17,9 +17,6 @@ use xml::reader::XmlEvent::StartElement;
 
 const USER_AGENT: &'static str = concat!("reqwest/speedtest-rs ", env!("CARGO_PKG_VERSION"));
 
-#[derive(Debug)]
-pub struct ParseError(String);
-
 pub struct SpeedTestConfig {
     pub ip: String,
     location: EarthLocation,
@@ -206,15 +203,6 @@ pub fn download_server_list() -> Result<Response> {
     Ok(server_res)
 }
 
-pub fn get_server_list() -> Result<SpeedTestServersConfig> {
-    let config_body = try!(download_server_list());
-    info!("Parsing Server List");
-    let config_parser = EventReader::new(config_body);
-    let spt_config = SpeedTestServersConfig::new(config_parser);
-    info!("Parsed Server List");
-    spt_config
-}
-
 pub fn get_server_list_with_config(config: Option<&SpeedTestConfig>)
                                    -> Result<SpeedTestServersConfig> {
     let config_body = try!(download_server_list());
@@ -291,9 +279,6 @@ impl SpeedMeasurement {
     }
 }
 
-pub fn test_download(server: &SpeedTestServer) -> Result<SpeedMeasurement> {
-    test_download_with_progress(server, || {})
-}
 
 pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> Result<SpeedMeasurement>
     where F: Fn() -> () + Send + Sync + 'static

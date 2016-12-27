@@ -101,8 +101,7 @@ fn main() {
             .unwrap();
         println!("");
     } else {
-        download_measurement = speedtest::test_download_with_progress(best_server, || {})
-            .unwrap();
+        download_measurement = speedtest::test_download_with_progress(best_server, || {}).unwrap();
     }
 
     if matches.is_present("bytes") {
