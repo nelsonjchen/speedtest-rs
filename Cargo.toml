@@ -7,10 +7,6 @@ name = "speedtest-rs"
 repository = "https://github.com/nelsonjchen/speedtest-rs"
 version = "0.0.9"
 
-[[bin]]
-doc = false
-name = "speedtest-rs"
-
 [dependencies]
 clap = "1.5"
 env_logger = "0.3"
