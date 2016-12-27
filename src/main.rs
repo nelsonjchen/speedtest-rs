@@ -19,9 +19,10 @@ pub mod error;
 
 pub use self::error::{Result, Error};
 
+#[allow(dead_code)]
 fn main() {
     env_logger::init().unwrap();
-    
+
     let matches = App::new("speedtest-rs")
         .version(&crate_version!()[..])
         .about("Command line interface for testing internet bandwidth using speedtest.net.")
@@ -96,7 +97,7 @@ fn main() {
             .unwrap();
         println!("");
     } else {
-        download_measurement = speedtest::test_download_with_progress(best_server, do_nothing)
+        download_measurement = speedtest::test_download_with_progress(best_server, || {})
             .unwrap();
     }
 
@@ -115,7 +116,7 @@ fn main() {
         upload_measurement = speedtest::test_upload_with_progress(best_server, print_dot).unwrap();
         println!("");
     } else {
-        upload_measurement = speedtest::test_upload_with_progress(best_server, do_nothing).unwrap();
+        upload_measurement = speedtest::test_upload_with_progress(best_server, || {}).unwrap();
     }
 
     if matches.is_present("bytes") {
@@ -142,5 +143,3 @@ fn print_dot() {
     print!(".");
     io::stdout().flush().unwrap();
 }
-
-fn do_nothing() {}
