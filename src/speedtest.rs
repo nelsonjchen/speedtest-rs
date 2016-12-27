@@ -85,13 +85,13 @@ pub struct SpeedTestServersConfig {
 
 
 impl SpeedTestServersConfig {
-    fn new<R: Read>(parser: EventReader<R>) -> ::Result<SpeedTestServersConfig> {
+    fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestServersConfig> {
         SpeedTestServersConfig::new_with_config(parser, None)
     }
 
     fn new_with_config<R: Read>(parser: EventReader<R>,
                                 config: Option<&SpeedTestConfig>)
-                                -> ::Result<SpeedTestServersConfig> {
+                                -> Result<SpeedTestServersConfig> {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
 
         for event in parser {
@@ -174,7 +174,7 @@ impl SpeedTestServersConfig {
     }
 }
 
-pub fn download_configuration() -> ::Result<Response> {
+pub fn download_configuration() -> Result<Response> {
     info!("Downloading Configuration from speedtest.net");
     let client = Client::new().unwrap();
     // Creating an outgoing request.
@@ -186,7 +186,7 @@ pub fn download_configuration() -> ::Result<Response> {
     Ok(res)
 }
 
-pub fn get_configuration() -> ::Result<SpeedTestConfig> {
+pub fn get_configuration() -> Result<SpeedTestConfig> {
     let config_body = try!(download_configuration());
     info!("Parsing Configuration");
     let config_parser = EventReader::new(config_body);
@@ -195,7 +195,7 @@ pub fn get_configuration() -> ::Result<SpeedTestConfig> {
     spt_config
 }
 
-pub fn download_server_list() -> ::Result<Response> {
+pub fn download_server_list() -> Result<Response> {
     info!("Download Server List");
     let client = Client::new().unwrap();
     let server_res = try!(client.get("http://www.speedtest.net/speedtest-servers.php")
@@ -206,7 +206,7 @@ pub fn download_server_list() -> ::Result<Response> {
     Ok(server_res)
 }
 
-pub fn get_server_list() -> ::Result<SpeedTestServersConfig> {
+pub fn get_server_list() -> Result<SpeedTestServersConfig> {
     let config_body = try!(download_server_list());
     info!("Parsing Server List");
     let config_parser = EventReader::new(config_body);
@@ -216,7 +216,7 @@ pub fn get_server_list() -> ::Result<SpeedTestServersConfig> {
 }
 
 pub fn get_server_list_with_config(config: Option<&SpeedTestConfig>)
-                                   -> ::Result<SpeedTestServersConfig> {
+                                   -> Result<SpeedTestServersConfig> {
     let config_body = try!(download_server_list());
     info!("Parsing Server List");
     let config_parser = EventReader::new(config_body);
@@ -235,7 +235,7 @@ pub struct SpeedTestLatencyTestResult<'a> {
 }
 
 pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer])
-                                        -> ::Result<SpeedTestLatencyTestResult> {
+                                        -> Result<SpeedTestLatencyTestResult> {
     info!("Testing for fastest server");
     let client = Client::new().unwrap();
     let mut fastest_server = None;
@@ -291,11 +291,11 @@ impl SpeedMeasurement {
     }
 }
 
-pub fn test_download(server: &SpeedTestServer) -> ::Result<SpeedMeasurement> {
+pub fn test_download(server: &SpeedTestServer) -> Result<SpeedMeasurement> {
     test_download_with_progress(server, || {})
 }
 
-pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Result<SpeedMeasurement>
+pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> Result<SpeedMeasurement>
     where F: Fn() -> () + Send + Sync + 'static
 {
     info!("Testing Download speed");
@@ -371,11 +371,11 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Resul
     })
 }
 
-pub fn test_upload(server: &SpeedTestServer) -> ::Result<SpeedMeasurement> {
+pub fn test_upload(server: &SpeedTestServer) -> Result<SpeedMeasurement> {
     test_upload_with_progress(server, || {})
 }
 
-pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> ::Result<SpeedMeasurement>
+pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> Result<SpeedMeasurement>
     where F: Fn() -> () + Send + Sync + 'static
 {
     info!("Testing Upload");
