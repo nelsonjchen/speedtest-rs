@@ -1,21 +1,15 @@
 use reqwest::Error as ReqwestError;
 
-use self::Error::*;
+error_chain!{
+    foreign_links {
+        Reqwest(ReqwestError);
+    }
 
-pub type Result<T> = ::std::result::Result<T, Error>;
-
-#[derive(Debug)]
-pub enum Error {
-    ConfigDownloadFailed,
-    ConfigParseError,
-    ServerListParseError,
-    LatencyTestInvalidPath,
-    LatencyTestClosestError,
-    Reqwest(ReqwestError),
-}
-
-impl From<ReqwestError> for Error {
-    fn from(err: ReqwestError) -> Error {
-        Reqwest(err)
+    errors {
+        ConfigDownloadFailed {}
+        ConfigParseError {}
+        ServerListParseError {}
+        LatencyTestInvalidPath {}
+        LatencyTestClosestError {}
     }
 }

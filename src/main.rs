@@ -1,7 +1,10 @@
 #[macro_use]
 extern crate clap;
 #[macro_use]
+extern crate error_chain;
+#[macro_use]
 extern crate log;
+
 
 extern crate crypto;
 extern crate env_logger;
@@ -10,14 +13,15 @@ extern crate reqwest;
 extern crate url;
 extern crate xml;
 
+mod speedtest;
+mod distance;
+mod error;
+
 use clap::{App, Arg};
 use std::io::{self, Write};
 
-pub mod speedtest;
-pub mod distance;
-pub mod error;
 
-pub use self::error::{Result, Error};
+use error::*;
 
 #[allow(dead_code)]
 fn main() {

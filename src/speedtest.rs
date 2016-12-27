@@ -1,7 +1,7 @@
 use crypto::md5::Md5;
 use crypto::digest::Digest;
 use distance::{self, EarthLocation, compute_distance};
-use error::Error;
+use error::*;
 use reqwest::header::{Connection, UserAgent, Referer, ContentType};
 use reqwest::{Client, Response};
 use std::cmp::Ordering::Less;
@@ -27,7 +27,7 @@ pub struct SpeedTestConfig {
 }
 
 impl SpeedTestConfig {
-    fn new<R: Read>(parser: EventReader<R>) -> ::Result<SpeedTestConfig> {
+    fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestConfig> {
         let mut ip: Option<String> = None;
         let mut lat: Option<f32> = None;
         let mut lon: Option<f32> = None;
@@ -62,7 +62,7 @@ impl SpeedTestConfig {
                 isp: isp,
             })
         } else {
-            Err(Error::ConfigParseError)
+            Err(ErrorKind::ConfigParseError.into())
         }
     }
 }
@@ -243,7 +243,7 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer])
     for server in servers {
         let path = Path::new(&server.url);
         let latency_path = format!("{}/latency.txt",
-                                   try!(path.parent().ok_or(Error::LatencyTestInvalidPath))
+                                   try!(path.parent().ok_or(ErrorKind::LatencyTestInvalidPath))
                                        .display());
         info!("Downloading: {:?}", latency_path);
         let mut latency_measurements = vec![];
@@ -274,7 +274,7 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer])
           fastest_latency.num_milliseconds(),
           fastest_server);
     Ok(SpeedTestLatencyTestResult {
-        server: try!(fastest_server.ok_or(Error::LatencyTestClosestError)),
+        server: try!(fastest_server.ok_or(ErrorKind::LatencyTestClosestError)),
         latency: fastest_latency,
     })
 }
