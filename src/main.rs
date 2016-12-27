@@ -1,12 +1,17 @@
 #[macro_use]
+extern crate clap;
+#[macro_use]
 extern crate log;
-extern crate env_logger;
 
-extern crate xml;
-extern crate time;
 extern crate crypto;
+extern crate env_logger;
+extern crate time;
 extern crate reqwest;
 extern crate url;
+extern crate xml;
+
+use clap::{App, Arg};
+use std::io::{self, Write};
 
 pub mod speedtest;
 pub mod distance;
@@ -14,17 +19,9 @@ pub mod error;
 
 pub use self::error::{Result, Error};
 
-
-#[macro_use]
-extern crate clap;
-
-use clap::{App, Arg};
-
-use std::io::{self, Write};
-
-#[allow(dead_code)]
 fn main() {
     env_logger::init().unwrap();
+    
     let matches = App::new("speedtest-rs")
         .version(&crate_version!()[..])
         .about("Command line interface for testing internet bandwidth using speedtest.net.")

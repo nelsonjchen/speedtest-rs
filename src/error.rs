@@ -1,5 +1,6 @@
-use self::Error::*;
 use reqwest::Error as ReqwestError;
+
+use self::Error::*;
 
 pub type Result<T> = ::std::result::Result<T, Error>;
 
