@@ -498,26 +498,6 @@ pub fn get_share_url(request: &ShareUrlRequest) -> String {
     format!("http://www.speedtest.net/result/{}.png", response_id)
 }
 
-pub fn construct_share_form(request: ShareUrlRequest) -> String {
-    url::form_urlencoded::Serializer::new(String::new())
-        .extend_pairs([("download", request.download_measurement.kbps().to_string()),
-                       ("ping",
-                        request.latency_measurement
-                            .latency
-                            .num_milliseconds()
-                            .to_string()),
-                       ("upload",
-                        request.upload_measurement
-                            .kbps()
-                            .to_string()),
-                       ("promo", "".to_owned()),
-                       ("startmode", "pingselect".to_owned()),
-                       ("recommendedserverid", request.server.id.to_string()),
-                       ("hash", request.hash())]
-            .iter())
-        .finish()
-}
-
 pub fn parse_share_request_response_id(input: &[u8]) -> Option<String> {
     let pairs = url::form_urlencoded::parse(input);
     for pair in pairs {
