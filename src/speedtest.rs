@@ -173,12 +173,12 @@ impl SpeedTestServersConfig {
 
 pub fn download_configuration() -> Result<Response> {
     info!("Downloading Configuration from speedtest.net");
-    let client = Client::new().unwrap();
+    let client = Client::new()?;
     // Creating an outgoing request.
-    let res = try!(client.get("http://www.speedtest.net/speedtest-config.php")
+    let res = client.get("http://www.speedtest.net/speedtest-config.php")
         .header(Connection::close())
         .header(UserAgent(USER_AGENT.to_owned()))
-        .send());
+        .send()?;
     info!("Downloaded Configuration from speedtest.net");
     Ok(res)
 }
@@ -194,7 +194,7 @@ pub fn get_configuration() -> Result<SpeedTestConfig> {
 
 pub fn download_server_list() -> Result<Response> {
     info!("Download Server List");
-    let client = Client::new().unwrap();
+    let client = Client::new()?;
     let server_res = try!(client.get("http://www.speedtest.net/speedtest-servers.php")
         .header(Connection::close())
         .header(UserAgent(USER_AGENT.to_string()))
@@ -205,7 +205,7 @@ pub fn download_server_list() -> Result<Response> {
 
 pub fn get_server_list_with_config(config: Option<&SpeedTestConfig>)
                                    -> Result<SpeedTestServersConfig> {
-    let config_body = try!(download_server_list());
+    let config_body = download_server_list()?;
     info!("Parsing Server List");
     let config_parser = EventReader::new(config_body);
     let spt_config = match config {
@@ -225,7 +225,7 @@ pub struct SpeedTestLatencyTestResult<'a> {
 pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer])
                                         -> Result<SpeedTestLatencyTestResult> {
     info!("Testing for fastest server");
-    let client = Client::new().unwrap();
+    let client = Client::new()?;
     let mut fastest_server = None;
     let mut fastest_latency = Duration::max_value();
     for server in servers {
@@ -284,7 +284,7 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> Result<
     where F: Fn() -> () + Send + Sync + 'static
 {
     info!("Testing Download speed");
-    let root_path = Path::new(&server.url).parent().unwrap();
+    let root_path = Path::new(&server.url).parent().ok_or("No parent path")?;
     debug!("Root path is: {}", root_path.display());
     let start_time = Arc::new(now());
     let total_size;
@@ -354,10 +354,6 @@ pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> Result<
         size: total_size,
         duration: now() - *start_time,
     })
-}
-
-pub fn test_upload(server: &SpeedTestServer) -> Result<SpeedMeasurement> {
-    test_upload_with_progress(server, || {})
 }
 
 pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> Result<SpeedMeasurement>
