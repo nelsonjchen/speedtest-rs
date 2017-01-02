@@ -20,9 +20,6 @@ mod error;
 use clap::{App, Arg};
 use std::io::{self, Write};
 
-
-use error::*;
-
 #[allow(dead_code)]
 fn main() {
     env_logger::init().unwrap();

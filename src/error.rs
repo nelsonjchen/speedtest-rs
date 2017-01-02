@@ -6,9 +6,7 @@ error_chain!{
     }
 
     errors {
-        ConfigDownloadFailed {}
         ConfigParseError {}
-        ServerListParseError {}
         LatencyTestInvalidPath {}
         LatencyTestClosestError {}
     }
