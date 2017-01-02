@@ -459,7 +459,7 @@ impl<'a, 'b, 'c> ShareUrlRequest<'a, 'b, 'c> {
     }
 }
 
-pub fn get_share_url(request: &ShareUrlRequest) -> String {
+pub fn get_share_url(request: &ShareUrlRequest) -> Result<String> {
     info!("Generating share URL");
     let download = request.download_measurement.kbps();
     info!("Download parameter is {:?}", download);
@@ -494,9 +494,9 @@ pub fn get_share_url(request: &ShareUrlRequest) -> String {
         .body(body.as_bytes())
         .send();
     let mut encode_return = String::new();
-    res.unwrap().read_to_string(&mut encode_return).unwrap();
+    res?.read_to_string(&mut encode_return)?;
     let response_id = parse_share_request_response_id(encode_return.as_bytes()).unwrap();
-    format!("http://www.speedtest.net/result/{}.png", response_id)
+    Ok(format!("http://www.speedtest.net/result/{}.png", response_id))
 }
 
 pub fn parse_share_request_response_id(input: &[u8]) -> Option<String> {
