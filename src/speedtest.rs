@@ -195,10 +195,10 @@ pub fn get_configuration() -> Result<SpeedTestConfig> {
 pub fn download_server_list() -> Result<Response> {
     info!("Download Server List");
     let client = Client::new()?;
-    let server_res = try!(client.get("http://www.speedtest.net/speedtest-servers.php")
+    let server_res = client.get("http://www.speedtest.net/speedtest-servers.php")
         .header(Connection::close())
         .header(UserAgent(USER_AGENT.to_string()))
-        .send());
+        .send()?;
     info!("Downloaded Server List");
     Ok(server_res)
 }
