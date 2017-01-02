@@ -184,7 +184,7 @@ pub fn download_configuration() -> Result<Response> {
 }
 
 pub fn get_configuration() -> Result<SpeedTestConfig> {
-    let config_body = try!(download_configuration());
+    let config_body = download_configuration()?;
     info!("Parsing Configuration");
     let config_parser = EventReader::new(config_body);
     let spt_config = SpeedTestConfig::new(config_parser);
@@ -231,16 +231,17 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer])
     for server in servers {
         let path = Path::new(&server.url);
         let latency_path = format!("{}/latency.txt",
-                                   try!(path.parent().ok_or(ErrorKind::LatencyTestInvalidPath))
+                                   path.parent()
+                                       .ok_or(ErrorKind::LatencyTestInvalidPath)?
                                        .display());
         info!("Downloading: {:?}", latency_path);
         let mut latency_measurements = vec![];
         for _ in 0..3 {
             let start_time = now();
-            let res = try!(client.get(&latency_path)
+            let res = client.get(&latency_path)
                 .header(Connection::close())
                 .header(UserAgent(USER_AGENT.to_owned()))
-                .send());
+                .send()?;
             res.bytes().last();
             let latency_measurement = now() - start_time;
             info!("Sampled {} ms", latency_measurement.num_milliseconds());
@@ -262,7 +263,7 @@ pub fn get_best_server_based_on_latency(servers: &[SpeedTestServer])
           fastest_latency.num_milliseconds(),
           fastest_server);
     Ok(SpeedTestLatencyTestResult {
-        server: try!(fastest_server.ok_or(ErrorKind::LatencyTestClosestError)),
+        server: fastest_server.ok_or(ErrorKind::LatencyTestClosestError)?,
         latency: fastest_latency,
     })
 }
