@@ -83,12 +83,12 @@ pub struct SpeedTestServersConfig {
 
 impl SpeedTestServersConfig {
     fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestServersConfig> {
-        SpeedTestServersConfig::new_with_config(parser, None)
+        SpeedTestServersConfig::with_config(parser, None)
     }
 
-    fn new_with_config<R: Read>(parser: EventReader<R>,
-                                config: Option<&SpeedTestConfig>)
-                                -> Result<SpeedTestServersConfig> {
+    fn with_config<R: Read>(parser: EventReader<R>,
+                            config: Option<&SpeedTestConfig>)
+                            -> Result<SpeedTestServersConfig> {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
 
         for event in parser {
@@ -209,7 +209,7 @@ pub fn get_server_list_with_config(config: Option<&SpeedTestConfig>)
     info!("Parsing Server List");
     let config_parser = EventReader::new(config_body);
     let spt_config = match config {
-        Some(config) => SpeedTestServersConfig::new_with_config(config_parser, Some(config)),
+        Some(config) => SpeedTestServersConfig::with_config(config_parser, Some(config)),
         None => SpeedTestServersConfig::new(config_parser),
     };
     info!("Parsed Server List");
