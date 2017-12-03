@@ -564,7 +564,7 @@ mod tests {
 
     #[test]
     fn test_parse_share_request_response_id() {
-        let resp = "resultid=4932415710&date=12%2F21%2F2015&time=5%3A10+AM&rating=0⏎".as_bytes();
+        let resp = "resultid=4932415710&date=12%2F21%2F2015&time=5%3A10+AM&rating=0".as_bytes();
         assert_eq!(
             parse_share_request_response_id(resp),
             Some("4932415710".to_owned())
