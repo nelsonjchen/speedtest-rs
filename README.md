@@ -28,7 +28,7 @@ speedtest.net. Cross-compile this and maybe it can go anywhere! I also hope that
 
 This is currently based heavily on the popular Python implementation:
 
-https://github.com/sivel/speedtest-cli
+https://github.com/sivel/speedtest-cli @ 0.3.4
 
 For now, it would only support speedtest.net and not Speedtest Mini.
 
