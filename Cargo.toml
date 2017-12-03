@@ -2,10 +2,10 @@
 authors = ["Nelson Chen <nelson@mindflakes.com>"]
 description = "Speedtest.net testing utility and crate"
 exclude = ["tests/config/*"]
-license = "MIT"
+license = "MIT OR Apache-2.0"
 name = "speedtest-rs"
 repository = "https://github.com/nelsonjchen/speedtest-rs"
-version = "0.0.9"
+version = "0.0.10"
 
 [dependencies]
 clap = "1.5"
