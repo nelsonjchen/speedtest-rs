@@ -8,8 +8,8 @@ extern crate log;
 
 extern crate crypto;
 extern crate env_logger;
-extern crate time;
 extern crate reqwest;
+extern crate time;
 extern crate url;
 extern crate xml;
 
@@ -27,18 +27,26 @@ fn main() {
     let matches = App::new("speedtest-rs")
         .version(&crate_version!()[..])
         .about("Command line interface for testing internet bandwidth using speedtest.net.")
-        .arg(Arg::with_name("list")
-            .long("list")
-            .help("Display a list of speedtest.net servers sorted by distance"))
-        .arg(Arg::with_name("share")
-            .long("share")
-            .help("Generate and provide an URL to the speedtest.net share results image"))
-        .arg(Arg::with_name("bytes")
-            .long("bytes")
-            .help("Display values in bytes instead of bits."))
-        .arg(Arg::with_name("simple")
-            .long("simple")
-            .help("Suppress verbose output, only show basic informatio"))
+        .arg(
+            Arg::with_name("list")
+                .long("list")
+                .help("Display a list of speedtest.net servers sorted by distance"),
+        )
+        .arg(
+            Arg::with_name("share")
+                .long("share")
+                .help("Generate and provide an URL to the speedtest.net share results image"),
+        )
+        .arg(
+            Arg::with_name("bytes")
+                .long("bytes")
+                .help("Display values in bytes instead of bits."),
+        )
+        .arg(
+            Arg::with_name("simple")
+                .long("simple")
+                .help("Suppress verbose output, only show basic informatio"),
+        )
         .get_matches();
 
     if !matches.is_present("simple") {
@@ -53,13 +61,14 @@ fn main() {
 
     if matches.is_present("list") {
         for server in server_list_sorted {
-            println!("{:4}) {} ({}, {}) [{:.2} km]",
-             server.id,
-             server.sponsor,
-             server.name,
-             server.country,
-             server.distance.unwrap(),
-         );
+            println!(
+                "{:4}) {} ({}, {}) [{:.2} km]",
+                server.id,
+                server.sponsor,
+                server.name,
+                server.country,
+                server.distance.unwrap(),
+            );
         }
         return;
     }
@@ -72,18 +81,20 @@ fn main() {
     for server in &server_list_sorted {
         info!("Close Server: {:?}", server);
     }
-    let latecy_test_result = speedtest::get_best_server_based_on_latency(&server_list_sorted[..])
-        .unwrap();
+    let latecy_test_result =
+        speedtest::get_best_server_based_on_latency(&server_list_sorted[..]).unwrap();
     if !matches.is_present("simple") {
-        println!("Hosted by {} ({}) [{:.2} km]: {}.{} ms",
-             latecy_test_result.server.sponsor,
-             latecy_test_result.server.name,
-             latecy_test_result.server.distance.unwrap(),
-             latecy_test_result.latency.num_milliseconds(),
-             latecy_test_result.latency.num_microseconds().unwrap() % 1000,
-         );
+        println!(
+            "Hosted by {} ({}) [{:.2} km]: {}.{} ms",
+            latecy_test_result.server.sponsor,
+            latecy_test_result.server.name,
+            latecy_test_result.server.distance.unwrap(),
+            latecy_test_result.latency.num_milliseconds(),
+            latecy_test_result.latency.num_microseconds().unwrap() % 1000,
+        );
     } else {
-        println!("Ping: {}.{} ms",
+        println!(
+            "Ping: {}.{} ms",
             latecy_test_result.latency.num_milliseconds(),
             latecy_test_result.latency.num_microseconds().unwrap() % 1000,
         );
@@ -94,19 +105,23 @@ fn main() {
 
     if !matches.is_present("simple") {
         print!("Testing download speed");
-        download_measurement = speedtest::test_download_with_progress(best_server, print_dot)
-            .unwrap();
+        download_measurement =
+            speedtest::test_download_with_progress(best_server, print_dot).unwrap();
         println!("");
     } else {
         download_measurement = speedtest::test_download_with_progress(best_server, || {}).unwrap();
     }
 
     if matches.is_present("bytes") {
-        println!("Download: {:.2} Mbyte/s",
-                 ((download_measurement.kbps() / 8) as f32 / 1000.00));
+        println!(
+            "Download: {:.2} Mbyte/s",
+            ((download_measurement.kbps() / 8) as f32 / 1000.00)
+        );
     } else {
-        println!("Download: {:.2} Mbit/s",
-                 (download_measurement.kbps()) as f32 / 1000.00);
+        println!(
+            "Download: {:.2} Mbit/s",
+            (download_measurement.kbps()) as f32 / 1000.00
+        );
     }
 
     let upload_measurement;
@@ -120,11 +135,15 @@ fn main() {
     }
 
     if matches.is_present("bytes") {
-        println!("Upload: {:.2} Mbyte/s",
-                 ((upload_measurement.kbps() / 8) as f32 / 1000.00));
+        println!(
+            "Upload: {:.2} Mbyte/s",
+            ((upload_measurement.kbps() / 8) as f32 / 1000.00)
+        );
     } else {
-        println!("Upload: {:.2} Mbit/s",
-                 (upload_measurement.kbps() as f32 / 1000.00));
+        println!(
+            "Upload: {:.2} Mbit/s",
+            (upload_measurement.kbps() as f32 / 1000.00)
+        );
     }
 
     if matches.is_present("share") {
@@ -135,8 +154,10 @@ fn main() {
             latency_measurement: &latecy_test_result,
         };
         info!("Share Request {:?}", request);
-        println!("Share results: {}",
-                 speedtest::get_share_url(&request).unwrap());
+        println!(
+            "Share results: {}",
+            speedtest::get_share_url(&request).unwrap()
+        );
     }
 }
 
