@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## Changed
+- Update infrastructure and ensure things still build on beta and nightly as of
+  release.
+- Lay out initial foundation for a "error-chain" approach instead of unwraps
+  everywhere. This may be replaced later with the "failure" crate. WIP.
+- Update some internal formatting to modern Rust. WIP.
 
 ## [0.0.9] - 2016-12-22
 ### Changed
