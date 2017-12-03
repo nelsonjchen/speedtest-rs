@@ -7,13 +7,10 @@ name = "speedtest-rs"
 repository = "https://github.com/nelsonjchen/speedtest-rs"
 version = "0.0.9"
 
-[[bin]]
-doc = false
-name = "speedtest-rs"
-
 [dependencies]
 clap = "1.5"
 env_logger = "0.3"
+error-chain = "0.7.2"
 log = "0.3"
 reqwest = "0.2.0"
 rust-crypto = "0.2"

@@ -1,82 +1,87 @@
-## 0.0.9 (Dec 22, 2016)
+# Changelog
+All notable changes to this project will be documented in this file.
 
-Swap out usage of hyper directly with reqwest.
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-### Features
+## [Unreleased]
+## Changed
+- Update infrastructure and ensure things still build on beta and nightly as of
+  release.
+- Lay out initial foundation for a "error-chain" approach instead of unwraps
+  everywhere. This may be replaced later with the "failure" crate. WIP.
+- Update some internal formatting to modern Rust. WIP.
 
-* `speedtest-rs` now uses the platform's native TLS implementation. Compile
+## [0.0.9] - 2016-12-22
+### Changed
+- Swap out usage of hyper directly with reqwest.
+
+- `speedtest-rs` now uses the platform's native TLS implementation. Compile
   issues on Windows or Mac due to OpenSSL issues or sheanigans are no
   longer an issue.
 
-## 0.0.8 (Aug 14, 2016)
+## [0.0.8] - 2016-08-14
 
-Maintenance and Progress Release
+### Changed
 
-### Fixes
+- Updated dependencies. In particular, updated to the new `url` crate API.
 
-* Updated dependencies. In particular, updated to the new `url` crate API.
+## [0.0.7] - 2016-01-27
 
-## 0.0.7 (Jan 27, 2016)
+### Changed
 
-### Fixes
-
-* Update progress bar behavior to be more like `speedtest-cli` by displaying
+- Update progress bar behavior to be more like `speedtest-cli` by displaying
   attempts to upload a file piece instead of completion.
 
-## 0.0.6 (Jan 25, 2016)
+## [0.0.6] - 2016-01-25
 
-### Fixes
+### Changed
 
-* Correct issue with confusion on maths used to calculate bits and bytes. I
+- Correct issue with confusion on maths used to calculate bits and bytes. I
   should probably code when I'm awake and not when I'm tired, exhausted, and
   delirious. Fix was put in while I'm delirious so who knows if this works!
-* Fixed issue where not using `--bytes` results in "Mbytes/s" output even
+- Fixed issue where not using `--bytes` results in "Mbytes/s" output even
   though output is "Mbit/s".
 
-## 0.0.5 (Jan 15, 2016)
+## [0.0.5] - 2016-01-15
 
-### Fixes
+### Changed
 
-* Also applied omitted 10 second test run limit to download.
+- Also applied omitted 10 second test run limit to download.
 
-## 0.0.4 (Dec 24, 2015)
+## [0.0.4] - 2015-12-24
 
-### Features
+### Added
 
-* Added `--share` to generate and provide an URL to the speedtest.net share
+- Added `--share` to generate and provide an URL to the speedtest.net share
   results image.
 
-## 0.0.3 (Dec 23, 2015)
+## [0.0.3] - 2015-12-23
 
-### Fixes
+### Changed
 
-* Server list URL changed to non-static version. The static version appears to
+- Server list URL changed to non-static version. The static version appears to
   have been taken down for good this time.
 
 
-## 0.0.2 (Dec 4, 2015)
+## [0.0.2] - 2015-12-04
 
-Maintenance and Progress Release
+### Added
 
-### Features
-
-* Add `--simple` flag which prints out results but not progress bars simular to
+- Add `--simple` flag which prints out results but not progress bars simular to
   `speedtest-cli`.
+- Generate User Agent string from crate version
 
-### Fixes
-
-* Generate User Agent string from crate version
-* Made latency test determination a lot more like `speedtest-cli`'s weird
+### Changed
+- Made latency test determination a lot more like `speedtest-cli`'s weird
   metric for "averaging". Not sure if fix but they say it was intentional.
 
 
-## 0.0.1 (Nov 18, 2015)
+## [0.0.1] - 2015-11-18
 
-Initial Release.
+### Added
 
-### Features
-
-* Progress indicators and "TUI" like `speedtest-cli`
-* Test download speed like `speedtest-cli`
-* Test upload speed like `speedtest-cli`
-* Option to display values in bytes instead.... also like `speedtest-cli`.
+- Progress indicators and "TUI" like `speedtest-cli`
+- Test download speed like `speedtest-cli`
+- Test upload speed like `speedtest-cli`
+- Option to display values in bytes instead.... also like `speedtest-cli`.
