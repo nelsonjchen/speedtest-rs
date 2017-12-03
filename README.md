@@ -1,11 +1,11 @@
 # speedtest-rs
 
-*a tool like `speedtest-cli`, but in Rust and lacking a few things (for now)!*
+*a tool like `speedtest-cli`, but in Rust and lacking a few things*
 
-[![Project Status: Wip - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/0.1.0/wip.svg)](http://www.repostatus.org/#wip)
 [![Build Status](https://travis-ci.org/nelsonjchen/speedtest-rs.svg?branch=master)](https://travis-ci.org/nelsonjchen/speedtest-rs)
+[![](https://img.shields.io/crates/v/speedtest-rs.svg)](https://crates.io/crates/speedtest-rs)
 
-This is working at the moment. Download and upload testing is done. There is some separation of concerns between the GUI and the backend so this *might* be reusable in other crates.
+Status: This is working at the moment. Download and upload testing is done.
 
 ## Purpose
 
