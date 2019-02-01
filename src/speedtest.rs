@@ -1,7 +1,7 @@
 use crypto::md5::Md5;
 use crypto::digest::Digest;
-use distance::{self, compute_distance, EarthLocation};
-use error::*;
+use crate::distance::{self, compute_distance, EarthLocation};
+use crate::error::*;
 use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
 use reqwest::{Client, Response};
 use std::cmp::Ordering::Less;
@@ -557,7 +557,7 @@ pub fn parse_share_request_response_id(input: &[u8]) -> Option<String> {
 mod tests {
     use super::*;
     use xml::reader::EventReader;
-    use distance::EarthLocation;
+    use crate::distance::EarthLocation;
     use time::Duration;
 
     #[test]
