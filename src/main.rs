@@ -22,7 +22,7 @@ use std::io::{self, Write};
 
 #[allow(dead_code)]
 fn main() {
-    env_logger::init().unwrap();
+    env_logger::init();
 
     let matches = App::new("speedtest-rs")
         .version(&crate_version!()[..])

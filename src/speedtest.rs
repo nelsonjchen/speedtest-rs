@@ -2,7 +2,7 @@ use crypto::md5::Md5;
 use crypto::digest::Digest;
 use distance::{self, compute_distance, EarthLocation};
 use error::*;
-use reqwest::header::{Connection, ContentType, Referer, UserAgent};
+use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
 use reqwest::{Client, Response};
 use std::cmp::Ordering::Less;
 use std::io::Read;
@@ -15,7 +15,7 @@ use url;
 use xml::reader::EventReader;
 use xml::reader::XmlEvent::StartElement;
 
-const USER_AGENT: &'static str = concat!("reqwest/speedtest-rs ", env!("CARGO_PKG_VERSION"));
+const ST_USER_AGENT: &'static str = concat!("reqwest/speedtest-rs ", env!("CARGO_PKG_VERSION"));
 
 pub struct SpeedTestConfig {
     pub ip: String,
@@ -186,12 +186,12 @@ impl SpeedTestServersConfig {
 
 pub fn download_configuration() -> Result<Response> {
     info!("Downloading Configuration from speedtest.net");
-    let client = Client::new()?;
+    let client = Client::new();
     // Creating an outgoing request.
     let res = client
         .get("http://www.speedtest.net/speedtest-config.php")
-        .header(Connection::close())
-        .header(UserAgent(USER_AGENT.to_owned()))
+        .header(CONNECTION, "close")
+        .header(USER_AGENT, ST_USER_AGENT.to_owned())
         .send()?;
     info!("Downloaded Configuration from speedtest.net");
     Ok(res)
@@ -208,11 +208,11 @@ pub fn get_configuration() -> Result<SpeedTestConfig> {
 
 pub fn download_server_list() -> Result<Response> {
     info!("Download Server List");
-    let client = Client::new()?;
+    let client = Client::new();
     let server_res = client
         .get("http://www.speedtest.net/speedtest-servers.php")
-        .header(Connection::close())
-        .header(UserAgent(USER_AGENT.to_string()))
+        .header(CONNECTION, "close")
+        .header(USER_AGENT, ST_USER_AGENT)
         .send()?;
     info!("Downloaded Server List");
     Ok(server_res)
@@ -242,7 +242,7 @@ pub fn get_best_server_based_on_latency(
     servers: &[SpeedTestServer],
 ) -> Result<SpeedTestLatencyTestResult> {
     info!("Testing for fastest server");
-    let client = Client::new()?;
+    let client = Client::new();
     let mut fastest_server = None;
     let mut fastest_latency = Duration::max_value();
     for server in servers {
@@ -259,8 +259,8 @@ pub fn get_best_server_based_on_latency(
             let start_time = now();
             let res = client
                 .get(&latency_path)
-                .header(Connection::close())
-                .header(UserAgent(USER_AGENT.to_owned()))
+                .header(CONNECTION, "close")
+                .header(USER_AGENT, ST_USER_AGENT.to_owned())
                 .send()?;
             res.bytes().last();
             let latency_measurement = now() - start_time;
@@ -339,11 +339,11 @@ where
                     info!("Canceled Downloading {} of {}", size, path.display());
                     return 0;
                 }
-                let client = Client::new().unwrap();
+                let client = Client::new();
                 let mut res = client
                     .get(path.to_str().unwrap())
-                    .header(Connection::close())
-                    .header(UserAgent(USER_AGENT.to_owned()))
+                    .header(CONNECTION, "close")
+                    .header(USER_AGENT, ST_USER_AGENT.to_owned())
                     .send()
                     .unwrap();
                 let mut buffer = [0; 10240];
@@ -417,13 +417,13 @@ where
                 return 0;
             }
             let body_loop = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().cycle();
-            let client = Client::new().unwrap();
+            let client = Client::new();
             let body = format!("content1={}", body_loop.take(size).collect::<String>());
             let mut res = client
                 .post(path.to_str().unwrap())
-                .body(body.as_bytes())
-                .header(Connection::close())
-                .header(UserAgent(USER_AGENT.to_owned()))
+                .body(body)
+                .header(CONNECTION, "close")
+                .header(USER_AGENT, ST_USER_AGENT.to_owned())
                 .send()
                 .unwrap();
             let mut buffer = [0; 10240];
@@ -526,15 +526,13 @@ pub fn get_share_url(request: &ShareUrlRequest) -> Result<String> {
 
     info!("Share Body Request: {:?}", body);
 
-    let client = Client::new().unwrap();
+    let client = Client::new();
     let res = client
         .post("http://www.speedtest.net/api/api.php")
-        .header(UserAgent(USER_AGENT.to_owned()))
-        .header(Referer(
-            "http://c.speedtest.net/flash/speedtest.swf".to_owned(),
-        ))
-        .header(ContentType::form_url_encoded())
-        .body(body.as_bytes())
+        .header(CONNECTION, "close")
+        .header(REFERER, "http://c.speedtest.net/flash/speedtest.swf")
+        .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
+        .body(body)
         .send();
     let mut encode_return = String::new();
     res?.read_to_string(&mut encode_return)?;
