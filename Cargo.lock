@@ -997,7 +997,7 @@ dependencies = [
 
 [[package]]
 name = "speedtest-rs"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
