@@ -262,7 +262,7 @@ pub fn get_best_server_based_on_latency(
                 .get(&latency_path)
                 .header(CONNECTION, "close")
                 .header(USER_AGENT, ST_USER_AGENT.to_owned())
-                .send().map_err(SpeedtestError::Reqwest)?;
+                .send().map_err(SpeedtestError::ReqwestError)?;
             res.bytes().last();
             let latency_measurement = now() - start_time;
             info!("Sampled {} ms", latency_measurement.num_milliseconds());
@@ -534,9 +534,9 @@ pub fn get_share_url(request: &ShareUrlRequest) -> Result<String, SpeedtestError
         .header(REFERER, "http://c.speedtest.net/flash/speedtest.swf")
         .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
         .body(body)
-        .send().map_err(SpeedtestError::Reqwest);
+        .send().map_err(SpeedtestError::ReqwestError);
     let mut encode_return = String::new();
-    res?.read_to_string(&mut encode_return).map_err(SpeedtestError::Io)?;
+    res?.read_to_string(&mut encode_return).map_err(SpeedtestError::IoError)?;
     let response_id = parse_share_request_response_id(encode_return.as_bytes()).unwrap();
     Ok(format!(
         "http://www.speedtest.net/result/{}.png",

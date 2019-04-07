@@ -1,13 +1,13 @@
 use reqwest::Error as ReqwestError;
-use failure::{Error as FailureError, Fail};
+use failure::Fail;
 
 #[derive(Debug, Fail)]
 pub enum SpeedtestError {
 //    Legacy Errors
     #[fail(display = "Reqwest",)]
-    Reqwest(#[fail(cause)] ReqwestError),
+    ReqwestError(#[fail(cause)] ReqwestError),
     #[fail(display = "Io",)]
-    Io(#[fail(cause)] ::std::io::Error),
+    IoError(#[fail(cause)] ::std::io::Error),
     #[fail(display = "Legacy Config Parse error",)]
     ConfigParseError,
     #[fail(display = "Legacy Latency Test Invalid Path",)]
