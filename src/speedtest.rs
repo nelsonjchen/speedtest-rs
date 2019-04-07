@@ -14,6 +14,7 @@ use time::{now, Duration};
 use url;
 use xml::reader::EventReader;
 use xml::reader::XmlEvent::StartElement;
+use crate::error::SpeedtestError::SpeedtestUploadTimeout;
 
 const ST_USER_AGENT: &'static str = concat!("reqwest/speedtest-rs ", env!("CARGO_PKG_VERSION"));
 
@@ -24,17 +25,17 @@ pub struct SpeedTestConfig {
 }
 
 impl SpeedTestConfig {
-    fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestConfig> {
+    fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestConfig, SpeedtestError> {
         let mut ip: Option<String> = None;
         let mut lat: Option<f32> = None;
         let mut lon: Option<f32> = None;
         let mut isp: Option<String> = None;
         for event in parser {
             if let Ok(StartElement {
-                ref name,
-                ref attributes,
-                ..
-            }) = event
+                          ref name,
+                          ref attributes,
+                          ..
+                      }) = event
             {
                 if name.local_name == "client" {
                     for attribute in attributes {
@@ -64,7 +65,7 @@ impl SpeedTestConfig {
                 isp: isp,
             })
         } else {
-            Err(ErrorKind::ConfigParseError.into())
+            Err(SpeedtestError::ConfigParseError)
         }
     }
 }
@@ -87,22 +88,22 @@ pub struct SpeedTestServersConfig {
 
 
 impl SpeedTestServersConfig {
-    fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestServersConfig> {
+    fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestServersConfig, SpeedtestError> {
         SpeedTestServersConfig::with_config(parser, None)
     }
 
     fn with_config<R: Read>(
         parser: EventReader<R>,
         config: Option<&SpeedTestConfig>,
-    ) -> Result<SpeedTestServersConfig> {
+    ) -> Result<SpeedTestServersConfig, SpeedtestError> {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
 
         for event in parser {
             if let Ok(StartElement {
-                ref name,
-                ref attributes,
-                ..
-            }) = event
+                          ref name,
+                          ref attributes,
+                          ..
+                      }) = event
             {
                 if name.local_name == "server" {
                     let mut country: Option<String> = None;
@@ -184,7 +185,7 @@ impl SpeedTestServersConfig {
     }
 }
 
-pub fn download_configuration() -> Result<Response> {
+pub fn download_configuration() -> Result<Response, SpeedtestError> {
     info!("Downloading Configuration from speedtest.net");
     let client = Client::new();
     // Creating an outgoing request.
@@ -192,12 +193,12 @@ pub fn download_configuration() -> Result<Response> {
         .get("http://www.speedtest.net/speedtest-config.php")
         .header(CONNECTION, "close")
         .header(USER_AGENT, ST_USER_AGENT.to_owned())
-        .send()?;
+        .send().map_err(|e| SpeedtestError::SpeedtestHttpError(SpeedtestHttpError::ConfigRetrievalError(e)))?;
     info!("Downloaded Configuration from speedtest.net");
     Ok(res)
 }
 
-pub fn get_configuration() -> Result<SpeedTestConfig> {
+pub fn get_configuration() -> Result<SpeedTestConfig, SpeedtestError> {
     let config_body = download_configuration()?;
     info!("Parsing Configuration");
     let config_parser = EventReader::new(config_body);
@@ -206,21 +207,21 @@ pub fn get_configuration() -> Result<SpeedTestConfig> {
     spt_config
 }
 
-pub fn download_server_list() -> Result<Response> {
+pub fn download_server_list() -> Result<Response, SpeedtestError> {
     info!("Download Server List");
     let client = Client::new();
     let server_res = client
         .get("http://www.speedtest.net/speedtest-servers.php")
         .header(CONNECTION, "close")
         .header(USER_AGENT, ST_USER_AGENT)
-        .send()?;
+        .send().map_err(|e| SpeedtestError::SpeedtestHttpError(SpeedtestHttpError::ServersRetrievalError(e)))?;
     info!("Downloaded Server List");
     Ok(server_res)
 }
 
 pub fn get_server_list_with_config(
     config: Option<&SpeedTestConfig>,
-) -> Result<SpeedTestServersConfig> {
+) -> Result<SpeedTestServersConfig, SpeedtestError> {
     let config_body = download_server_list()?;
     info!("Parsing Server List");
     let config_parser = EventReader::new(config_body);
@@ -240,7 +241,7 @@ pub struct SpeedTestLatencyTestResult<'a> {
 
 pub fn get_best_server_based_on_latency(
     servers: &[SpeedTestServer],
-) -> Result<SpeedTestLatencyTestResult> {
+) -> Result<SpeedTestLatencyTestResult, SpeedtestError> {
     info!("Testing for fastest server");
     let client = Client::new();
     let mut fastest_server = None;
@@ -250,7 +251,7 @@ pub fn get_best_server_based_on_latency(
         let latency_path = format!(
             "{}/latency.txt",
             path.parent()
-                .ok_or(ErrorKind::LatencyTestInvalidPath)?
+                .ok_or(SpeedtestError::LatencyTestInvalidPath)?
                 .display()
         );
         info!("Downloading: {:?}", latency_path);
@@ -261,7 +262,7 @@ pub fn get_best_server_based_on_latency(
                 .get(&latency_path)
                 .header(CONNECTION, "close")
                 .header(USER_AGENT, ST_USER_AGENT.to_owned())
-                .send()?;
+                .send().map_err(SpeedtestError::Reqwest)?;
             res.bytes().last();
             let latency_measurement = now() - start_time;
             info!("Sampled {} ms", latency_measurement.num_milliseconds());
@@ -287,7 +288,7 @@ pub fn get_best_server_based_on_latency(
         fastest_server
     );
     Ok(SpeedTestLatencyTestResult {
-        server: fastest_server.ok_or(ErrorKind::LatencyTestClosestError)?,
+        server: fastest_server.ok_or(SpeedtestError::LatencyTestClosestError)?,
         latency: fastest_latency,
     })
 }
@@ -305,12 +306,12 @@ impl SpeedMeasurement {
 }
 
 
-pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> Result<SpeedMeasurement>
-where
-    F: Fn() -> () + Send + Sync + 'static,
+pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> Result<SpeedMeasurement, SpeedtestError>
+    where
+        F: Fn() -> () + Send + Sync + 'static,
 {
     info!("Testing Download speed");
-    let root_path = Path::new(&server.url).parent().ok_or("No parent path")?;
+    let root_path = Path::new(&server.url).parent().ok_or(SpeedtestError::SpeedtestCLIError { message: "No parent path".to_string() })?;
     debug!("Root path is: {}", root_path.display());
     let start_time = Arc::new(now());
     let total_size;
@@ -382,9 +383,9 @@ where
     })
 }
 
-pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> Result<SpeedMeasurement>
-where
-    F: Fn() -> () + Send + Sync + 'static,
+pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> Result<SpeedMeasurement, SpeedtestError>
+    where
+        F: Fn() -> () + Send + Sync + 'static,
 {
     info!("Testing Upload");
     let upload_path = Path::new(&server.url).to_path_buf().clone();
@@ -494,7 +495,7 @@ impl<'a, 'b, 'c> ShareUrlRequest<'a, 'b, 'c> {
     }
 }
 
-pub fn get_share_url(request: &ShareUrlRequest) -> Result<String> {
+pub fn get_share_url(request: &ShareUrlRequest) -> Result<String, SpeedtestError> {
     info!("Generating share URL");
     let download = request.download_measurement.kbps();
     info!("Download parameter is {:?}", download);
@@ -533,9 +534,9 @@ pub fn get_share_url(request: &ShareUrlRequest) -> Result<String> {
         .header(REFERER, "http://c.speedtest.net/flash/speedtest.swf")
         .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
         .body(body)
-        .send();
+        .send().map_err(SpeedtestError::Reqwest);
     let mut encode_return = String::new();
-    res?.read_to_string(&mut encode_return)?;
+    res?.read_to_string(&mut encode_return).map_err(SpeedtestError::Io)?;
     let response_id = parse_share_request_response_id(encode_return.as_bytes()).unwrap();
     Ok(format!(
         "http://www.speedtest.net/result/{}.png",
