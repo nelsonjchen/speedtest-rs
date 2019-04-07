@@ -16,6 +16,8 @@ use xml::reader::EventReader;
 use xml::reader::XmlEvent::StartElement;
 use crate::error::SpeedtestError::SpeedtestUploadTimeout;
 
+mod faithful;
+
 const ST_USER_AGENT: &'static str = concat!("reqwest/speedtest-rs ", env!("CARGO_PKG_VERSION"));
 
 pub struct SpeedTestConfig {
@@ -615,7 +617,7 @@ mod tests {
 
     #[test]
     fn test_parse_config_xml() {
-        let parser = EventReader::new(include_bytes!("../tests/config/config.php.xml") as &[u8]);
+        let parser = EventReader::new(include_bytes!("../../tests/config/config.php.xml") as &[u8]);
         let config = SpeedTestConfig::new(parser).unwrap();
         assert_eq!("174.79.12.26", config.ip);
         assert_eq!(
@@ -631,10 +633,7 @@ mod tests {
     #[test]
     fn test_parse_speedtest_servers_xml() {
         let parser = EventReader::new(include_bytes!(
-            "../tests/confi\
-             g/stripped-ser\
-             vers-static.\
-             php.xml"
+            "../../tests/config/stripped-servers-static.php.xml"
         ) as &[u8]);
         let spt_server_config = SpeedTestServersConfig::new(parser).unwrap();
         assert!(spt_server_config.servers.len() > 5);
@@ -654,10 +653,7 @@ mod tests {
             isp: "xxxfinity".to_string(),
         };
         let parser = EventReader::new(include_bytes!(
-            "../tests/confi\
-             g/geo-test-ser\
-             vers-static.\
-             php.xml"
+            "../../tests/config/geo-test-servers-static.php.xml"
         ) as &[u8]);
         let config = SpeedTestServersConfig::new(parser).unwrap();
         let closest_server = &config.servers_sorted_by_distance(&spt_config)[0];
