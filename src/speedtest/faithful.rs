@@ -1,48 +1,31 @@
 use crate::speedtest::{SpeedTestConfig, SpeedTestServer};
-use time::Duration;
+use std::time::Duration;
 use std::sync::{Arc, Mutex, Condvar};
+use typed_builder::TypedBuilder;
+use crate::distance::EarthLocation;
 
-#[derive(Default)]
+#[derive(TypedBuilder)]
 pub struct Speedtest {
+    #[builder(default)]
     pub config: Option<SpeedTestConfig>,
+    #[builder(default)]
     source_addr: Option<std::net::IpAddr>,
-    timeout: Option<Duration>,
+    #[builder(default_code = "Duration::from_secs(10)")]
+    timeout: Duration,
+    #[builder(default = false)]
     secure: bool,
+    #[builder(default)]
     shutdown_condvar: Option<Mutex<Condvar>>,
-    servers: Vec<SpeedTestServer>,
-    client: Option<>
+    #[builder(default)]
+    pub servers: Vec<SpeedTestServer>,
+    #[builder(default)]
+    pub location: Option<EarthLocation>,
 }
 
-impl Speedtest {
-    pub fn new() -> Self
-    {
-        Self {
-            timeout: Some(Duration::seconds(10)),
-            ..Self::default()
-        }
-    }
-
-    pub fn use_config(self, config: SpeedTestConfig) -> Self {
-        Self {
-            config: Some(config),
-            ..self
-        }
-    }
-
-    pub fn get_config(self) -> Self {
-        Self {
-            config: None,
-            ..self
-        }
-    }
-
-    pub fn execute(self) -> Self {
-        Self {
-            self
-        }
-    }
+pub struct SpeedtestBuilder {
 
 }
+
 
 
 #[cfg(test)]
@@ -51,7 +34,6 @@ mod tests {
 
     #[test]
     fn test_test() {
-        let speedtest = Speedtest::new().get_config();
+        let speedtest = Speedtest::builder().build();
     }
-
 }
