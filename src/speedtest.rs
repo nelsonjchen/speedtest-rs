@@ -190,7 +190,7 @@ pub fn download_configuration() -> Result<Response> {
     // Creating an outgoing request.
 
     #[cfg(not(test))]
-    let url = "http://www.speedtest.net/speedtest-config.php";
+    let url = "http://www.speedtest.net/";
     #[cfg(test)]
     let url = &mockito::server_url();
 
