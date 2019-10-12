@@ -5,14 +5,6 @@ extern crate error_chain;
 #[macro_use]
 extern crate log;
 
-
-extern crate crypto;
-extern crate env_logger;
-extern crate reqwest;
-extern crate time;
-extern crate url;
-extern crate xml;
-
 mod speedtest;
 mod distance;
 mod error;

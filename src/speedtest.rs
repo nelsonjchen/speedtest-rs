@@ -1,5 +1,3 @@
-use crypto::md5::Md5;
-use crypto::digest::Digest;
 use crate::distance::{self, compute_distance, EarthLocation};
 use crate::error::*;
 use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
@@ -492,16 +490,15 @@ pub struct ShareUrlRequest<'a, 'b, 'c> {
 
 impl<'a, 'b, 'c> ShareUrlRequest<'a, 'b, 'c> {
     pub fn hash(&self) -> String {
-        let mut md5 = Md5::new();
-        let hashed_str = &format!(
+        use md5::{Md5, Digest};        
+        let verification_string = format!(
             "{}-{}-{}-{}",
             self.latency_measurement.latency.num_milliseconds(),
             self.upload_measurement.kbps(),
             self.download_measurement.kbps(),
             "297aae72"
-        )[..];
-        md5.input_str(hashed_str);
-        md5.result_str()
+        );
+        format!("{:x}", Md5::digest(verification_string.as_bytes()))
     }
 }
 
