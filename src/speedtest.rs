@@ -188,14 +188,14 @@ pub fn download_configuration() -> Result<Response> {
     // Creating an outgoing request.
 
     #[cfg(not(test))]
-    let url = "http://www.speedtest.net/";
+    let url = "http://www.speedtest.net";
     #[cfg(test)]
     let url = &mockito::server_url();
 
-    println!("{}", url);
+    let full_url = format!("{}/speedtest-config.php", url);
 
     let res = client
-        .get(&format!("{}/speedtest-config.php", url))
+        .get(&full_url)
         .header(CONNECTION, "close")
         .header(USER_AGENT, ST_USER_AGENT.to_owned())
         .send()?;
