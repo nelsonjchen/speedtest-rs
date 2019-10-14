@@ -5,12 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [0.0.11] - 2019-02-04
-## Changed
+### Changed
 - Update dependencies and followed the API changes
 - Updated to Rust 2018
 
 ## [0.0.10] - 2017-12-03
-## Changed
+### Changed
 - Update infrastructure and ensure things still build on beta and nightly as of
   release.
 - Lay out initial foundation for a "error-chain" approach instead of unwraps
