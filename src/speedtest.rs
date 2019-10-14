@@ -245,7 +245,7 @@ pub fn get_best_server_based_on_latency(
     let client = Client::new();
     let mut fastest_server = None;
     let mut fastest_latency = Duration::max_value();
-    for server in servers {
+    'server_loop: for server in servers {
         let path = Path::new(&server.url);
         let latency_path = format!(
             "{}/latency.txt",
@@ -261,8 +261,11 @@ pub fn get_best_server_based_on_latency(
                 .get(&latency_path)
                 .header(CONNECTION, "close")
                 .header(USER_AGENT, ST_USER_AGENT.to_owned())
-                .send()?;
-            res.bytes().last();
+                .send();
+            if res.is_err() {
+                continue 'server_loop;
+            }                
+            res?.bytes().last();
             let latency_measurement = now() - start_time;
             info!("Sampled {} ms", latency_measurement.num_milliseconds());
             latency_measurements.push(latency_measurement);
