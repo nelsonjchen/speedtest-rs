@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.0.12] - 2019-10-13
 ### Fixed
 - [Skip servers if the latency test failed.](https://github.com/nelsonjchen/speedtest-rs/pull/22)
+### Changed
+- Update dependencies
 
 ## [0.0.11] - 2019-02-04
 ### Changed
