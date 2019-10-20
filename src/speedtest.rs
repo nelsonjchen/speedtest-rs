@@ -214,9 +214,14 @@ pub fn get_configuration() -> Result<SpeedTestConfig> {
 
 pub fn download_server_list() -> Result<Response> {
     info!("Download Server List");
+    #[cfg(not(test))]
+    let url = "http://www.speedtest.net/speedtest-servers.php";
+    #[cfg(test)]
+    let url = &format!("{}/speedtest-servers.php", &mockito::server_url());
+
     let client = Client::new();
     let server_res = client
-        .get("http://www.speedtest.net/speedtest-servers.php")
+        .get(url)
         .header(CONNECTION, "close")
         .header(USER_AGENT, ST_USER_AGENT)
         .send()?;
@@ -673,7 +678,7 @@ mod tests {
     }
 
     #[test]
-    fn test_download_configuration() {
+    fn test_get_configuration() {
         use mockito::mock;
 
         let _m = mock("GET", "/speedtest-config.php")
@@ -682,5 +687,17 @@ mod tests {
         .create();
 
         let _config = get_configuration();
+    }
+
+    #[test]
+    fn test_get_server_list_with_config() {
+        use mockito::mock;
+
+        let _m = mock("GET", "/speedtest-config.php")
+        .with_status(200)
+        .with_body_from_file("tests/config/servers-static.php.xml")
+        .create();
+
+        let _server_list_config = get_server_list_with_config(None);
     }
 }
