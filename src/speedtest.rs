@@ -1,14 +1,14 @@
-use crypto::md5::Md5;
-use crypto::digest::Digest;
 use crate::distance::{self, compute_distance, EarthLocation};
 use crate::error::*;
+use crypto::digest::Digest;
+use crypto::md5::Md5;
 use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
 use reqwest::{Client, Response};
 use std::cmp::Ordering::Less;
 use std::io::Read;
 use std::path::Path;
-use std::sync::{Arc, RwLock};
 use std::sync::mpsc::sync_channel;
+use std::sync::{Arc, RwLock};
 use std::thread;
 use time::{now, Duration};
 use url;
@@ -85,7 +85,6 @@ pub struct SpeedTestServersConfig {
     servers: Vec<SpeedTestServer>,
 }
 
-
 impl SpeedTestServersConfig {
     fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestServersConfig> {
         SpeedTestServersConfig::with_config(parser, None)
@@ -151,9 +150,8 @@ impl SpeedTestServersConfig {
                             latitude: lat,
                             longitude: lon,
                         };
-                        let distance = config.map(|config| {
-                            distance::compute_distance(&config.location, &location)
-                        });
+                        let distance = config
+                            .map(|config| distance::compute_distance(&config.location, &location));
                         let server = SpeedTestServer {
                             country,
                             host,
@@ -275,7 +273,7 @@ pub fn get_best_server_based_on_latency(
                 .send();
             if res.is_err() {
                 continue 'server_loop;
-            }                
+            }
             res?.bytes().last();
             let latency_measurement = now() - start_time;
             info!("Sampled {} ms", latency_measurement.num_milliseconds());
@@ -318,7 +316,6 @@ impl SpeedMeasurement {
     }
 }
 
-
 pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> Result<SpeedMeasurement>
 where
     F: Fn() -> () + Send + Sync + 'static,
@@ -337,44 +334,46 @@ where
     let root_path = root_path.to_path_buf();
     let thread_start_time = start_time.clone();
     let farc = Arc::new(f);
-    let prod_thread = thread::spawn(move || for size in &sizes {
-        for _ in 0..times_to_run_each_file {
-            let size = *size;
-            let root_path = root_path.clone();
-            let start_time = thread_start_time.clone();
-            let farc = farc.clone();
-            let thread = thread::spawn(move || {
-                let path = root_path
-                    .to_path_buf()
-                    .join(format!("random{0}x{0}.jpg", size));
-                let f = farc.clone();
-                f();
-                if (now() - *start_time) > Duration::seconds(10) {
-                    info!("Canceled Downloading {} of {}", size, path.display());
-                    return 0;
-                }
-                let client = Client::new();
-                let mut res = client
-                    .get(path.to_str().unwrap())
-                    .header(CONNECTION, "close")
-                    .header(USER_AGENT, ST_USER_AGENT.to_owned())
-                    .send()
-                    .unwrap();
-                let mut buffer = [0; 10240];
-                let mut size: usize = 0;
-                loop {
-                    match res.read(&mut buffer) {
-                        Ok(0) => {
-                            break;
-                        }
-                        Ok(n) => size += n,
-                        _ => panic!("Something has gone wrong."),
+    let prod_thread = thread::spawn(move || {
+        for size in &sizes {
+            for _ in 0..times_to_run_each_file {
+                let size = *size;
+                let root_path = root_path.clone();
+                let start_time = thread_start_time.clone();
+                let farc = farc.clone();
+                let thread = thread::spawn(move || {
+                    let path = root_path
+                        .to_path_buf()
+                        .join(format!("random{0}x{0}.jpg", size));
+                    let f = farc.clone();
+                    f();
+                    if (now() - *start_time) > Duration::seconds(10) {
+                        info!("Canceled Downloading {} of {}", size, path.display());
+                        return 0;
                     }
-                }
-                info!("Done {}, {}", path.display(), size);
-                size
-            });
-            tx.send(thread).unwrap();
+                    let client = Client::new();
+                    let mut res = client
+                        .get(path.to_str().unwrap())
+                        .header(CONNECTION, "close")
+                        .header(USER_AGENT, ST_USER_AGENT.to_owned())
+                        .send()
+                        .unwrap();
+                    let mut buffer = [0; 10240];
+                    let mut size: usize = 0;
+                    loop {
+                        match res.read(&mut buffer) {
+                            Ok(0) => {
+                                break;
+                            }
+                            Ok(n) => size += n,
+                            _ => panic!("Something has gone wrong."),
+                        }
+                    }
+                    info!("Done {}, {}", path.display(), size);
+                    size
+                });
+                tx.send(thread).unwrap();
+            }
         }
     });
 
@@ -417,43 +416,45 @@ where
 
     let thread_start_time = start_time.clone();
     let farc = Arc::new(f);
-    let prod_thread = thread::spawn(move || for size in &sizes {
-        let size = *size;
-        let path = upload_path.to_path_buf().clone();
-        let start_time = thread_start_time.clone();
-        let farc = farc.clone();
-        let thread = thread::spawn(move || {
-            info!("Uploading {} to {}", size, path.display());
-            let f = farc.clone();
-            f();
-            if (now() - *start_time) > Duration::seconds(10) {
-                info!("Canceled Uploading {} of {}", size, path.display());
-                return 0;
-            }
-            let body_loop = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().cycle();
-            let client = Client::new();
-            let body = format!("content1={}", body_loop.take(size).collect::<String>());
-            let mut res = client
-                .post(path.to_str().unwrap())
-                .body(body)
-                .header(CONNECTION, "close")
-                .header(USER_AGENT, ST_USER_AGENT.to_owned())
-                .send()
-                .unwrap();
-            let mut buffer = [0; 10240];
-            loop {
-                match res.read(&mut buffer) {
-                    Ok(0) => {
-                        break;
-                    }
-                    Ok(_) => {}
-                    _ => panic!("Something has gone wrong."),
+    let prod_thread = thread::spawn(move || {
+        for size in &sizes {
+            let size = *size;
+            let path = upload_path.to_path_buf().clone();
+            let start_time = thread_start_time.clone();
+            let farc = farc.clone();
+            let thread = thread::spawn(move || {
+                info!("Uploading {} to {}", size, path.display());
+                let f = farc.clone();
+                f();
+                if (now() - *start_time) > Duration::seconds(10) {
+                    info!("Canceled Uploading {} of {}", size, path.display());
+                    return 0;
                 }
-            }
-            info!("Done {}, {}", path.display(), size);
-            size
-        });
-        tx.send(thread).unwrap();
+                let body_loop = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().cycle();
+                let client = Client::new();
+                let body = format!("content1={}", body_loop.take(size).collect::<String>());
+                let mut res = client
+                    .post(path.to_str().unwrap())
+                    .body(body)
+                    .header(CONNECTION, "close")
+                    .header(USER_AGENT, ST_USER_AGENT.to_owned())
+                    .send()
+                    .unwrap();
+                let mut buffer = [0; 10240];
+                loop {
+                    match res.read(&mut buffer) {
+                        Ok(0) => {
+                            break;
+                        }
+                        Ok(_) => {}
+                        _ => panic!("Something has gone wrong."),
+                    }
+                }
+                info!("Done {}, {}", path.display(), size);
+                size
+            });
+            tx.send(thread).unwrap();
+        }
     });
 
     let cons_complete = complete.clone();
@@ -570,9 +571,9 @@ pub fn parse_share_request_response_id(input: &[u8]) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use xml::reader::EventReader;
     use crate::distance::EarthLocation;
     use time::Duration;
+    use xml::reader::EventReader;
 
     #[test]
     fn test_parse_share_request_response_id() {
@@ -682,10 +683,9 @@ mod tests {
         use mockito::mock;
 
         let _m = mock("GET", "/speedtest-config.php")
-        .with_status(200)
-        .with_body_from_file("tests/config/stripped-config.php.xml")
-        .create();
-
+            .with_status(200)
+            .with_body_from_file("tests/config/stripped-config.php.xml")
+            .create();
         let _config = get_configuration();
     }
 
@@ -694,9 +694,9 @@ mod tests {
         use mockito::mock;
 
         let _m = mock("GET", "/speedtest-config.php")
-        .with_status(200)
-        .with_body_from_file("tests/config/servers-static.php.xml")
-        .create();
+            .with_status(200)
+            .with_body_from_file("tests/config/servers-static.php.xml")
+            .create();
 
         let _server_list_config = get_server_list_with_config(None);
     }

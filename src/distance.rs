@@ -11,10 +11,12 @@ pub fn compute_distance(origin: &EarthLocation, destination: &EarthLocation) -> 
     let d_lat = to_radians(origin.latitude - destination.latitude);
     let d_long = to_radians(origin.longitude - destination.longitude);
     let a = (d_lat / 2.0).sin() * (d_lat / 2.0).sin()
-        + to_radians(origin.latitude).cos() * to_radians(destination.latitude).cos()
-            * (d_long / 2.0).sin() * (d_long / 2.0).sin();
+        + to_radians(origin.latitude).cos()
+            * to_radians(destination.latitude).cos()
+            * (d_long / 2.0).sin()
+            * (d_long / 2.0).sin();
     let c = 2.0 * a.sqrt().atan2((1.0 - a).sqrt());
-    radius * c    
+    radius * c
 }
 
 fn to_radians(degree: f32) -> f32 {
