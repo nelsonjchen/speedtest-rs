@@ -107,7 +107,7 @@ fn main() {
         print!("Testing download speed");
         download_measurement =
             speedtest::test_download_with_progress(best_server, print_dot).unwrap();
-        println!("");
+        println!();
     } else {
         download_measurement = speedtest::test_download_with_progress(best_server, || {}).unwrap();
     }
@@ -129,7 +129,7 @@ fn main() {
     if !matches.is_present("simple") {
         print!("Testing upload speed");
         upload_measurement = speedtest::test_upload_with_progress(best_server, print_dot).unwrap();
-        println!("");
+        println!();
     } else {
         upload_measurement = speedtest::test_upload_with_progress(best_server, || {}).unwrap();
     }

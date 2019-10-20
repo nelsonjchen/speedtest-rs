@@ -15,7 +15,7 @@ use url;
 use xml::reader::EventReader;
 use xml::reader::XmlEvent::StartElement;
 
-const ST_USER_AGENT: &'static str = concat!("reqwest/speedtest-rs ", env!("CARGO_PKG_VERSION"));
+const ST_USER_AGENT: &str = concat!("reqwest/speedtest-rs ", env!("CARGO_PKG_VERSION"));
 
 pub struct SpeedTestConfig {
     pub ip: String,
@@ -56,12 +56,12 @@ impl SpeedTestConfig {
         }
         if let (Some(ip), Some(lat), Some(lon), Some(isp)) = (ip, lat, lon, isp) {
             Ok(SpeedTestConfig {
-                ip: ip,
+                ip,
                 location: EarthLocation {
                     latitude: lat,
                     longitude: lon,
                 },
-                isp: isp,
+                isp,
             })
         } else {
             Err(ErrorKind::ConfigParseError.into())
@@ -155,21 +155,21 @@ impl SpeedTestServersConfig {
                             distance::compute_distance(&config.location, &location)
                         });
                         let server = SpeedTestServer {
-                            country: country,
-                            host: host,
-                            id: id,
-                            location: location,
-                            distance: distance,
-                            name: name,
-                            sponsor: sponsor,
-                            url: url,
+                            country,
+                            host,
+                            id,
+                            location,
+                            distance,
+                            name,
+                            sponsor,
+                            url,
                         };
                         servers.push(server);
                     }
                 }
             }
         }
-        Ok(SpeedTestServersConfig { servers: servers })
+        Ok(SpeedTestServersConfig { servers })
     }
 
     pub fn servers_sorted_by_distance(&self, config: &SpeedTestConfig) -> Vec<SpeedTestServer> {
@@ -339,7 +339,7 @@ where
     let farc = Arc::new(f);
     let prod_thread = thread::spawn(move || for size in &sizes {
         for _ in 0..times_to_run_each_file {
-            let size = size.clone();
+            let size = *size;
             let root_path = root_path.clone();
             let start_time = thread_start_time.clone();
             let farc = farc.clone();
@@ -367,7 +367,7 @@ where
                         Ok(0) => {
                             break;
                         }
-                        Ok(n) => size = size + n,
+                        Ok(n) => size += n,
                         _ => panic!("Something has gone wrong."),
                     }
                 }
@@ -389,7 +389,7 @@ where
     });
     prod_thread.join().unwrap();
     cons_thread.join().unwrap();
-    total_size = (*complete).read().unwrap().iter().fold(0, |val, i| val + i);
+    total_size = (*complete).read().unwrap().iter().sum();
     Ok(SpeedMeasurement {
         size: total_size,
         duration: now() - *start_time,
@@ -404,8 +404,8 @@ where
     let upload_path = Path::new(&server.url).to_path_buf().clone();
     let total_size: usize;
     let start_time = Arc::new(now());
-    let small_sizes = [250000; 25];
-    let large_sizes = [500000; 25];
+    let small_sizes = [250_000; 25];
+    let large_sizes = [500_000; 25];
     let sizes = small_sizes
         .iter()
         .chain(large_sizes.iter())
@@ -418,7 +418,7 @@ where
     let thread_start_time = start_time.clone();
     let farc = Arc::new(f);
     let prod_thread = thread::spawn(move || for size in &sizes {
-        let size = size.clone();
+        let size = *size;
         let path = upload_path.to_path_buf().clone();
         let start_time = thread_start_time.clone();
         let farc = farc.clone();
@@ -468,7 +468,7 @@ where
 
     prod_thread.join().unwrap();
     cons_thread.join().unwrap();
-    total_size = (*complete).read().unwrap().iter().fold(0, |val, i| val + i);
+    total_size = (*complete).read().unwrap().iter().sum();
     let latency = now() - *start_time;
     info!(
         "It took {} ms to upload {} bytes",
@@ -527,9 +527,9 @@ pub fn get_share_url(request: &ShareUrlRequest) -> Result<String> {
         ("ping", format!("{}", ping.num_milliseconds())),
         ("upload", format!("{}", request.upload_measurement.kbps())),
         ("promo", format!("")),
-        ("startmode", format!("pingselect")),
+        ("startmode", "pingselect".to_string()),
         ("recommendedserverid", format!("{}", server)),
-        ("accuracy", format!("1")),
+        ("accuracy", "1".to_string()),
         ("serverid", format!("{}", server)),
         ("hash", request.hash()),
     ];
@@ -564,7 +564,7 @@ pub fn parse_share_request_response_id(input: &[u8]) -> Option<String> {
             return Some(pair.1.into_owned().to_string());
         }
     }
-    return None;
+    None
 }
 
 #[cfg(test)]
@@ -652,8 +652,8 @@ mod tests {
         let spt_server_config = SpeedTestServersConfig::new(parser).unwrap();
         assert!(spt_server_config.servers.len() > 5);
         let server = spt_server_config.servers.get(1).unwrap();
-        assert!(server.url.len() > 0);
-        assert!(server.country.len() > 0);
+        assert!(!server.url.is_empty());
+        assert!(!server.country.is_empty());
     }
 
     #[test]

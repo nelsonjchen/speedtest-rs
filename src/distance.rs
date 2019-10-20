@@ -14,8 +14,7 @@ pub fn compute_distance(origin: &EarthLocation, destination: &EarthLocation) -> 
         + to_radians(origin.latitude).cos() * to_radians(destination.latitude).cos()
             * (d_long / 2.0).sin() * (d_long / 2.0).sin();
     let c = 2.0 * a.sqrt().atan2((1.0 - a).sqrt());
-    let d = radius * c;
-    d
+    radius * c    
 }
 
 fn to_radians(degree: f32) -> f32 {
