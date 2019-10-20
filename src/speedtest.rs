@@ -186,10 +186,16 @@ impl SpeedTestServersConfig {
 
 pub fn download_configuration() -> Result<Response> {
     info!("Downloading Configuration from speedtest.net");
+
+    #[cfg(not(test))]
+    let url = "http://www.speedtest.net/speedtest-config.php";
+    #[cfg(test)]
+    let url = &format!("{}/speedtest-config.php", &mockito::server_url());
+
     let client = Client::new();
     // Creating an outgoing request.
     let res = client
-        .get("http://www.speedtest.net/speedtest-config.php")
+        .get(url)
         .header(CONNECTION, "close")
         .header(USER_AGENT, ST_USER_AGENT.to_owned())
         .send()?;
@@ -664,5 +670,17 @@ mod tests {
         let config = SpeedTestServersConfig::new(parser).unwrap();
         let closest_server = &config.servers_sorted_by_distance(&spt_config)[0];
         assert_eq!("Los Angeles, CA", closest_server.name);
+    }
+
+    #[test]
+    fn test_download_configuration() {
+        use mockito::mock;
+
+        let _m = mock("GET", "/speedtest-config.php")
+        .with_status(200)
+        .with_body_from_file("tests/config/stripped-config.php.xml")
+        .create();
+
+        let _config = get_configuration();
     }
 }
