@@ -488,14 +488,14 @@ where
 }
 
 #[derive(Debug)]
-pub struct ShareUrlRequest<'a, 'b, 'c> {
+pub struct SpeedTestResult<'a, 'b, 'c> {
     pub download_measurement: &'a SpeedMeasurement,
     pub upload_measurement: &'b SpeedMeasurement,
     pub server: &'c SpeedTestServer,
     pub latency_measurement: &'c SpeedTestLatencyTestResult<'c>,
 }
 
-impl<'a, 'b, 'c> ShareUrlRequest<'a, 'b, 'c> {
+impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
     pub fn hash(&self) -> String {
         let mut md5 = Md5::new();
         let hashed_str = &format!(
@@ -510,7 +510,7 @@ impl<'a, 'b, 'c> ShareUrlRequest<'a, 'b, 'c> {
     }
 }
 
-pub fn get_share_url(request: &ShareUrlRequest) -> Result<String> {
+pub fn get_share_url(request: &SpeedTestResult) -> Result<String> {
     info!("Generating share URL");
     let download = request.download_measurement.kbps();
     info!("Download parameter is {:?}", download);
@@ -616,7 +616,7 @@ mod tests {
             latency: Duration::milliseconds(26),
         };
         println!("Latency: {:?}", latency_measurement);
-        let request = ShareUrlRequest {
+        let request = SpeedTestResult {
             download_measurement: &download_measurement,
             upload_measurement: &upload_measurement,
             server: &server,

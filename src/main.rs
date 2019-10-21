@@ -133,7 +133,7 @@ fn main() {
     }
 
     if matches.is_present("share") {
-        let request = speedtest::ShareUrlRequest {
+        let request = speedtest::SpeedTestResult {
             download_measurement: &download_measurement,
             upload_measurement: &upload_measurement,
             server: &best_server,
