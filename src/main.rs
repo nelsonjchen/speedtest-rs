@@ -1,13 +1,10 @@
-#[macro_use]
-extern crate clap;
+use clap::{crate_version, App, Arg};
 use log::info;
+use std::io::{self, Write};
 
 mod distance;
 mod error;
 mod speedtest;
-
-use clap::{App, Arg};
-use std::io::{self, Write};
 
 #[allow(dead_code)]
 fn main() {

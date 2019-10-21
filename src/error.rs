@@ -1,5 +1,5 @@
-use reqwest::Error as ReqwestError;
 use error_chain::error_chain;
+use reqwest::Error as ReqwestError;
 
 error_chain! {
     foreign_links {
