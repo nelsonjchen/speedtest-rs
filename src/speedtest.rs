@@ -2,6 +2,7 @@ use crate::distance::{self, compute_distance, EarthLocation};
 use crate::error::*;
 use crypto::digest::Digest;
 use crypto::md5::Md5;
+use log::{debug, info};
 use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
 use reqwest::{Client, Response};
 use std::cmp::Ordering::Less;

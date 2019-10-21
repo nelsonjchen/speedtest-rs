@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate clap;
-#[macro_use]
-extern crate log;
+use log::info;
 
 mod distance;
 mod error;
