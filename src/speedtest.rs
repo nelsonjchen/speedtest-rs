@@ -1,20 +1,22 @@
-use crate::distance::{self, EarthLocation};
-use crate::error::*;
-use crypto::digest::Digest;
-use crypto::md5::Md5;
-use log::{debug, info};
-use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
-use reqwest::{Client, Response};
 use std::cmp::Ordering::Less;
 use std::io::Read;
 use std::path::Path;
 use std::sync::mpsc::sync_channel;
 use std::sync::{Arc, RwLock};
 use std::thread;
+
+use crypto::digest::Digest;
+use crypto::md5::Md5;
+use log::{debug, info};
+use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
+use reqwest::{Client, Response};
 use time::{now, Duration};
 use url;
 use xml::reader::EventReader;
 use xml::reader::XmlEvent::StartElement;
+
+use crate::distance::{self, EarthLocation};
+use crate::error::*;
 
 const ST_USER_AGENT: &str = concat!("reqwest/speedtest-rs ", env!("CARGO_PKG_VERSION"));
 
