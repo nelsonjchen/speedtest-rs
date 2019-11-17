@@ -1,4 +1,4 @@
-use crate::distance::{self, compute_distance, EarthLocation};
+use crate::distance::{self, EarthLocation};
 use crate::error::*;
 use crypto::digest::Digest;
 use crypto::md5::Md5;
@@ -175,8 +175,8 @@ impl SpeedTestServersConfig {
         let location = &config.location;
         let mut sorted_servers = self.servers.clone();
         sorted_servers.sort_by(|a, b| {
-            let a_distance = compute_distance(&location, &a.location);
-            let b_distance = compute_distance(&location, &b.location);
+            let a_distance = distance::compute_distance(&location, &a.location);
+            let b_distance = distance::compute_distance(&location, &b.location);
             a_distance.partial_cmp(&b_distance).unwrap_or(Less)
         });
         sorted_servers
@@ -572,9 +572,6 @@ pub fn parse_share_request_response_id(input: &[u8]) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::distance::EarthLocation;
-    use time::Duration;
-    use xml::reader::EventReader;
 
     #[test]
     fn test_parse_share_request_response_id() {
