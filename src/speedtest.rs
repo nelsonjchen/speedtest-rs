@@ -554,21 +554,21 @@ pub fn get_share_url(request: &SpeedTestResult) -> Result<String> {
         .send();
     let mut encode_return = String::new();
     res?.read_to_string(&mut encode_return)?;
-    let response_id = parse_share_request_response_id(encode_return.as_bytes()).unwrap();
+    let response_id = parse_share_request_response_id(encode_return.as_bytes())?;
     Ok(format!(
         "http://www.speedtest.net/result/{}.png",
         response_id
     ))
 }
 
-pub fn parse_share_request_response_id(input: &[u8]) -> Option<String> {
+pub fn parse_share_request_response_id(input: &[u8]) -> Result<String> {
     let pairs = url::form_urlencoded::parse(input);
     for pair in pairs {
         if pair.0 == "resultid" {
-            return Some(pair.1.into_owned().to_string());
+            return Ok(pair.1.into_owned().to_string());
         }
     }
-    None
+    Err(ErrorKind::ParseShareUrlError.into())
 }
 
 #[cfg(test)]
@@ -579,8 +579,8 @@ mod tests {
     fn test_parse_share_request_response_id() {
         let resp = "resultid=4932415710&date=12%2F21%2F2015&time=5%3A10+AM&rating=0".as_bytes();
         assert_eq!(
-            parse_share_request_response_id(resp),
-            Some("4932415710".to_owned())
+            parse_share_request_response_id(resp).unwrap(),
+            "4932415710"
         );
     }
 

@@ -11,5 +11,6 @@ error_chain! {
         ConfigParseError {}
         LatencyTestInvalidPath {}
         LatencyTestClosestError {}
+        ParseShareUrlError {}
     }
 }
