@@ -48,12 +48,14 @@ fn main() -> Result<(), error::Error> {
     if matches.is_present("list") {
         for server in server_list_sorted {
             println!(
-                "{:4}) {} ({}, {}) [{:.2} km]",
+                "{:4}) {} ({}, {}) [{}]",
                 server.id,
                 server.sponsor,
                 server.name,
                 server.country,
-                server.distance.unwrap(),
+                server
+                    .distance
+                    .map_or("None".to_string(), |d| format!("{:.2} km", d)),
             );
         }
         return Ok(());
