@@ -5,9 +5,8 @@ use std::sync::mpsc::sync_channel;
 use std::sync::{Arc, RwLock};
 use std::thread;
 
-use crypto::digest::Digest;
-use crypto::md5::Md5;
 use log::{debug, info};
+use md5;
 use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
 use reqwest::{Client, Response};
 use time::{now, Duration};
@@ -507,16 +506,15 @@ pub struct SpeedTestResult<'a, 'b, 'c> {
 
 impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
     pub fn hash(&self) -> String {
-        let mut md5 = Md5::new();
-        let hashed_str = &format!(
+        let hashed_str = format!(
             "{}-{}-{}-{}",
             self.latency_measurement.latency.num_milliseconds(),
             self.upload_measurement.kbps(),
             self.download_measurement.kbps(),
             "297aae72"
-        )[..];
-        md5.input_str(hashed_str);
-        md5.result_str()
+        );
+
+        format!("{:x}", md5::compute(hashed_str))
     }
 }
 
