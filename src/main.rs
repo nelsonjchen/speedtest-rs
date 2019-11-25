@@ -31,7 +31,7 @@ fn main() -> Result<(), error::Error> {
         .arg(
             Arg::with_name("simple")
                 .long("simple")
-                .help("Suppress verbose output, only show basic informatio"),
+                .help("Suppress verbose output, only show basic information"),
         )
         .get_matches();
 
