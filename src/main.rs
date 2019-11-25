@@ -75,7 +75,10 @@ fn main() -> Result<(), error::Error> {
             "Hosted by {} ({}) [{:.2} km]: {}.{} ms",
             latecy_test_result.server.sponsor,
             latecy_test_result.server.name,
-            latecy_test_result.server.distance.unwrap(),
+            latecy_test_result
+                .server
+                .distance
+                .map_or("None".to_string(), |d| format!("{:.2} km", d)),
             latecy_test_result.latency.num_milliseconds(),
             latecy_test_result.latency.num_microseconds().unwrap() % 1000,
         );
