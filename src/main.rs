@@ -6,7 +6,6 @@ mod distance;
 mod error;
 mod speedtest;
 
-#[allow(dead_code)]
 fn main() -> Result<(), error::Error> {
     env_logger::init();
 
