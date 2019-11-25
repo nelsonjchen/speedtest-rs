@@ -80,13 +80,13 @@ fn main() -> Result<(), error::Error> {
                 .distance
                 .map_or("None".to_string(), |d| format!("{:.2} km", d)),
             latecy_test_result.latency.num_milliseconds(),
-            latecy_test_result.latency.num_microseconds().unwrap() % 1000,
+            latecy_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
         );
     } else {
         println!(
             "Ping: {}.{} ms",
             latecy_test_result.latency.num_milliseconds(),
-            latecy_test_result.latency.num_microseconds().unwrap() % 1000,
+            latecy_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
         );
     }
     let best_server = latecy_test_result.server;
