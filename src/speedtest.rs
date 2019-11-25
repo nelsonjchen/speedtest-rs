@@ -16,7 +16,7 @@ use xml::reader::EventReader;
 use xml::reader::XmlEvent::StartElement;
 
 use crate::distance::{self, EarthLocation};
-use crate::error::*;
+use crate::error::Error;
 
 const ST_USER_AGENT: &str = concat!("reqwest/speedtest-rs ", env!("CARGO_PKG_VERSION"));
 
@@ -27,7 +27,7 @@ pub struct SpeedTestConfig {
 }
 
 impl SpeedTestConfig {
-    fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestConfig> {
+    fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestConfig, Error> {
         let mut ip: Option<String> = None;
         let mut lat: Option<f32> = None;
         let mut lon: Option<f32> = None;
@@ -67,7 +67,7 @@ impl SpeedTestConfig {
                 isp,
             })
         } else {
-            Err(ErrorKind::ConfigParseError.into())
+            Err(Error::ConfigParseError)
         }
     }
 }
@@ -89,14 +89,14 @@ pub struct SpeedTestServersConfig {
 }
 
 impl SpeedTestServersConfig {
-    fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestServersConfig> {
+    fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestServersConfig, Error> {
         SpeedTestServersConfig::with_config(parser, None)
     }
 
     fn with_config<R: Read>(
         parser: EventReader<R>,
         config: Option<&SpeedTestConfig>,
-    ) -> Result<SpeedTestServersConfig> {
+    ) -> Result<SpeedTestServersConfig, Error> {
         let mut servers: Vec<SpeedTestServer> = Vec::new();
 
         for event in parser {
@@ -185,7 +185,7 @@ impl SpeedTestServersConfig {
     }
 }
 
-pub fn download_configuration() -> Result<Response> {
+pub fn download_configuration() -> Result<Response, Error> {
     info!("Downloading Configuration from speedtest.net");
 
     #[cfg(not(test))]
@@ -204,7 +204,7 @@ pub fn download_configuration() -> Result<Response> {
     Ok(res)
 }
 
-pub fn get_configuration() -> Result<SpeedTestConfig> {
+pub fn get_configuration() -> Result<SpeedTestConfig, Error> {
     let config_body = download_configuration()?;
     info!("Parsing Configuration");
     let config_parser = EventReader::new(config_body);
@@ -213,7 +213,7 @@ pub fn get_configuration() -> Result<SpeedTestConfig> {
     spt_config
 }
 
-pub fn download_server_list() -> Result<Response> {
+pub fn download_server_list() -> Result<Response, Error> {
     info!("Download Server List");
     #[cfg(not(test))]
     let url = "http://www.speedtest.net/speedtest-servers.php";
@@ -232,7 +232,7 @@ pub fn download_server_list() -> Result<Response> {
 
 pub fn get_server_list_with_config(
     config: Option<&SpeedTestConfig>,
-) -> Result<SpeedTestServersConfig> {
+) -> Result<SpeedTestServersConfig, Error> {
     let config_body = download_server_list()?;
     info!("Parsing Server List");
     let config_parser = EventReader::new(config_body);
@@ -252,7 +252,7 @@ pub struct SpeedTestLatencyTestResult<'a> {
 
 pub fn get_best_server_based_on_latency(
     servers: &[SpeedTestServer],
-) -> Result<SpeedTestLatencyTestResult> {
+) -> Result<SpeedTestLatencyTestResult, Error> {
     info!("Testing for fastest server");
     let client = Client::new();
     let mut fastest_server = None;
@@ -262,7 +262,7 @@ pub fn get_best_server_based_on_latency(
         let latency_path = format!(
             "{}/latency.txt",
             path.parent()
-                .ok_or(ErrorKind::LatencyTestInvalidPath)?
+                .ok_or(Error::LatencyTestInvalidPath)?
                 .display()
         );
         info!("Downloading: {:?}", latency_path);
@@ -302,7 +302,7 @@ pub fn get_best_server_based_on_latency(
         fastest_server
     );
     Ok(SpeedTestLatencyTestResult {
-        server: fastest_server.ok_or(ErrorKind::LatencyTestClosestError)?,
+        server: fastest_server.ok_or(Error::LatencyTestClosestError)?,
         latency: fastest_latency,
     })
 }
@@ -319,12 +319,17 @@ impl SpeedMeasurement {
     }
 }
 
-pub fn test_download_with_progress<F>(server: &SpeedTestServer, f: F) -> Result<SpeedMeasurement>
+pub fn test_download_with_progress<F>(
+    server: &SpeedTestServer,
+    f: F,
+) -> Result<SpeedMeasurement, Error>
 where
     F: Fn() -> () + Send + Sync + 'static,
 {
     info!("Testing Download speed");
-    let root_path = Path::new(&server.url).parent().ok_or("No parent path")?;
+    let root_path = Path::new(&server.url)
+        .parent()
+        .ok_or(Error::ConfigParseError)?;
     debug!("Root path is: {}", root_path.display());
     let start_time = Arc::new(now());
     let total_size;
@@ -398,7 +403,10 @@ where
     })
 }
 
-pub fn test_upload_with_progress<F>(server: &SpeedTestServer, f: F) -> Result<SpeedMeasurement>
+pub fn test_upload_with_progress<F>(
+    server: &SpeedTestServer,
+    f: F,
+) -> Result<SpeedMeasurement, Error>
 where
     F: Fn() -> () + Send + Sync + 'static,
 {
@@ -512,7 +520,7 @@ impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
     }
 }
 
-pub fn get_share_url(request: &SpeedTestResult) -> Result<String> {
+pub fn get_share_url(request: &SpeedTestResult) -> Result<String, Error> {
     info!("Generating share URL");
     let download = request.download_measurement.kbps();
     info!("Download parameter is {:?}", download);
@@ -561,14 +569,14 @@ pub fn get_share_url(request: &SpeedTestResult) -> Result<String> {
     ))
 }
 
-pub fn parse_share_request_response_id(input: &[u8]) -> Result<String> {
+pub fn parse_share_request_response_id(input: &[u8]) -> Result<String, Error> {
     let pairs = url::form_urlencoded::parse(input);
     for pair in pairs {
         if pair.0 == "resultid" {
             return Ok(pair.1.into_owned().to_string());
         }
     }
-    Err(ErrorKind::ParseShareUrlError.into())
+    Err(Error::ParseShareUrlError)
 }
 
 #[cfg(test)]
@@ -578,10 +586,7 @@ mod tests {
     #[test]
     fn test_parse_share_request_response_id() {
         let resp = "resultid=4932415710&date=12%2F21%2F2015&time=5%3A10+AM&rating=0".as_bytes();
-        assert_eq!(
-            parse_share_request_response_id(resp).unwrap(),
-            "4932415710"
-        );
+        assert_eq!(parse_share_request_response_id(resp).unwrap(), "4932415710");
     }
 
     #[test]

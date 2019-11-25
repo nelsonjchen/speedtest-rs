@@ -1,16 +1,23 @@
-use error_chain::error_chain;
-use reqwest::Error as ReqwestError;
+use reqwest;
 
-error_chain! {
-    foreign_links {
-        Reqwest(ReqwestError);
-        Io(::std::io::Error);
+#[derive(Debug)]
+pub enum Error {
+    Reqwest(reqwest::Error),
+    Io(::std::io::Error),
+    ConfigParseError,
+    LatencyTestInvalidPath,
+    LatencyTestClosestError,
+    ParseShareUrlError,
+}
+
+impl From<reqwest::Error> for Error {
+    fn from(err: reqwest::Error) -> Error {
+        Error::Reqwest(err)
     }
+}
 
-    errors {
-        ConfigParseError {}
-        LatencyTestInvalidPath {}
-        LatencyTestClosestError {}
-        ParseShareUrlError {}
+impl From<::std::io::Error> for Error {
+    fn from(err: ::std::io::Error) -> Error {
+        Error::Io(err)
     }
 }
