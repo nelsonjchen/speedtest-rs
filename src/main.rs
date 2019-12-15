@@ -68,27 +68,27 @@ fn main() -> Result<(), error::Error> {
     for server in &server_list_sorted {
         info!("Close Server: {:?}", server);
     }
-    let latecy_test_result = speedtest::get_best_server_based_on_latency(&server_list_sorted[..])?;
+    let latency_test_result = speedtest::get_best_server_based_on_latency(&server_list_sorted[..])?;
     if !matches.is_present("simple") {
         println!(
             "Hosted by {} ({}) [{:.2} km]: {}.{} ms",
-            latecy_test_result.server.sponsor,
-            latecy_test_result.server.name,
-            latecy_test_result
+            latency_test_result.server.sponsor,
+            latency_test_result.server.name,
+            latency_test_result
                 .server
                 .distance
                 .map_or("None".to_string(), |d| format!("{:.2} km", d)),
-            latecy_test_result.latency.num_milliseconds(),
-            latecy_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
+            latency_test_result.latency.num_milliseconds(),
+            latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
         );
     } else {
         println!(
             "Ping: {}.{} ms",
-            latecy_test_result.latency.num_milliseconds(),
-            latecy_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
+            latency_test_result.latency.num_milliseconds(),
+            latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
         );
     }
-    let best_server = latecy_test_result.server;
+    let best_server = latency_test_result.server;
 
     let download_measurement;
 
@@ -139,7 +139,7 @@ fn main() -> Result<(), error::Error> {
             download_measurement: &download_measurement,
             upload_measurement: &upload_measurement,
             server: &best_server,
-            latency_measurement: &latecy_test_result,
+            latency_measurement: &latency_test_result,
         };
         info!("Share Request {:?}", request);
         println!("Share results: {}", speedtest::get_share_url(&request)?);
