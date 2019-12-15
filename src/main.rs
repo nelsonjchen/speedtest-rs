@@ -6,8 +6,7 @@ mod distance;
 mod error;
 mod speedtest;
 
-#[allow(dead_code)]
-fn main() {
+fn main() -> Result<(), error::Error> {
     env_logger::init();
 
     let matches = App::new("speedtest-rs")
@@ -31,32 +30,34 @@ fn main() {
         .arg(
             Arg::with_name("simple")
                 .long("simple")
-                .help("Suppress verbose output, only show basic informatio"),
+                .help("Suppress verbose output, only show basic information"),
         )
         .get_matches();
 
     if !matches.is_present("simple") {
         println!("Retrieving speedtest.net configuration...");
     }
-    let config = speedtest::get_configuration().unwrap();
+    let config = speedtest::get_configuration()?;
     if !matches.is_present("simple") {
         println!("Retrieving speedtest.net server list...");
     }
-    let server_list = speedtest::get_server_list_with_config(Some(&config)).unwrap();
+    let server_list = speedtest::get_server_list_with_config(Some(&config))?;
     let mut server_list_sorted = server_list.servers_sorted_by_distance(&config);
 
     if matches.is_present("list") {
         for server in server_list_sorted {
             println!(
-                "{:4}) {} ({}, {}) [{:.2} km]",
+                "{:4}) {} ({}, {}) [{}]",
                 server.id,
                 server.sponsor,
                 server.name,
                 server.country,
-                server.distance.unwrap(),
+                server
+                    .distance
+                    .map_or("None".to_string(), |d| format!("{:.2} km", d)),
             );
         }
-        return;
+        return Ok(());
     }
     if !matches.is_present("simple") {
         println!("Testing from {} ({})...", config.isp, config.ip);
@@ -67,22 +68,24 @@ fn main() {
     for server in &server_list_sorted {
         info!("Close Server: {:?}", server);
     }
-    let latency_test_result =
-        speedtest::get_best_server_based_on_latency(&server_list_sorted[..]).unwrap();
+    let latency_test_result = speedtest::get_best_server_based_on_latency(&server_list_sorted[..])?;
     if !matches.is_present("simple") {
         println!(
             "Hosted by {} ({}) [{:.2} km]: {}.{} ms",
             latency_test_result.server.sponsor,
             latency_test_result.server.name,
-            latency_test_result.server.distance.unwrap(),
+            latency_test_result
+                .server
+                .distance
+                .map_or("None".to_string(), |d| format!("{:.2} km", d)),
             latency_test_result.latency.num_milliseconds(),
-            latency_test_result.latency.num_microseconds().unwrap() % 1000,
+            latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
         );
     } else {
         println!(
             "Ping: {}.{} ms",
             latency_test_result.latency.num_milliseconds(),
-            latency_test_result.latency.num_microseconds().unwrap() % 1000,
+            latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
         );
     }
     let best_server = latency_test_result.server;
@@ -91,11 +94,10 @@ fn main() {
 
     if !matches.is_present("simple") {
         print!("Testing download speed");
-        download_measurement =
-            speedtest::test_download_with_progress(best_server, print_dot).unwrap();
+        download_measurement = speedtest::test_download_with_progress(best_server, print_dot)?;
         println!();
     } else {
-        download_measurement = speedtest::test_download_with_progress(best_server, || {}).unwrap();
+        download_measurement = speedtest::test_download_with_progress(best_server, || {})?;
     }
 
     if matches.is_present("bytes") {
@@ -114,10 +116,10 @@ fn main() {
 
     if !matches.is_present("simple") {
         print!("Testing upload speed");
-        upload_measurement = speedtest::test_upload_with_progress(best_server, print_dot).unwrap();
+        upload_measurement = speedtest::test_upload_with_progress(best_server, print_dot)?;
         println!();
     } else {
-        upload_measurement = speedtest::test_upload_with_progress(best_server, || {}).unwrap();
+        upload_measurement = speedtest::test_upload_with_progress(best_server, || {})?;
     }
 
     if matches.is_present("bytes") {
@@ -140,11 +142,9 @@ fn main() {
             latency_measurement: &latency_test_result,
         };
         info!("Share Request {:?}", request);
-        println!(
-            "Share results: {}",
-            speedtest::get_share_url(&request).unwrap()
-        );
+        println!("Share results: {}", speedtest::get_share_url(&request)?);
     }
+    Ok(())
 }
 
 fn print_dot() {
