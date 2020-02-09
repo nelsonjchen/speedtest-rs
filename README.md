@@ -2,7 +2,7 @@
 
 *a tool like `speedtest-cli`, but in Rust and lacking a few things*
 
-[![Build Status](https://travis-ci.org/nelsonjchen/speedtest-rs.svg?branch=master)](https://travis-ci.org/nelsonjchen/speedtest-rs)
+![Continuous integration](https://github.com/nelsonjchen/speedtest-rs/workflows/Continuous%20integration/badge.svg)
 [![](https://img.shields.io/crates/v/speedtest-rs.svg)](https://crates.io/crates/speedtest-rs)
 
 Status: This is working at the moment. Download and upload testing is done.
