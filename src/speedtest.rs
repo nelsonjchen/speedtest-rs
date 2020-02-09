@@ -6,11 +6,9 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 
 use log::{debug, info};
-use md5;
 use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
 use reqwest::{Client, Response};
 use time::{now, Duration};
-use url;
 use xml::reader::EventReader;
 use xml::reader::XmlEvent::StartElement;
 
@@ -410,7 +408,7 @@ where
     F: Fn() -> () + Send + Sync + 'static,
 {
     info!("Testing Upload");
-    let upload_path = Path::new(&server.url).to_path_buf().clone();
+    let upload_path = Path::new(&server.url).to_path_buf();
     let total_size: usize;
     let start_time = Arc::new(now());
     let small_sizes = [250_000; 25];
@@ -571,7 +569,7 @@ pub fn parse_share_request_response_id(input: &[u8]) -> Result<String, Error> {
     let pairs = url::form_urlencoded::parse(input);
     for pair in pairs {
         if pair.0 == "resultid" {
-            return Ok(pair.1.into_owned().to_string());
+            return Ok(pair.1.into_owned());
         }
     }
     Err(Error::ParseShareUrlError)
