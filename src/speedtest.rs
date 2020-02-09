@@ -6,8 +6,8 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 
 use log::{debug, info};
-use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
 use reqwest::blocking::{Client, Response};
+use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
 use time::{now, Duration};
 use xml::reader::EventReader;
 use xml::reader::XmlEvent::StartElement;
