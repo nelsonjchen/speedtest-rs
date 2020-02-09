@@ -12,9 +12,12 @@ edition = "2018"
 clap = "2.33.0"
 env_logger = "0.7.1"
 log = "0.4.8"
-reqwest = "0.9.22"
+reqwest = "0.9.24"
 time = "0.1.42"
 url = "2.1.0"
 xml-rs = "0.8.0"
 mockito = "0.21.0"
 md5 = "0.7.0"
+
+[features]
+rustls-tls = ["reqwest/rustls-tls"]
