@@ -5,6 +5,7 @@ use std::io::{self, Write};
 mod distance;
 mod error;
 mod speedtest;
+mod speedtest_csv;
 
 fn main() -> Result<(), error::Error> {
     env_logger::init();
@@ -33,7 +34,16 @@ fn main() -> Result<(), error::Error> {
                 .help("Suppress verbose output, only show basic information"),
         )
         .arg(Arg::with_name("csv").long("csv").help("Output"))
+        .arg(Arg::with_name("csv-header").long("csv-header").help("Output"))
+
         .get_matches();
+
+    // This appears to be purely informational.
+    if matches.is_present("csv-header") {
+        use csv::WriterBuilder;
+
+        return Ok(());
+    }
 
     let machine_format = matches.is_present("csv") || matches.is_present("json");
 
