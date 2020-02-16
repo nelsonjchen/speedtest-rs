@@ -32,13 +32,16 @@ fn main() -> Result<(), error::Error> {
                 .long("simple")
                 .help("Suppress verbose output, only show basic information"),
         )
+        .arg(Arg::with_name("csv").long("csv").help("Output"))
         .get_matches();
 
-    if !matches.is_present("simple") {
+    let machine_format = matches.is_present("csv") || matches.is_present("json");
+
+    if !matches.is_present("simple") && !machine_format {
         println!("Retrieving speedtest.net configuration...");
     }
     let config = speedtest::get_configuration()?;
-    if !matches.is_present("simple") {
+    if !matches.is_present("simple") && !machine_format {
         println!("Retrieving speedtest.net server list...");
     }
     let server_list = speedtest::get_server_list_with_config(Some(&config))?;
@@ -59,40 +62,46 @@ fn main() -> Result<(), error::Error> {
         }
         return Ok(());
     }
-    if !matches.is_present("simple") {
+
+    if !matches.is_present("simple") && !machine_format {
         println!("Testing from {} ({})...", config.isp, config.ip);
         println!("Selecting best server based on latency...");
     }
+
     info!("Five Closest Servers");
     server_list_sorted.truncate(5);
     for server in &server_list_sorted {
         info!("Close Server: {:?}", server);
     }
     let latency_test_result = speedtest::get_best_server_based_on_latency(&server_list_sorted[..])?;
-    if !matches.is_present("simple") {
-        println!(
-            "Hosted by {} ({}) [{:.2} km]: {}.{} ms",
-            latency_test_result.server.sponsor,
-            latency_test_result.server.name,
-            latency_test_result
-                .server
-                .distance
-                .map_or("None".to_string(), |d| format!("{:.2} km", d)),
-            latency_test_result.latency.num_milliseconds(),
-            latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
-        );
-    } else {
-        println!(
-            "Ping: {}.{} ms",
-            latency_test_result.latency.num_milliseconds(),
-            latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
-        );
+
+    if !machine_format {
+        if !matches.is_present("simple") {
+            println!(
+                "Hosted by {} ({}) [{:.2} km]: {}.{} ms",
+                latency_test_result.server.sponsor,
+                latency_test_result.server.name,
+                latency_test_result
+                    .server
+                    .distance
+                    .map_or("None".to_string(), |d| format!("{:.2} km", d)),
+                latency_test_result.latency.num_milliseconds(),
+                latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
+            );
+        } else {
+            println!(
+                "Ping: {}.{} ms",
+                latency_test_result.latency.num_milliseconds(),
+                latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
+            );
+        }
     }
+
     let best_server = latency_test_result.server;
 
     let download_measurement;
 
-    if !matches.is_present("simple") {
+    if !matches.is_present("simple") && !machine_format {
         print!("Testing download speed");
         download_measurement = speedtest::test_download_with_progress(best_server, print_dot)?;
         println!();
@@ -100,21 +109,23 @@ fn main() -> Result<(), error::Error> {
         download_measurement = speedtest::test_download_with_progress(best_server, || {})?;
     }
 
-    if matches.is_present("bytes") {
-        println!(
-            "Download: {:.2} Mbyte/s",
-            ((download_measurement.kbps() / 8) as f32 / 1000.00)
-        );
-    } else {
-        println!(
-            "Download: {:.2} Mbit/s",
-            (download_measurement.kbps()) as f32 / 1000.00
-        );
+    if !machine_format {
+        if matches.is_present("bytes") {
+            println!(
+                "Download: {:.2} Mbyte/s",
+                ((download_measurement.kbps() / 8) as f32 / 1000.00)
+            );
+        } else {
+            println!(
+                "Download: {:.2} Mbit/s",
+                (download_measurement.kbps()) as f32 / 1000.00
+            );
+        }
     }
 
     let upload_measurement;
 
-    if !matches.is_present("simple") {
+    if !matches.is_present("simple") && !machine_format {
         print!("Testing upload speed");
         upload_measurement = speedtest::test_upload_with_progress(best_server, print_dot)?;
         println!();
@@ -122,19 +133,21 @@ fn main() -> Result<(), error::Error> {
         upload_measurement = speedtest::test_upload_with_progress(best_server, || {})?;
     }
 
-    if matches.is_present("bytes") {
-        println!(
-            "Upload: {:.2} Mbyte/s",
-            ((upload_measurement.kbps() / 8) as f32 / 1000.00)
-        );
-    } else {
-        println!(
-            "Upload: {:.2} Mbit/s",
-            (upload_measurement.kbps() as f32 / 1000.00)
-        );
+    if !machine_format {
+        if matches.is_present("bytes") {
+            println!(
+                "Upload: {:.2} Mbyte/s",
+                ((upload_measurement.kbps() / 8) as f32 / 1000.00)
+            );
+        } else {
+            println!(
+                "Upload: {:.2} Mbit/s",
+                (upload_measurement.kbps() as f32 / 1000.00)
+            );
+        }
     }
 
-    if matches.is_present("share") {
+    if matches.is_present("share") && !machine_format {
         let request = speedtest::SpeedTestResult {
             download_measurement: &download_measurement,
             upload_measurement: &upload_measurement,
