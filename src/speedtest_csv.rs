@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Default)]
 struct SpeedTestCsvResult<'a> {
     server_id: &'a str,
     sponsor: &'a str,
@@ -16,14 +16,14 @@ struct SpeedTestCsvResult<'a> {
 
 #[cfg(test)]
 mod tests {
-    use csv::WriterBuilder;
+    use csv::serializer::serialize_header;
     use std::error::Error;
 
     #[test]
     fn test_header_serialize() -> Result<(), Box<dyn Error>> {
         let original = "Server ID,Sponsor,Server Name,Timestamp,Distance,Ping,Download,Upload,Share,IP Address";
 
-        let wtr = WriterBuilder::new().has_headers(true).from_writer(vec![]);
+        let wtr = serialize_header(SpeedTestCsvResult{});
 
         let data = String::from_utf8(wtr.into_inner()?)?;
         assert_eq!(data, original);
