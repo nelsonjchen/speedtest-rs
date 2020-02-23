@@ -1,8 +1,8 @@
+use crate::speedtest_csv::SpeedTestCsvResult;
+use chrono::Utc;
 use clap::{crate_version, App, Arg};
 use log::info;
 use std::io::{self, Write};
-use crate::speedtest_csv::SpeedTestCsvResult;
-use chrono::Utc;
 
 mod distance;
 mod error;
@@ -36,8 +36,11 @@ fn main() -> Result<(), error::Error> {
                 .help("Suppress verbose output, only show basic information"),
         )
         .arg(Arg::with_name("csv").long("csv").help("Output"))
-        .arg(Arg::with_name("csv-header").long("csv-header").help("Output"))
-
+        .arg(
+            Arg::with_name("csv-header")
+                .long("csv-header")
+                .help("Output"),
+        )
         .get_matches();
 
     // This appears to be purely informational.
@@ -175,11 +178,8 @@ fn main() -> Result<(), error::Error> {
             timestamp: &Utc::now().to_string(),
             distance: &(latency_test_result
                 .server
-                .distance.map_or(
-                "".to_string(),
-                |d| d.to_string()
-            )
-            ),
+                .distance
+                .map_or("".to_string(), |d| d.to_string())),
             ping: &format!(
                 "{}.{}",
                 latency_test_result.latency.num_milliseconds(),
@@ -189,21 +189,26 @@ fn main() -> Result<(), error::Error> {
             upload: &(upload_measurement.kbps() as f32 / 1000.00).to_string(),
             share: &if matches.is_present("share") {
                 speedtest::get_share_url(&speedtest_result)?
-            } else { "".to_string() }.to_string(),
+            } else {
+                "".to_string()
+            }
+            .to_string(),
             ip_address: &config.ip,
         };
-        let mut wtr = csv::WriterBuilder::new().
-            has_headers(false).
-            from_writer(io::stdout()
-            );
+        let mut wtr = csv::WriterBuilder::new()
+            .has_headers(false)
+            .from_writer(io::stdout());
         wtr.serialize(speedtest_csv_result)?;
         wtr.flush()?;
-        return Ok(())
+        return Ok(());
     }
 
     if matches.is_present("share") && !machine_format {
         info!("Share Request {:?}", speedtest_result);
-        println!("Share results: {}", speedtest::get_share_url(&speedtest_result)?);
+        println!(
+            "Share results: {}",
+            speedtest::get_share_url(&speedtest_result)?
+        );
     }
 
     Ok(())
