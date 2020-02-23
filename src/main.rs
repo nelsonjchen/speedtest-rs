@@ -1,6 +1,8 @@
 use clap::{crate_version, App, Arg};
 use log::info;
 use std::io::{self, Write};
+use crate::speedtest_csv::SpeedTestCsvResult;
+use chrono::Utc;
 
 mod distance;
 mod error;
@@ -158,16 +160,52 @@ fn main() -> Result<(), error::Error> {
         }
     }
 
-    if matches.is_present("share") && !machine_format {
-        let request = speedtest::SpeedTestResult {
-            download_measurement: &download_measurement,
-            upload_measurement: &upload_measurement,
-            server: &best_server,
-            latency_measurement: &latency_test_result,
+    let speedtest_result = speedtest::SpeedTestResult {
+        download_measurement: &download_measurement,
+        upload_measurement: &upload_measurement,
+        server: &best_server,
+        latency_measurement: &latency_test_result,
+    };
+
+    if { matches.is_present("csv") } {
+        let speedtest_csv_result = SpeedTestCsvResult {
+            server_id: &best_server.id.to_string(),
+            sponsor: &best_server.sponsor,
+            server_name: &best_server.name,
+            timestamp: &Utc::now().to_string(),
+            distance: &(latency_test_result
+                .server
+                .distance.map_or(
+                "".to_string(),
+                |d| d.to_string()
+            )
+            ),
+            ping: &format!(
+                "{}.{}",
+                latency_test_result.latency.num_milliseconds(),
+                latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000
+            ),
+            download: &(download_measurement.kbps() as f32 / 1000.00).to_string(),
+            upload: &(upload_measurement.kbps() as f32 / 1000.00).to_string(),
+            share: &if matches.is_present("share") {
+                speedtest::get_share_url(&speedtest_result)?
+            } else { "".to_string() }.to_string(),
+            ip_address: &config.ip,
         };
-        info!("Share Request {:?}", request);
-        println!("Share results: {}", speedtest::get_share_url(&request)?);
+        let mut wtr = csv::WriterBuilder::new().
+            has_headers(false).
+            from_writer(io::stdout()
+            );
+        wtr.serialize(speedtest_csv_result)?;
+        wtr.flush()?;
+        return Ok(())
     }
+
+    if matches.is_present("share") && !machine_format {
+        info!("Share Request {:?}", speedtest_result);
+        println!("Share results: {}", speedtest::get_share_url(&speedtest_result)?);
+    }
+
     Ok(())
 }
 

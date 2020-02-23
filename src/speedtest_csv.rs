@@ -3,25 +3,25 @@ use serde::Serialize;
 #[derive(Debug, Serialize, Default)]
 pub struct SpeedTestCsvResult<'a> {
     #[serde(rename ="Server ID")]
-    server_id: &'a str,
+    pub server_id: &'a str,
     #[serde(rename ="Sponsor")]
-    sponsor: &'a str,
+    pub sponsor: &'a str,
     #[serde(rename ="Server Name")]
-    server_name: &'a str,
+    pub server_name: &'a str,
     #[serde(rename ="Timestamp")]
-    timestamp: &'a str,
+    pub timestamp: &'a str,
     #[serde(rename ="Distance")]
-    distance: &'a str,
+    pub distance: &'a str,
     #[serde(rename ="Ping")]
-    ping: &'a str,
+    pub ping: &'a str,
     #[serde(rename ="Download")]
-    download: &'a str,
+    pub download: &'a str,
     #[serde(rename ="Upload")]
-    upload: &'a str,
+    pub upload: &'a str,
     #[serde(rename ="Share")]
-    share: &'a str,
+    pub share: &'a str,
     #[serde(rename ="IP Address")]
-    ip_address: &'a str,
+    pub ip_address: &'a str,
 }
 
 impl<'a> SpeedTestCsvResult<'a> {
