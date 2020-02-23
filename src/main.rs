@@ -170,7 +170,7 @@ fn main() -> Result<(), error::Error> {
         latency_measurement: &latency_test_result,
     };
 
-    if { matches.is_present("csv") } {
+    if matches.is_present("csv") {
         let speedtest_csv_result = SpeedTestCsvResult {
             server_id: &best_server.id.to_string(),
             sponsor: &best_server.sponsor,
@@ -191,8 +191,7 @@ fn main() -> Result<(), error::Error> {
                 speedtest::get_share_url(&speedtest_result)?
             } else {
                 "".to_string()
-            }
-            .to_string(),
+            },
             ip_address: &config.ip,
         };
         let mut wtr = csv::WriterBuilder::new()
