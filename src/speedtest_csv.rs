@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 #[derive(Debug, Serialize, Default)]
-struct SpeedTestCsvResult<'a> {
+pub struct SpeedTestCsvResult<'a> {
     server_id: &'a str,
     sponsor: &'a str,
     server_name: &'a str,
@@ -14,19 +14,28 @@ struct SpeedTestCsvResult<'a> {
     ip_address: &'a str,
 }
 
+impl<'a> SpeedTestCsvResult<'a> {
+    pub fn header_serialize(self) -> String {
+        // Un-dynamic for now
+        // Blocked on:
+        // * https://github.com/BurntSushi/rust-csv/issues/161 being implemented or solved
+        // * https://github.com/BurntSushi/rust-csv/pull/193/files, like in this?
+        "Server ID,Sponsor,Server Name,Timestamp,Distance,Ping,Download,Upload,Share,IP Address".to_string()
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use csv::serializer::serialize_header;
+    use super::*;
     use std::error::Error;
 
     #[test]
     fn test_header_serialize() -> Result<(), Box<dyn Error>> {
         let original = "Server ID,Sponsor,Server Name,Timestamp,Distance,Ping,Download,Upload,Share,IP Address";
 
-        let wtr = serialize_header(SpeedTestCsvResult{});
+        let results = SpeedTestCsvResult::default();
 
-        let data = String::from_utf8(wtr.into_inner()?)?;
-        assert_eq!(data, original);
+        assert_eq!(results.header_serialize(), original);
         Ok(())
     }
 }

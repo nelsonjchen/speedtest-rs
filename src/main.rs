@@ -40,8 +40,9 @@ fn main() -> Result<(), error::Error> {
 
     // This appears to be purely informational.
     if matches.is_present("csv-header") {
-        use csv::WriterBuilder;
+        let results = speedtest_csv::SpeedTestCsvResult::default();
 
+        println!("{}", results.header_serialize());
         return Ok(());
     }
 
