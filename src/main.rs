@@ -175,7 +175,7 @@ fn main() -> Result<(), error::Error> {
             server_id: &best_server.id.to_string(),
             sponsor: &best_server.sponsor,
             server_name: &best_server.name,
-            timestamp: &Utc::now().to_string(),
+            timestamp: &Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Micros, true),
             distance: &(latency_test_result
                 .server
                 .distance
