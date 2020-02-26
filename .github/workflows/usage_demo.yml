@@ -1,9 +1,10 @@
 on: push
 
-name: Usage Demo/Test
+name: Usage Demo
 
 jobs:
-  ci:
+  usage-demo:
+    name: "Usage Demo"
     runs-on: ubuntu-latest
 
     steps:
@@ -31,3 +32,8 @@ jobs:
         with:
           command: run
           args: -- --csv
+      - uses: actions-rs/cargo@v1
+        name: Run (CSV Header)
+        with:
+          command: run
+          args: -- --csv-header
