@@ -35,11 +35,28 @@ fn main() -> Result<(), error::Error> {
                 .long("simple")
                 .help("Suppress verbose output, only show basic information"),
         )
-        .arg(Arg::with_name("csv").long("csv").help("Output"))
+        .arg(Arg::with_name("csv").long("csv").help(
+            "Suppress verbose output, only show basic information in CSV format.\
+             Speeds listed in bit/s and not affected by --bytes",
+        ))
         .arg(
             Arg::with_name("csv-header")
                 .long("csv-header")
-                .help("Output"),
+                .help("Print CSV headers"),
+        )
+        .arg(
+            Arg::with_name("csv_delimiter")
+                .long("csv_delimiter")
+                .help("Single character delimiter to use in CSV output.")
+                .takes_value(true)
+                .default_value(",")
+                .validator(|v| {
+                    if v.chars().count() == 1 {
+                        Ok(())
+                    } else {
+                        Err("--csv-delimiter must be a single character".into())
+                    }
+                }),
         )
         .get_matches();
 
