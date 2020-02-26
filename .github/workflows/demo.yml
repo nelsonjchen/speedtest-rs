@@ -1,0 +1,32 @@
+on: push
+
+name: Usage Demo/Test
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          override: true
+
+      - uses: actions-rs/cargo@v1
+        name: Build
+        with:
+          command: build
+          args: --features=${{ matrix.features }}
+
+      - uses: actions-rs/cargo@v1
+        name: Run (Typical)
+        with:
+          command: run
+
+      - uses: actions-rs/cargo@v1
+        name: Run (CSV Output)
+        with:
+          command: run
+          args: -- --csv
