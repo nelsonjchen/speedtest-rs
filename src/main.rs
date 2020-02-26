@@ -45,8 +45,8 @@ fn main() -> Result<(), error::Error> {
                 .help("Print CSV headers"),
         )
         .arg(
-            Arg::with_name("csv_delimiter")
-                .long("csv_delimiter")
+            Arg::with_name("csv-delimiter")
+                .long("csv-delimiter")
                 .help("Single character delimiter to use in CSV output.")
                 .takes_value(true)
                 .default_value(",")
@@ -213,6 +213,14 @@ fn main() -> Result<(), error::Error> {
         };
         let mut wtr = csv::WriterBuilder::new()
             .has_headers(false)
+            .delimiter(
+                matches
+                    .value_of("csv-delimiter")
+                    .unwrap_or(",")
+                    .chars()
+                    .next()
+                    .unwrap_or(',') as u8,
+            )
             .from_writer(io::stdout());
         wtr.serialize(speedtest_csv_result)?;
         wtr.flush()?;
