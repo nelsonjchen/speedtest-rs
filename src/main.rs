@@ -179,7 +179,7 @@ fn main() -> Result<(), error::Error> {
             distance: &(latency_test_result
                 .server
                 .distance
-                .map_or("".to_string(), |d| d.to_string()))[..],
+                .map_or("".to_string(), |d| format!("{:.14}", d)))[..],
             ping: &format!(
                 "{}.{}",
                 latency_test_result.latency.num_milliseconds(),
