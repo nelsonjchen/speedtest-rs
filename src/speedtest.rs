@@ -314,6 +314,10 @@ impl SpeedMeasurement {
     pub fn kbps(&self) -> u32 {
         (self.size as u32 * 8) / self.duration.num_milliseconds() as u32
     }
+
+    pub fn bps_f64(&self) -> f64 {
+        (self.size as f64 * 8.0) / (self.duration.num_milliseconds() as f64 / (1000.0))
+    }
 }
 
 pub fn test_download_with_progress<F>(

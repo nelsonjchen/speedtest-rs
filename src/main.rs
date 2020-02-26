@@ -185,8 +185,8 @@ fn main() -> Result<(), error::Error> {
                 latency_test_result.latency.num_milliseconds(),
                 latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000
             ),
-            download: &(download_measurement.kbps() as f32 / 1000.00).to_string(),
-            upload: &(upload_measurement.kbps() as f32 / 1000.00).to_string(),
+            download: &(download_measurement.bps_f64()).to_string(),
+            upload: &(upload_measurement.bps_f64()).to_string(),
             share: &if matches.is_present("share") {
                 speedtest::get_share_url(&speedtest_result)?
             } else {
