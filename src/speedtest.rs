@@ -72,6 +72,7 @@ impl SpeedTestConfig {
 #[derive(Clone, Debug)]
 pub struct SpeedTestServer {
     pub country: String,
+    pub cc: String,
     pub host: String,
     pub id: u32,
     pub location: EarthLocation,
@@ -79,6 +80,7 @@ pub struct SpeedTestServer {
     pub name: String,
     pub sponsor: String,
     pub url: String,
+    pub url2: String,
 }
 
 pub struct SpeedTestServersConfig {
@@ -105,6 +107,7 @@ impl SpeedTestServersConfig {
             {
                 if name.local_name == "server" {
                     let mut country: Option<String> = None;
+                    let mut cc: Option<String> = None;
                     let mut host: Option<String> = None;
                     let mut id: Option<u32> = None;
                     let mut lat: Option<f32> = None;
@@ -112,11 +115,15 @@ impl SpeedTestServersConfig {
                     let mut name: Option<String> = None;
                     let mut sponsor: Option<String> = None;
                     let mut url: Option<String> = None;
+                    let mut url2: Option<String> = None;
                     for attribute in attributes {
                         match attribute.name.local_name.as_ref() {
                             "country" => {
                                 country = Some(attribute.value.clone());
                             }
+                            "cc" => {
+                                cc = Some(attribute.value.clone());
+                            },
                             "host" => {
                                 host = Some(attribute.value.clone());
                             }
@@ -131,12 +138,16 @@ impl SpeedTestServersConfig {
                             }
                             "url" => {
                                 url = Some(attribute.value.clone());
+                            },
+                            "url2" => {
+                                url2 = Some(attribute.value.clone());
                             }
                             _ => {}
                         }
                     }
                     if let (
                         Some(country),
+                        Some(cc),
                         Some(host),
                         Some(id),
                         Some(lat),
@@ -144,7 +155,8 @@ impl SpeedTestServersConfig {
                         Some(name),
                         Some(sponsor),
                         Some(url),
-                    ) = (country, host, id, lat, lon, name, sponsor, url)
+                        Some(url2),
+                    ) = (country, cc, host, id, lat, lon, name, sponsor, url, url2)
                     {
                         let location = EarthLocation {
                             latitude: lat,
@@ -154,6 +166,7 @@ impl SpeedTestServersConfig {
                             .map(|config| distance::compute_distance(&config.location, &location));
                         let server = SpeedTestServer {
                             country,
+                            cc,
                             host,
                             id,
                             location,
@@ -161,6 +174,7 @@ impl SpeedTestServersConfig {
                             name,
                             sponsor,
                             url,
+                            url2,
                         };
                         servers.push(server);
                     }
@@ -499,14 +513,14 @@ where
 }
 
 #[derive(Debug)]
-pub struct SpeedTestResult<'a, 'b, 'c> {
+pub struct SpeedTestResult<'a> {
     pub download_measurement: &'a SpeedMeasurement,
-    pub upload_measurement: &'b SpeedMeasurement,
-    pub server: &'c SpeedTestServer,
-    pub latency_measurement: &'c SpeedTestLatencyTestResult<'c>,
+    pub upload_measurement: &'a SpeedMeasurement,
+    pub server: &'a SpeedTestServer,
+    pub latency_measurement: &'a SpeedTestLatencyTestResult<'a>,
 }
 
-impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
+impl<'a,> SpeedTestResult<'a> {
     pub fn hash(&self) -> String {
         let hashed_str = format!(
             "{}-{}-{}-{}",
@@ -603,6 +617,7 @@ mod tests {
         println!("Upload: {:?}", upload_measurement);
         let server = SpeedTestServer {
             country: "".to_owned(),
+            cc: "".to_string(),
             host: "".to_owned(),
             id: 5116,
             location: EarthLocation {
@@ -613,6 +628,7 @@ mod tests {
             name: "".to_owned(),
             sponsor: "".to_owned(),
             url: "".to_owned(),
+            url2: "".to_string(),
         };
         println!("Server: {:?}", server);
         let latency_measurement = SpeedTestLatencyTestResult {
