@@ -1490,6 +1490,7 @@ dependencies = [
  "mockito",
  "reqwest",
  "serde",
+ "serde_json",
  "time",
  "url 2.1.1",
  "xml-rs",

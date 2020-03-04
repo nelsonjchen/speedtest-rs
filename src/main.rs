@@ -8,6 +8,7 @@ mod distance;
 mod error;
 mod speedtest;
 mod speedtest_csv;
+mod speedtest_json;
 
 fn main() -> Result<(), error::Error> {
     env_logger::init();
@@ -35,6 +36,10 @@ fn main() -> Result<(), error::Error> {
                 .long("simple")
                 .help("Suppress verbose output, only show basic information"),
         )
+        .arg(Arg::with_name("json").long("json").help(
+            "Suppress verbose output, only show basic information in JSON format.\
+             Speeds listed in bit/s and not affected by --bytes",
+        ))
         .arg(Arg::with_name("csv").long("csv").help(
             "Suppress verbose output, only show basic information in CSV format.\
              Speeds listed in bit/s and not affected by --bytes",
