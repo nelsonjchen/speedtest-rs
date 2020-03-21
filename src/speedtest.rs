@@ -351,9 +351,7 @@ where
                 let start_time = thread_start_time.clone();
                 let farc = farc.clone();
                 let thread = thread::spawn(move || {
-                    let path = root_path
-                        .to_path_buf()
-                        .join(format!("random{0}x{0}.jpg", size));
+                    let path = root_path.join(format!("random{0}x{0}.jpg", size));
                     let f = farc.clone();
                     f();
                     if (now() - *start_time) > Duration::seconds(10) {
