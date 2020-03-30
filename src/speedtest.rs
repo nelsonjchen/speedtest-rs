@@ -498,8 +498,8 @@ where
 
 #[derive(Debug)]
 pub struct SpeedTestResult<'a, 'b, 'c> {
-    pub download_measurement: &'a SpeedMeasurement,
-    pub upload_measurement: &'b SpeedMeasurement,
+    pub download_measurement: Option<&'a SpeedMeasurement>,
+    pub upload_measurement: Option<&'b SpeedMeasurement>,
     pub server: &'c SpeedTestServer,
     pub latency_measurement: &'c SpeedTestLatencyTestResult<'c>,
 }
@@ -509,8 +509,16 @@ impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
         let hashed_str = format!(
             "{}-{}-{}-{}",
             self.latency_measurement.latency.num_milliseconds(),
-            self.upload_measurement.kbps(),
-            self.download_measurement.kbps(),
+            if let Some(upload_measurement) = self.upload_measurement {
+                upload_measurement.kbps()
+            } else {
+                0
+            },
+            if let Some(download_measurement) = self.download_measurement {
+                download_measurement.kbps()
+            } else {
+                0
+            },
             "297aae72"
         );
 
@@ -518,30 +526,55 @@ impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
     }
 }
 
-pub fn get_share_url(request: &SpeedTestResult) -> Result<String, Error> {
+pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Error> {
     info!("Generating share URL");
-    let download = request.download_measurement.kbps();
+    let download = if let Some(download_measurement) = speedtest_result.download_measurement {
+        download_measurement.kbps()
+    } else {
+        0
+    };
     info!("Download parameter is {:?}", download);
-    let upload = request.upload_measurement.kbps();
+    let upload = if let Some(upload_measurement) = speedtest_result.upload_measurement {
+        upload_measurement.kbps()
+    } else {
+        0
+    };
     info!("Upload parameter is {:?}", upload);
-    let server = request.server.id;
+    let server = speedtest_result.server.id;
     info!("Server parameter is {:?}", server);
-    let ping = request.latency_measurement.latency;
+    let ping = speedtest_result.latency_measurement.latency;
     info!("Ping parameter is {:?}", ping);
 
     let pairs = [
         (
             "download",
-            format!("{}", request.download_measurement.kbps()),
+            format!(
+                "{}",
+                if let Some(download_measurement) = speedtest_result.download_measurement {
+                    download_measurement.kbps()
+                } else {
+                    0
+                }
+            ),
         ),
         ("ping", format!("{}", ping.num_milliseconds())),
-        ("upload", format!("{}", request.upload_measurement.kbps())),
+        (
+            "upload",
+            format!(
+                "{}",
+                if let Some(upload_measurement) = speedtest_result.upload_measurement {
+                    upload_measurement.kbps()
+                } else {
+                    0
+                }
+            ),
+        ),
         ("promo", format!("")),
         ("startmode", "pingselect".to_string()),
         ("recommendedserverid", format!("{}", server)),
         ("accuracy", "1".to_string()),
         ("serverid", format!("{}", server)),
-        ("hash", request.hash()),
+        ("hash", speedtest_result.hash()),
     ];
 
     let body = url::form_urlencoded::Serializer::new(String::new())
@@ -619,8 +652,8 @@ mod tests {
         };
         println!("Latency: {:?}", latency_measurement);
         let request = SpeedTestResult {
-            download_measurement: &download_measurement,
-            upload_measurement: &upload_measurement,
+            download_measurement: Some(&download_measurement),
+            upload_measurement: Some(&upload_measurement),
             server: &server,
             latency_measurement: &latency_measurement,
         };
