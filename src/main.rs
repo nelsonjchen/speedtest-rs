@@ -16,6 +16,16 @@ fn main() -> Result<(), error::Error> {
         .version(&crate_version!()[..])
         .about("Command line interface for testing internet bandwidth using speedtest.net.")
         .arg(
+            Arg::with_name("no-download")
+                .long("no-download")
+                .help("Don't run download test"),
+        )
+        .arg(
+            Arg::with_name("no-upload")
+                .long("no-upload")
+                .help("Don't run upload test"),
+        )
+        .arg(
             Arg::with_name("list")
                 .long("list")
                 .help("Display a list of speedtest.net servers sorted by distance"),
@@ -133,56 +143,71 @@ fn main() -> Result<(), error::Error> {
     let best_server = latency_test_result.server;
 
     let download_measurement;
+    let inner_download_measurement;
 
-    if !matches.is_present("simple") && !machine_format {
-        print!("Testing download speed");
-        download_measurement = speedtest::test_download_with_progress(best_server, print_dot)?;
-        println!();
-    } else {
-        download_measurement = speedtest::test_download_with_progress(best_server, || {})?;
-    }
-
-    if !machine_format {
-        if matches.is_present("bytes") {
-            println!(
-                "Download: {:.2} Mbyte/s",
-                ((download_measurement.kbps() / 8) as f32 / 1000.00)
-            );
+    if !matches.is_present("no-download") {
+        if !matches.is_present("simple") && !machine_format {
+            print!("Testing download speed");
+            inner_download_measurement =
+                speedtest::test_download_with_progress(best_server, print_dot)?;
+            println!();
         } else {
-            println!(
-                "Download: {:.2} Mbit/s",
-                (download_measurement.kbps()) as f32 / 1000.00
-            );
+            inner_download_measurement =
+                speedtest::test_download_with_progress(best_server, || {})?;
         }
+
+        if !machine_format {
+            if matches.is_present("bytes") {
+                println!(
+                    "Download: {:.2} Mbyte/s",
+                    ((inner_download_measurement.kbps() / 8) as f32 / 1000.00)
+                );
+            } else {
+                println!(
+                    "Download: {:.2} Mbit/s",
+                    (inner_download_measurement.kbps()) as f32 / 1000.00
+                );
+            }
+        }
+        download_measurement = Some(&inner_download_measurement);
+    } else {
+        download_measurement = None;
     }
 
     let upload_measurement;
+    let inner_upload_measurement;
 
-    if !matches.is_present("simple") && !machine_format {
-        print!("Testing upload speed");
-        upload_measurement = speedtest::test_upload_with_progress(best_server, print_dot)?;
-        println!();
-    } else {
-        upload_measurement = speedtest::test_upload_with_progress(best_server, || {})?;
-    }
-
-    if !machine_format {
-        if matches.is_present("bytes") {
-            println!(
-                "Upload: {:.2} Mbyte/s",
-                ((upload_measurement.kbps() / 8) as f32 / 1000.00)
-            );
+    if !matches.is_present("no-upload") {
+        if !matches.is_present("simple") && !machine_format {
+            print!("Testing upload speed");
+            inner_upload_measurement =
+                speedtest::test_upload_with_progress(best_server, print_dot)?;
+            println!();
         } else {
-            println!(
-                "Upload: {:.2} Mbit/s",
-                (upload_measurement.kbps() as f32 / 1000.00)
-            );
+            inner_upload_measurement = speedtest::test_upload_with_progress(best_server, || {})?;
         }
+
+        if !machine_format {
+            if matches.is_present("bytes") {
+                println!(
+                    "Upload: {:.2} Mbyte/s",
+                    ((inner_upload_measurement.kbps() / 8) as f32 / 1000.00)
+                );
+            } else {
+                println!(
+                    "Upload: {:.2} Mbit/s",
+                    (inner_upload_measurement.kbps() as f32 / 1000.00)
+                );
+            }
+        }
+        upload_measurement = Some(&inner_upload_measurement);
+    } else {
+        upload_measurement = None;
     }
 
     let speedtest_result = speedtest::SpeedTestResult {
-        download_measurement: &download_measurement,
-        upload_measurement: &upload_measurement,
+        download_measurement,
+        upload_measurement,
         server: &best_server,
         latency_measurement: &latency_test_result,
     };
@@ -202,8 +227,18 @@ fn main() -> Result<(), error::Error> {
                 latency_test_result.latency.num_milliseconds(),
                 latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000
             ),
-            download: &(download_measurement.bps_f64()).to_string(),
-            upload: &(upload_measurement.bps_f64()).to_string(),
+            download: &(if let Some(measurement) = download_measurement {
+                measurement.bps_f64()
+            } else {
+                0.0
+            })
+            .to_string(),
+            upload: &(if let Some(measurement) = upload_measurement {
+                measurement.bps_f64()
+            } else {
+                0.0
+            })
+            .to_string(),
             share: &if matches.is_present("share") {
                 speedtest::get_share_url(&speedtest_result)?
             } else {
