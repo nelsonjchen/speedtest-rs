@@ -7,6 +7,12 @@
 
 Status: This is working at the moment. Download and upload testing is done.
 
+## Ookla speedtest now has their own CLI tool that's native and available for many platforms.
+
+https://www.speedtest.net/apps/cli
+
+Please look here. Unfortunately, it is not FOSS. Still, it is supported by them and can be used for non-commercial purposes. 
+
 ## Purpose
 
 This is a learning exercise for me to learn:
