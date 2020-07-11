@@ -3,6 +3,7 @@ use chrono::Utc;
 use clap::{crate_version, App, Arg};
 use log::info;
 use std::io::{self, Write};
+use url::Url;
 
 mod distance;
 mod error;
@@ -68,6 +69,12 @@ fn main() -> Result<(), error::Error> {
                     }
                 }),
         )
+        .arg(
+            Arg::with_name("mini")
+                .long("mini")
+                .help("Address of speedtest-mini server")
+                .takes_value(true),
+        )
         .get_matches();
 
     // This appears to be purely informational.
@@ -84,50 +91,89 @@ fn main() -> Result<(), error::Error> {
         println!("Retrieving speedtest.net configuration...");
     }
     let config = speedtest::get_configuration()?;
-    if !matches.is_present("simple") && !machine_format {
-        println!("Retrieving speedtest.net server list...");
-    }
-    let server_list = speedtest::get_server_list_with_config(Some(&config))?;
-    let mut server_list_sorted = server_list.servers_sorted_by_distance(&config);
 
-    if matches.is_present("list") {
-        for server in server_list_sorted {
-            println!(
-                "{:4}) {} ({}, {}) [{}]",
-                server.id,
-                server.sponsor,
-                server.name,
-                server.country,
-                server
-                    .distance
-                    .map_or("None".to_string(), |d| format!("{:.2} km", d)),
-            );
+    let mut server_list_sorted;
+    if !matches.is_present("mini") {
+        if !matches.is_present("simple") && !machine_format {
+            println!("Retrieving speedtest.net server list...");
         }
-        return Ok(());
-    }
+        let server_list = speedtest::get_server_list_with_config(Some(&config))?;
+        server_list_sorted = server_list.servers_sorted_by_distance(&config);
 
-    if !matches.is_present("simple") && !machine_format {
-        println!("Testing from {} ({})...", config.isp, config.ip);
-        println!("Selecting best server based on latency...");
-    }
+        if matches.is_present("list") {
+            for server in server_list_sorted {
+                println!(
+                    "{:4}) {} ({}, {}) [{}]",
+                    server.id,
+                    server.sponsor,
+                    server.name,
+                    server.country,
+                    server
+                        .distance
+                        .map_or("None".to_string(), |d| format!("{:.2} km", d)),
+                );
+            }
+            return Ok(());
+        }
+        if !matches.is_present("simple") && !machine_format {
+            println!("Testing from {} ({})...", config.isp, config.ip);
+            println!("Selecting best server based on latency...");
+        }
 
-    info!("Five Closest Servers");
-    server_list_sorted.truncate(5);
-    for server in &server_list_sorted {
-        info!("Close Server: {:?}", server);
+        info!("Five Closest Servers");
+        server_list_sorted.truncate(5);
+        for server in &server_list_sorted {
+            info!("Close Server: {:?}", server);
+        }
+    } else {
+        let mini = matches.value_of("mini").unwrap();
+        let mini_url = Url::parse(mini).unwrap();
+
+        // matches.value_of("mini").unwrap().to_string()
+        let host;
+        let hostport;
+
+        host = mini_url.host().unwrap().to_string();
+
+        if mini_url.port() == None {
+            hostport = format!("{}", host);
+        } else {
+            hostport = format!("{}:{}", mini_url.host().unwrap(), mini_url.port().unwrap())
+        }
+
+        let mut path = mini_url.path();
+        if path == "/" {
+            path = "/speedtest/upload.php";
+        }
+
+        let url = format!("{}://{}{}", mini_url.scheme(), hostport, path);
+
+        server_list_sorted = vec![speedtest::SpeedTestServer {
+            country: format!("{}", host),
+            host: hostport,
+            id: 0,
+            location: distance::EarthLocation {
+                latitude: 0.0,
+                longitude: 0.0,
+            },
+            distance: None,
+            name: format!("{}", host),
+            sponsor: format!("{}", host),
+            url: url,
+        }]
     }
     let latency_test_result = speedtest::get_best_server_based_on_latency(&server_list_sorted[..])?;
 
     if !machine_format {
         if !matches.is_present("simple") {
             println!(
-                "Hosted by {} ({}) [{:.2} km]: {}.{} ms",
+                "Hosted by {} ({}){}: {}.{} ms",
                 latency_test_result.server.sponsor,
                 latency_test_result.server.name,
                 latency_test_result
                     .server
                     .distance
-                    .map_or("None".to_string(), |d| format!("{:.2} km", d)),
+                    .map_or("".to_string(), |d| format!(" [{:.2} km]", d)),
                 latency_test_result.latency.num_milliseconds(),
                 latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
             );
