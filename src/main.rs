@@ -136,7 +136,7 @@ fn main() -> Result<(), error::Error> {
         host = mini_url.host().unwrap().to_string();
 
         if mini_url.port() == None {
-            hostport = format!("{}", host);
+            hostport = host.to_string();
         } else {
             hostport = format!("{}:{}", mini_url.host().unwrap(), mini_url.port().unwrap())
         }
@@ -149,7 +149,7 @@ fn main() -> Result<(), error::Error> {
         let url = format!("{}://{}{}", mini_url.scheme(), hostport, path);
 
         server_list_sorted = vec![speedtest::SpeedTestServer {
-            country: format!("{}", host),
+            country: host.to_string(),
             host: hostport,
             id: 0,
             location: distance::EarthLocation {
@@ -157,9 +157,9 @@ fn main() -> Result<(), error::Error> {
                 longitude: 0.0,
             },
             distance: None,
-            name: format!("{}", host),
-            sponsor: format!("{}", host),
-            url: url,
+            name: host.to_string(),
+            sponsor: host,
+            url,
         }]
     }
     let latency_test_result = speedtest::get_best_server_based_on_latency(&server_list_sorted[..])?;
