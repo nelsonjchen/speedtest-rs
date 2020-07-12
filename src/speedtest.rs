@@ -325,7 +325,7 @@ pub fn test_download_with_progress<F>(
     f: F,
 ) -> Result<SpeedMeasurement, Error>
 where
-    F: Fn() -> () + Send + Sync + 'static,
+    F: Fn() + Send + Sync + 'static,
 {
     info!("Testing Download speed");
     let root_path = Path::new(&server.url)
@@ -407,7 +407,7 @@ pub fn test_upload_with_progress<F>(
     f: F,
 ) -> Result<SpeedMeasurement, Error>
 where
-    F: Fn() -> () + Send + Sync + 'static,
+    F: Fn() + Send + Sync + 'static,
 {
     info!("Testing Upload");
     let upload_path = Path::new(&server.url).to_path_buf();
