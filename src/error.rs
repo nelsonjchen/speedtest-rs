@@ -3,6 +3,7 @@ pub enum Error {
     Reqwest(reqwest::Error),
     Io(::std::io::Error),
     Csv(csv::Error),
+    ParseFloatError(std::num::ParseFloatError),
     ConfigParseError,
     LatencyTestInvalidPath,
     LatencyTestClosestError,
@@ -26,3 +27,10 @@ impl From<csv::Error> for Error {
         Error::Csv(err)
     }
 }
+
+impl From<std::num::ParseFloatError> for Error {
+    fn from(err: std::num::ParseFloatError) -> Error {
+        Error::ParseFloatError(err)
+    }
+}
+
