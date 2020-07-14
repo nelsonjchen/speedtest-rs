@@ -42,8 +42,8 @@ impl SpeedTestConfig {
                             "ip" => {
                                 ip = Some(attribute.value.clone());
                             }
-                            "lat" => lat = attribute.value.parse::<f32>().ok(),
-                            "lon" => lon = attribute.value.parse::<f32>().ok(),
+                            "lon" => lon = Some(attribute.value.parse::<f32>()?),
+                            "lat" => lat = Some(attribute.value.parse::<f32>()?),
                             "isp" => {
                                 isp = Some(attribute.value.clone());
                             }
