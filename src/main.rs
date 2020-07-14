@@ -1,3 +1,5 @@
+mod speedtest_config;
+
 use crate::speedtest_csv::SpeedTestCsvResult;
 use chrono::Utc;
 use clap::{crate_version, App, Arg};
