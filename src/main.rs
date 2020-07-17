@@ -118,7 +118,10 @@ fn main() -> Result<(), error::Error> {
             return Ok(());
         }
         if !matches.is_present("simple") && !machine_format {
-            println!("Testing from {} ({})...", config.isp, config.ip);
+            println!(
+                "Testing from {} ({})...",
+                config.client.isp, config.client.ip
+            );
             println!("Selecting best server based on latency...");
         }
 
@@ -292,7 +295,7 @@ fn main() -> Result<(), error::Error> {
             } else {
                 "".to_string()
             },
-            ip_address: &config.ip,
+            ip_address: &config.client.ip.to_string(),
         };
         let mut wtr = csv::WriterBuilder::new()
             .has_headers(false)

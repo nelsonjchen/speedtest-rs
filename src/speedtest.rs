@@ -151,10 +151,9 @@ pub fn download_configuration() -> Result<Response, Error> {
 }
 
 pub fn get_configuration() -> Result<SpeedTestConfig, Error> {
-    let config_body = download_configuration()?;
+    let mut config_body = download_configuration()?;
     info!("Parsing Configuration");
-    let config_parser = EventReader::new(config_body);
-    let spt_config = SpeedTestConfig::new(config_parser);
+    let spt_config = SpeedTestConfig::parse(&(config_body.text()?));
     info!("Parsed Configuration");
     spt_config
 }
@@ -613,21 +612,6 @@ mod tests {
     fn test_construct_share_form() {}
 
     #[test]
-    fn test_parse_config_xml() {
-        let parser = EventReader::new(include_bytes!("../tests/config/config.php.xml") as &[u8]);
-        let config = SpeedTestConfig::new(parser).unwrap();
-        assert_eq!("174.79.12.26", config.ip);
-        assert_eq!(
-            EarthLocation {
-                latitude: 32.9954,
-                longitude: -117.0753,
-            },
-            config.location
-        );
-        assert_eq!("Cox Communications", config.isp);
-    }
-
-    #[test]
     fn test_parse_speedtest_servers_xml() {
         let parser = EventReader::new(include_bytes!(
             "../tests/confi\
@@ -644,13 +628,23 @@ mod tests {
 
     #[test]
     fn test_fastest_server() {
+        use crate::speedtest_config::*;
+
         let spt_config = SpeedTestConfig {
-            ip: "127.0.0.1".to_string(),
+            client: SpeedTestClientConfig {
+                ip: "127.0.0.1".parse().unwrap(),
+                isp: "xxxfinity".to_string(),
+            },
+            ignore_servers: vec![],
+            sizes: SpeedTestSizeConfig::default(),
+            counts: SpeedTestCountsConfig::default(),
+            threads: SpeedTestThreadsConfig::default(),
+            length: SpeedTestLengthConfig::default(),
+            upload_max: 0,
             location: EarthLocation {
                 latitude: 32.9954,
                 longitude: -117.0753,
             },
-            isp: "xxxfinity".to_string(),
         };
         let parser = EventReader::new(include_bytes!(
             "../tests/confi\
