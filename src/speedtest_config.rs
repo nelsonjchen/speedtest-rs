@@ -65,7 +65,7 @@ impl SpeedTestConfig {
         let ignore_servers: Vec<u32> = server_config_node
             .attribute("ignoreids")
             .ok_or(Error::ConfigParseError)?
-            .split(",")
+            .split(',')
             .map(|s| s.parse::<u32>())
             .collect::<Result<Vec<u32>, _>>()?;
 
