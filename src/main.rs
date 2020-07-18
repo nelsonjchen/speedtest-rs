@@ -1,4 +1,5 @@
 mod speedtest_config;
+mod speedtest_servers_config;
 
 use crate::speedtest_csv::SpeedTestCsvResult;
 use chrono::Utc;
