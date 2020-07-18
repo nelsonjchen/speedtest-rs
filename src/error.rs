@@ -9,6 +9,7 @@ pub enum Error {
     AddrParseError(std::net::AddrParseError),
     RoXmlTreeError(roxmltree::Error),
     ConfigParseError,
+    ServerParseError,
     LatencyTestInvalidPath,
     LatencyTestClosestError,
     ParseShareUrlError,

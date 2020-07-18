@@ -9,6 +9,50 @@ pub struct SpeedTestServersConfig {
 }
 
 impl SpeedTestServersConfig {
+    pub fn parse_with_config(
+        server_config_xml: &str,
+        config: &SpeedTestConfig,
+    ) -> Result<SpeedTestServersConfig, Error> {
+        let document = roxmltree::Document::parse(server_config_xml)?;
+        let servers = document
+            .descendants()
+            .filter(|node| node.tag_name().name() == "server")
+            .map::<Result<_, Error>, _>(|n| {
+                let location = EarthLocation {
+                    latitude: n.attribute("lat").ok_or(Error::ServerParseError)?.parse()?,
+                    longitude: n.attribute("lon").ok_or(Error::ServerParseError)?.parse()?,
+                };
+                Ok(SpeedTestServer {
+                    country: n
+                        .attribute("country")
+                        .ok_or(Error::ServerParseError)?
+                        .to_string(),
+                    host: n
+                        .attribute("host")
+                        .ok_or(Error::ServerParseError)?
+                        .to_string(),
+                    id: n.attribute("id").ok_or(Error::ServerParseError)?.parse()?,
+                    location: location.clone(),
+                    distance: Some(distance::compute_distance(&config.location, &location)),
+                    name: n
+                        .attribute("name")
+                        .ok_or(Error::ServerParseError)?
+                        .to_string(),
+                    sponsor: n
+                        .attribute("sponsor")
+                        .ok_or(Error::ServerParseError)?
+                        .to_string(),
+                    url: n
+                        .attribute("url")
+                        .ok_or(Error::ServerParseError)?
+                        .to_string(),
+                })
+            })
+            .filter_map(Result::ok)
+            .collect();
+        Ok(SpeedTestServersConfig { servers })
+    }
+
     pub fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestServersConfig, Error> {
         SpeedTestServersConfig::with_config(parser, None)
     }
@@ -108,27 +152,10 @@ impl SpeedTestServersConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::speedtest_config::*;
 
-    #[test]
-    fn test_parse_speedtest_servers_xml() {
-        let parser = EventReader::new(include_bytes!(
-            "../tests/confi\
-             g/stripped-ser\
-             vers-static.\
-             php.xml"
-        ) as &[u8]);
-        let spt_server_config = SpeedTestServersConfig::new(parser).unwrap();
-        assert!(spt_server_config.servers.len() > 5);
-        let server = spt_server_config.servers.get(1).unwrap();
-        assert!(!server.url.is_empty());
-        assert!(!server.country.is_empty());
-    }
-
-    #[test]
-    fn test_fastest_server() {
-        use crate::speedtest_config::*;
-
-        let spt_config = SpeedTestConfig {
+    fn sample_spt_config() -> SpeedTestConfig {
+        SpeedTestConfig {
             client: SpeedTestClientConfig {
                 ip: "127.0.0.1".parse().unwrap(),
                 isp: "xxxfinity".to_string(),
@@ -143,14 +170,28 @@ mod tests {
                 latitude: 32.9954,
                 longitude: -117.0753,
             },
-        };
-        let parser = EventReader::new(include_bytes!(
-            "../tests/confi\
-             g/geo-test-ser\
-             vers-static.\
-             php.xml"
-        ) as &[u8]);
-        let config = SpeedTestServersConfig::new(parser).unwrap();
+        }
+    }
+
+    #[test]
+    fn test_parse_speedtest_servers_xml() {
+        let spt_config = sample_spt_config();
+        let config_str = include_str!("../tests/config/geo-test-servers-static.php.xml");
+
+        let server_config =
+            SpeedTestServersConfig::parse_with_config(config_str, &spt_config).unwrap();
+        assert!(server_config.servers.len() > 5);
+        let server = server_config.servers.get(1).unwrap();
+        assert!(!server.url.is_empty());
+        assert!(!server.country.is_empty());
+    }
+
+    #[test]
+    fn test_fastest_server() {
+        let spt_config = sample_spt_config();
+        let config_str = include_str!("../tests/config/geo-test-servers-static.php.xml");
+
+        let config = SpeedTestServersConfig::parse_with_config(config_str, &spt_config).unwrap();
         let closest_server = &config.servers_sorted_by_distance(&spt_config)[0];
         assert_eq!("Los Angeles, CA", closest_server.name);
     }
