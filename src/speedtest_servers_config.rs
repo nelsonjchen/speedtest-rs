@@ -47,6 +47,7 @@ impl SpeedTestServersConfig {
                 })
             })
             .filter_map(Result::ok)
+            .filter(|server| !config.ignore_servers.contains(&server.id))
             .collect();
         Ok(SpeedTestServersConfig { servers })
     }
@@ -69,21 +70,13 @@ mod tests {
     use crate::speedtest_config::*;
 
     fn sample_spt_config() -> SpeedTestConfig {
+        // Somewhere in Los Angeles
         SpeedTestConfig {
-            client: SpeedTestClientConfig {
-                ip: "127.0.0.1".parse().unwrap(),
-                isp: "xxxfinity".to_string(),
-            },
-            ignore_servers: vec![],
-            sizes: SpeedTestSizeConfig::default(),
-            counts: SpeedTestCountsConfig::default(),
-            threads: SpeedTestThreadsConfig::default(),
-            length: SpeedTestLengthConfig::default(),
-            upload_max: 0,
             location: EarthLocation {
                 latitude: 32.9954,
                 longitude: -117.0753,
             },
+            ..SpeedTestConfig::default()
         }
     }
 
@@ -94,6 +87,23 @@ mod tests {
 
         let server_config =
             SpeedTestServersConfig::parse_with_config(config_str, &spt_config).unwrap();
+        assert!(server_config.servers.len() > 5);
+        let server = server_config.servers.get(1).unwrap();
+        assert!(!server.url.is_empty());
+        assert!(!server.country.is_empty());
+    }
+
+    #[test]
+    fn test_parse_speedtest_servers_xml_with_ignore_servers() {
+        let spt_config = SpeedTestConfig {
+            ignore_servers: vec![5905],
+            ..sample_spt_config()
+        };
+        let config_str = include_str!("../tests/config/geo-test-servers-static.php.xml");
+
+        let server_config =
+            SpeedTestServersConfig::parse_with_config(config_str, &spt_config).unwrap();
+        assert!(server_config.servers.iter().all(|s| s.id != 5905));
         assert!(server_config.servers.len() > 5);
         let server = server_config.servers.get(1).unwrap();
         assert!(!server.url.is_empty());
