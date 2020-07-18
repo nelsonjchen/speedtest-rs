@@ -6,6 +6,15 @@ pub struct SpeedTestClientConfig {
     pub isp: String,
 }
 
+impl Default for SpeedTestClientConfig {
+    fn default() -> Self {
+        SpeedTestClientConfig {
+            ip: Ipv4Addr::new(127, 0, 0, 1),
+            isp: String::default(),
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct SpeedTestSizeConfig {
     pub upload: Vec<usize>,
@@ -30,6 +39,7 @@ pub struct SpeedTestLengthConfig {
     pub download: usize,
 }
 
+#[derive(Default)]
 pub struct SpeedTestConfig {
     pub client: SpeedTestClientConfig,
     pub ignore_servers: Vec<u32>,

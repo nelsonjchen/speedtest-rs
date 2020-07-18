@@ -1,8 +1,6 @@
 use crate::distance::{self, EarthLocation};
 use crate::{error::Error, speedtest::SpeedTestServer, speedtest_config::SpeedTestConfig};
-use std::{cmp::Ordering::Less, io::Read};
-use xml::reader::XmlEvent::StartElement;
-use xml::EventReader;
+use std::cmp::Ordering::Less;
 
 pub struct SpeedTestServersConfig {
     pub servers: Vec<SpeedTestServer>,
@@ -50,90 +48,6 @@ impl SpeedTestServersConfig {
             })
             .filter_map(Result::ok)
             .collect();
-        Ok(SpeedTestServersConfig { servers })
-    }
-
-    pub fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestServersConfig, Error> {
-        SpeedTestServersConfig::with_config(parser, None)
-    }
-
-    pub fn with_config<R: Read>(
-        parser: EventReader<R>,
-        config: Option<&SpeedTestConfig>,
-    ) -> Result<SpeedTestServersConfig, Error> {
-        let mut servers: Vec<SpeedTestServer> = Vec::new();
-
-        for event in parser {
-            if let Ok(StartElement {
-                ref name,
-                ref attributes,
-                ..
-            }) = event
-            {
-                if name.local_name == "server" {
-                    let mut country: Option<String> = None;
-                    let mut host: Option<String> = None;
-                    let mut id: Option<u32> = None;
-                    let mut lat: Option<f32> = None;
-                    let mut lon: Option<f32> = None;
-                    let mut name: Option<String> = None;
-                    let mut sponsor: Option<String> = None;
-                    let mut url: Option<String> = None;
-                    for attribute in attributes {
-                        match attribute.name.local_name.as_ref() {
-                            "country" => {
-                                country = Some(attribute.value.clone());
-                            }
-                            "host" => {
-                                host = Some(attribute.value.clone());
-                            }
-                            "id" => id = attribute.value.parse::<u32>().ok(),
-                            "lat" => lat = attribute.value.parse::<f32>().ok(),
-                            "lon" => lon = attribute.value.parse::<f32>().ok(),
-                            "name" => {
-                                name = Some(attribute.value.clone());
-                            }
-                            "sponsor" => {
-                                sponsor = Some(attribute.value.clone());
-                            }
-                            "url" => {
-                                url = Some(attribute.value.clone());
-                            }
-                            _ => {}
-                        }
-                    }
-                    if let (
-                        Some(country),
-                        Some(host),
-                        Some(id),
-                        Some(lat),
-                        Some(lon),
-                        Some(name),
-                        Some(sponsor),
-                        Some(url),
-                    ) = (country, host, id, lat, lon, name, sponsor, url)
-                    {
-                        let location = EarthLocation {
-                            latitude: lat,
-                            longitude: lon,
-                        };
-                        let distance = config
-                            .map(|config| distance::compute_distance(&config.location, &location));
-                        let server = SpeedTestServer {
-                            country,
-                            host,
-                            id,
-                            location,
-                            distance,
-                            name,
-                            sponsor,
-                            url,
-                        };
-                        servers.push(server);
-                    }
-                }
-            }
-        }
         Ok(SpeedTestServersConfig { servers })
     }
 

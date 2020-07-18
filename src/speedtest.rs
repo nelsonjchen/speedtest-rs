@@ -8,7 +8,6 @@ use log::{debug, info};
 use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
 use reqwest::{Client, Response};
 use time::{now, Duration};
-use xml::reader::EventReader;
 
 use crate::distance::EarthLocation;
 use crate::error::Error;
@@ -74,15 +73,12 @@ pub fn download_server_list() -> Result<Response, Error> {
 }
 
 pub fn get_server_list_with_config(
-    config: Option<&SpeedTestConfig>,
+    config: &SpeedTestConfig,
 ) -> Result<SpeedTestServersConfig, Error> {
-    let config_body = download_server_list()?;
+    let mut config_body = download_server_list()?;
     info!("Parsing Server List");
-    let config_parser = EventReader::new(config_body);
-    let spt_config = match config {
-        Some(config) => SpeedTestServersConfig::with_config(config_parser, Some(config)),
-        None => SpeedTestServersConfig::new(config_parser),
-    };
+    let server_config_string = config_body.text()?;
+    let spt_config = SpeedTestServersConfig::parse_with_config(&server_config_string, config);
     info!("Parsed Server List");
     spt_config
 }
@@ -529,6 +525,6 @@ mod tests {
             .with_body_from_file("tests/config/servers-static.php.xml")
             .create();
 
-        let _server_list_config = get_server_list_with_config(None);
+        let _server_list_config = get_server_list_with_config(&SpeedTestConfig::default());
     }
 }

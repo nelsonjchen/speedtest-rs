@@ -100,7 +100,7 @@ fn main() -> Result<(), error::Error> {
         if !matches.is_present("simple") && !machine_format {
             println!("Retrieving speedtest.net server list...");
         }
-        let server_list = speedtest::get_server_list_with_config(Some(&config))?;
+        let server_list = speedtest::get_server_list_with_config(&config)?;
         server_list_sorted = server_list.servers_sorted_by_distance(&config);
 
         if matches.is_present("list") {
