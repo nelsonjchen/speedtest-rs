@@ -12,7 +12,10 @@ pub enum Error {
     ServerParseError,
     LatencyTestInvalidPath,
     LatencyTestClosestError,
+    UrlParseError(url::ParseError),
+    SystemTimeError(std::time::SystemTimeError),
     ParseShareUrlError,
+    ThreadPoolBuildError(rayon::ThreadPoolBuildError),
 }
 
 impl From<reqwest::Error> for Error {
@@ -62,3 +65,22 @@ impl From<roxmltree::Error> for Error {
         Error::RoXmlTreeError(err)
     }
 }
+
+impl From<url::ParseError> for Error {
+    fn from(err: url::ParseError) -> Error {
+        Error::UrlParseError(err)
+    }
+}
+
+impl From<std::time::SystemTimeError> for Error {
+    fn from(err: std::time::SystemTimeError) -> Error {
+        Error::SystemTimeError(err)
+    }
+}
+
+impl From<rayon::ThreadPoolBuildError> for Error {
+    fn from(err: rayon::ThreadPoolBuildError) -> Error {
+        Error::ThreadPoolBuildError(err)
+    }
+}
+

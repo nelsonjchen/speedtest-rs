@@ -201,11 +201,11 @@ fn main() -> Result<(), error::Error> {
         if !matches.is_present("simple") && !machine_format {
             print!("Testing download speed");
             inner_download_measurement =
-                speedtest::test_download_with_progress(best_server, print_dot)?;
+                speedtest::test_download_with_progress_and_config(best_server, print_dot, &config)?;
             println!();
         } else {
             inner_download_measurement =
-                speedtest::test_download_with_progress(best_server, || {})?;
+                speedtest::test_download_with_progress_and_config(best_server, || {}, &config)?;
         }
 
         if !machine_format {
@@ -233,10 +233,11 @@ fn main() -> Result<(), error::Error> {
         if !matches.is_present("simple") && !machine_format {
             print!("Testing upload speed");
             inner_upload_measurement =
-                speedtest::test_upload_with_progress(best_server, print_dot)?;
+                speedtest::test_upload_with_progress_and_config(best_server, print_dot, &config)?;
             println!();
         } else {
-            inner_upload_measurement = speedtest::test_upload_with_progress(best_server, || {})?;
+            inner_upload_measurement =
+                speedtest::test_upload_with_progress_and_config(best_server, || {}, &config)?;
         }
 
         if !machine_format {

@@ -1,18 +1,20 @@
-use std::io::Read;
-use std::path::Path;
-use std::sync::mpsc::sync_channel;
-use std::sync::{Arc, RwLock};
-use std::thread;
+use std::{
+    path::Path,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
-use log::{debug, info};
-use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
-use reqwest::{Client, Response};
+use log::info;
+use reqwest::blocking::{Client, Request, Response};
+use reqwest::header::{HeaderValue, CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
+use reqwest::Url;
 use time::{now, Duration};
 
 use crate::distance::EarthLocation;
 use crate::error::Error;
 use crate::speedtest_config::SpeedTestConfig;
 use crate::speedtest_servers_config::SpeedTestServersConfig;
+use rayon::prelude::*;
+
 
 const ST_USER_AGENT: &str = concat!("reqwest/speedtest-rs ", env!("CARGO_PKG_VERSION"));
 
@@ -116,7 +118,7 @@ pub fn get_best_server_based_on_latency(
             if res.is_err() {
                 continue 'server_loop;
             }
-            res?.bytes().last();
+            res?.bytes()?.last();
             let latency_measurement = now() - start_time;
             info!("Sampled {} ms", latency_measurement.num_milliseconds());
             latency_measurements.push(latency_measurement);
@@ -162,180 +164,74 @@ impl SpeedMeasurement {
     }
 }
 
-pub fn test_download_with_progress<F>(
+pub fn test_download_with_progress_and_config<F>(
     server: &SpeedTestServer,
     f: F,
+    config: &SpeedTestConfig,
 ) -> Result<SpeedMeasurement, Error>
 where
     F: Fn() + Send + Sync + 'static,
 {
     info!("Testing Download speed");
-    let root_path = Path::new(&server.url)
-        .parent()
-        .ok_or(Error::ConfigParseError)?;
-    debug!("Root path is: {}", root_path.display());
-    let start_time = Arc::new(now());
-    let total_size;
+    let mut root_url = Url::parse(&server.url)?;
+    let query_pairs = root_url.query_pairs_mut();
 
-    let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
-    let times_to_run_each_file = 4;
-    let len_sizes = sizes.len() * times_to_run_each_file;
-    let complete = Arc::new(RwLock::new(vec![]));
-    let (tx, rx) = sync_channel(6);
-    let root_path = root_path.to_path_buf();
-    let thread_start_time = start_time.clone();
-    let farc = Arc::new(f);
-    let prod_thread = thread::spawn(move || {
-        for size in &sizes {
-            for _ in 0..times_to_run_each_file {
-                let size = *size;
-                let root_path = root_path.clone();
-                let start_time = thread_start_time.clone();
-                let farc = farc.clone();
-                let thread = thread::spawn(move || {
-                    let path = root_path.join(format!("random{0}x{0}.jpg", size));
-                    let f = farc.clone();
-                    f();
-                    if (now() - *start_time) > Duration::seconds(10) {
-                        info!("Canceled Downloading {} of {}", size, path.display());
-                        return 0;
-                    }
-                    let client = Client::new();
-                    let mut res = client
-                        .get(path.to_str().unwrap())
-                        .header(CONNECTION, "close")
-                        .header(USER_AGENT, ST_USER_AGENT.to_owned())
-                        .send()
-                        .unwrap();
-                    let mut buffer = [0; 10240];
-                    let mut size: usize = 0;
-                    loop {
-                        match res.read(&mut buffer) {
-                            Ok(0) => {
-                                break;
-                            }
-                            Ok(n) => size += n,
-                            _ => panic!("Something has gone wrong."),
-                        }
-                    }
-                    info!("Done {}, {}", path.display(), size);
-                    size
-                });
-                tx.send(thread).unwrap();
-            }
+    let urls = vec![];
+    for size in config.sizes.download {
+        let mut download_with_size_url = root_url.clone();
+        let path_segments_mut = download_with_size_url
+            .path_segments_mut()
+            .map_err(|_| Error::ServerParseError)?;
+        path_segments_mut.push(&format!("random{}x{}.jpg", size, size));
+        for cache_bump in 0..config.counts.download {
+            // let mut cache_busting_url = download_with_size_url.clone();
+            // let query_pairs_mut = cache_busting_url.query_pairs_mut();
+            // query_pairs_mut.append_pair("x", &format!("{}", cache_bump));
+            urls.push(download_with_size_url.clone());
         }
-    });
+    }
 
-    let cons_complete = complete.clone();
+    let request_count = urls.len();
+    let requests = vec![];
+    urls.iter()
+        .enumerate()
+        .map(|(i, url)| {
+            let mut cache_busting_url = url.clone();
+            cache_busting_url.query_pairs_mut().append_pair(
+                "x",
+                &format!(
+                    "{}.{}",
+                    SystemTime::now()
+                        .duration_since(UNIX_EPOCH)?
+                        .as_millis()
+                        .to_string(),
+                    i
+                ),
+            );
+            let mut request = Request::new(reqwest::Method::GET, url.clone());
+            request.headers_mut().insert(
+                reqwest::header::CACHE_CONTROL,
+                HeaderValue::from_static("no-cache"),
+            );
+            requests.push(request);
+            Ok(())
+        })
+        .collect()?;
 
-    let cons_thread = thread::spawn(move || {
-        while cons_complete.read().unwrap().len() < len_sizes {
-            let thread = rx.recv().unwrap();
-            let mut complete = (*cons_complete).write().unwrap();
-            complete.push(thread.join().unwrap());
-        }
+    let pool = rayon::ThreadPoolBuilder::new().num_threads(config.threads.download).build()?;
+    let res = pool.install(|| {
+        requests.par_iter().map(|request|
+            request
+        );
     });
-    prod_thread.join().unwrap();
-    cons_thread.join().unwrap();
-    total_size = (*complete).read().unwrap().iter().sum();
-    Ok(SpeedMeasurement {
-        size: total_size,
-        duration: now() - *start_time,
-    })
 }
 
-pub fn test_upload_with_progress<F>(
+pub fn test_upload_with_progress_and_config<F>(
     server: &SpeedTestServer,
     f: F,
-) -> Result<SpeedMeasurement, Error>
-where
-    F: Fn() + Send + Sync + 'static,
-{
-    info!("Testing Upload");
-    let upload_path = Path::new(&server.url).to_path_buf();
-    let total_size: usize;
-    let start_time = Arc::new(now());
-    let small_sizes = [250_000; 25];
-    let large_sizes = [500_000; 25];
-    let sizes = small_sizes
-        .iter()
-        .chain(large_sizes.iter())
-        .cloned()
-        .collect::<Vec<usize>>();
-    let len_sizes = sizes.len();
-    let complete = Arc::new(RwLock::new(vec![]));
-    let (tx, rx) = sync_channel(6);
-
-    let thread_start_time = start_time.clone();
-    let farc = Arc::new(f);
-    let prod_thread = thread::spawn(move || {
-        for size in &sizes {
-            let size = *size;
-            let path = upload_path.to_path_buf().clone();
-            let start_time = thread_start_time.clone();
-            let farc = farc.clone();
-            let thread = thread::spawn(move || {
-                info!("Uploading {} to {}", size, path.display());
-                let f = farc.clone();
-                f();
-                if (now() - *start_time) > Duration::seconds(10) {
-                    info!("Canceled Uploading {} of {}", size, path.display());
-                    return 0;
-                }
-                let body_loop = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().cycle();
-                let client = Client::new();
-                let body = format!("content1={}", body_loop.take(size).collect::<String>());
-                let mut res = client
-                    .post(path.to_str().unwrap())
-                    .body(body)
-                    .header(CONNECTION, "close")
-                    .header(USER_AGENT, ST_USER_AGENT.to_owned())
-                    .send()
-                    .unwrap();
-                let mut buffer = [0; 10240];
-                loop {
-                    match res.read(&mut buffer) {
-                        Ok(0) => {
-                            break;
-                        }
-                        Ok(_) => {}
-                        _ => panic!("Something has gone wrong."),
-                    }
-                }
-                info!("Done {}, {}", path.display(), size);
-                size
-            });
-            tx.send(thread).unwrap();
-        }
-    });
-
-    let cons_complete = complete.clone();
-
-    let cons_thread = thread::spawn(move || {
-        while cons_complete.read().unwrap().len() < len_sizes {
-            let thread = rx.recv().unwrap();
-            let mut complete = (*cons_complete).write().unwrap();
-            complete.push(thread.join().unwrap());
-        }
-    });
-
-    prod_thread.join().unwrap();
-    cons_thread.join().unwrap();
-    total_size = (*complete).read().unwrap().iter().sum();
-    let latency = now() - *start_time;
-    info!(
-        "It took {} ms to upload {} bytes",
-        latency.num_milliseconds(),
-        total_size
-    );
-    info!(
-        "{} bytes per second",
-        total_size as i64 / (latency.num_milliseconds() / 1000)
-    );
-    Ok(SpeedMeasurement {
-        size: total_size,
-        duration: now() - *start_time,
-    })
+    config: &SpeedTestConfig,
+) -> Result<SpeedMeasurement, Error> {
+    unimplemented!()
 }
 
 #[derive(Debug)]
@@ -433,8 +329,7 @@ pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Error
         .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
         .body(body)
         .send();
-    let mut encode_return = String::new();
-    res?.read_to_string(&mut encode_return)?;
+    let encode_return = res?.text()?;
     let response_id = parse_share_request_response_id(encode_return.as_bytes())?;
     Ok(format!(
         "http://www.speedtest.net/result/{}.png",
