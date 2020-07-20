@@ -231,7 +231,7 @@ pub fn test_upload_with_progress_and_config<F>(
     f: F,
     config: &SpeedTestConfig,
 ) -> Result<SpeedMeasurement, Error> {
-    unimplemented!()
+    todo!()
 }
 
 #[derive(Debug)]
