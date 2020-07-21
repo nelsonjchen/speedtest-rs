@@ -83,4 +83,3 @@ impl From<rayon::ThreadPoolBuildError> for Error {
         Error::ThreadPoolBuildError(err)
     }
 }
-

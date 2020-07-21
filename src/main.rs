@@ -180,14 +180,14 @@ fn main() -> Result<(), error::Error> {
                     .server
                     .distance
                     .map_or("".to_string(), |d| format!(" [{:.2} km]", d)),
-                latency_test_result.latency.num_milliseconds(),
-                latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
+                latency_test_result.latency.as_millis(),
+                latency_test_result.latency.as_micros() % 1000,
             );
         } else {
             println!(
                 "Ping: {}.{} ms",
-                latency_test_result.latency.num_milliseconds(),
-                latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
+                latency_test_result.latency.as_millis(),
+                latency_test_result.latency.as_millis() % 1000,
             );
         }
     }
@@ -277,8 +277,8 @@ fn main() -> Result<(), error::Error> {
                 .map_or("".to_string(), |d| format!("{:.14}", d)))[..],
             ping: &format!(
                 "{}.{}",
-                latency_test_result.latency.num_milliseconds(),
-                latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000
+                latency_test_result.latency.as_millis(),
+                latency_test_result.latency.as_micros() % 1000
             ),
             download: &(if let Some(measurement) = download_measurement {
                 measurement.bps_f64()
