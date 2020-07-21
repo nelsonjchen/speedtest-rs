@@ -167,7 +167,7 @@ impl SpeedMeasurement {
 pub fn test_download_with_progress_and_config<F>(
     server: &SpeedTestServer,
     progress_callback: F,
-    config: &SpeedTestConfig,
+    config: &mut SpeedTestConfig,
 ) -> Result<SpeedMeasurement, Error>
 where
     F: Fn() + Send + Sync + 'static,
@@ -190,9 +190,6 @@ where
     }
 
     let _request_count = urls.len();
-    let pool = rayon::ThreadPoolBuilder::new()
-        .num_threads(config.threads.download)
-        .build()?;
 
     let requests: Vec<_> = urls
         .iter()
@@ -233,18 +230,28 @@ where
     // Start Timer
     let start_time = SystemTime::now();
 
+    info!("Download Threads: {}", config.threads.download);
+    let pool = rayon::ThreadPoolBuilder::new()
+    .num_threads(config.threads.download)
+    .build()?;
+
+    info!("Total to be requested {:?}", requests);
+
     let total_transferred_per_thread = pool.install(|| {
         requests
-            .into_par_iter()
+            .into_iter()
+            // Make it sequential like the original. Ramp up the file sizes.
+            .par_bridge()
             .map(|r| -> Result<_, Error> {
                 let client = Client::new();
                 // let downloaded_count = vec![];
+                progress_callback();
+                info!("Requesting {}", r.url());
                 let mut response = client.execute(r)?;
                 let mut buf = [0u8; 10240];
                 let mut read_amounts = vec![];
                 while early_termination.load(Ordering::Relaxed) {
                     let read_amount = response.read(&mut buf)?;
-                    // println!("READ {}", read_amount);
                     read_amounts.push(read_amount);
                     if read_amount == 0 {
                         break;
@@ -262,10 +269,16 @@ where
 
     let end_time = SystemTime::now();
 
-    Ok(SpeedMeasurement {
+    let measurement = SpeedMeasurement {
         size: total_transferred,
         duration: end_time.duration_since(start_time)?,
-    })
+    };
+
+    if measurement.bps_f64() > 100000.0 {
+        config.threads.upload = 8
+    }
+
+    Ok(measurement)
 }
 
 pub fn test_upload_with_progress_and_config<F>(

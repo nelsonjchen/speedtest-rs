@@ -93,7 +93,7 @@ fn main() -> Result<(), error::Error> {
     if !matches.is_present("simple") && !machine_format {
         println!("Retrieving speedtest.net configuration...");
     }
-    let config = speedtest::get_configuration()?;
+    let mut config = speedtest::get_configuration()?;
 
     let mut server_list_sorted;
     if !matches.is_present("mini") {
@@ -201,11 +201,11 @@ fn main() -> Result<(), error::Error> {
         if !matches.is_present("simple") && !machine_format {
             print!("Testing download speed");
             inner_download_measurement =
-                speedtest::test_download_with_progress_and_config(best_server, print_dot, &config)?;
+                speedtest::test_download_with_progress_and_config(best_server, print_dot, &mut config)?;
             println!();
         } else {
             inner_download_measurement =
-                speedtest::test_download_with_progress_and_config(best_server, || {}, &config)?;
+                speedtest::test_download_with_progress_and_config(best_server, || {}, &mut config)?;
         }
 
         if !machine_format {
