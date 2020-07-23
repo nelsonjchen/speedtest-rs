@@ -295,8 +295,7 @@ pub fn test_upload_with_progress_and_config<F>(
 where
     F: Fn() + Send + Sync + 'static,
 {
-    info!("Testing Download speed");
-    let root_url = Url::parse(&server.url)?;
+    info!("Testing Upload speed");
 
     let mut sizes = vec![];
     for &size in &config.sizes.upload {
@@ -342,10 +341,11 @@ where
         .num_threads(config.threads.upload)
         .build()?;
 
-    info!("Total to be requested {:?}", requests);
+    info!("Total to be requested {:?}", requests.len());
     let total_transferred_per_thread = pool.install(|| {
         requests
             .into_iter()
+            .take(request_count)
             // Make it sequential like the original. Ramp up the file sizes.
             .par_bridge()
             .map(|r| -> Result<_, Error> {
