@@ -6,7 +6,7 @@ use std::{
 };
 
 use log::info;
-use reqwest::blocking::{Client, Request, Response};
+use reqwest::blocking::{Body, Client, Request, Response};
 use reqwest::header::{HeaderValue, CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
 use reqwest::Url;
 
@@ -232,8 +232,8 @@ where
 
     info!("Download Threads: {}", config.threads.download);
     let pool = rayon::ThreadPoolBuilder::new()
-    .num_threads(config.threads.download)
-    .build()?;
+        .num_threads(config.threads.download)
+        .build()?;
 
     info!("Total to be requested {:?}", requests);
 
@@ -281,12 +281,100 @@ where
     Ok(measurement)
 }
 
+#[derive(Debug)]
+pub struct SpeedTestUploadRequest {
+    pub request: Request,
+    pub size: usize,
+}
+
 pub fn test_upload_with_progress_and_config<F>(
-    _server: &SpeedTestServer,
-    _f: F,
-    _config: &SpeedTestConfig,
-) -> Result<SpeedMeasurement, Error> {
-    todo!()
+    server: &SpeedTestServer,
+    progress_callback: F,
+    config: &SpeedTestConfig,
+) -> Result<SpeedMeasurement, Error>
+where
+    F: Fn() + Send + Sync + 'static,
+{
+    info!("Testing Download speed");
+    let root_url = Url::parse(&server.url)?;
+
+    let mut sizes = vec![];
+    for &size in &config.sizes.upload {
+        for _ in 0..config.counts.upload {
+            sizes.push(size)
+        }
+    }
+
+    let best_url = Url::parse(&server.url)?;
+
+    let request_count = config.upload_max;
+
+    let requests: Vec<SpeedTestUploadRequest> = sizes
+        .into_iter()
+        .map(|size| {
+            let content_iter = b"content1="
+                .iter()
+                .chain(b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".iter().cycle())
+                .take(size);
+            let content_iter_read = iter_read::IterRead::new(content_iter);
+            let body = Body::sized(content_iter_read, size as u64);
+            let mut request = Request::new(reqwest::Method::POST, best_url.clone());
+            request.headers_mut().insert(
+                reqwest::header::USER_AGENT,
+                HeaderValue::from_static(&ST_USER_AGENT),
+            );
+            request.headers_mut().insert(
+                reqwest::header::CONNECTION,
+                HeaderValue::from_static("close"),
+            );
+            *request.body_mut() = Some(body);
+            Ok(SpeedTestUploadRequest { request, size })
+        })
+        .collect::<Result<Vec<_>, Error>>()?;
+    // TODO: Setup Ctrl-C Termination to use this "event".
+    let early_termination = AtomicBool::new(true);
+
+    // Start Timer
+    let start_time = SystemTime::now();
+
+    info!("Upload Threads: {}", config.threads.upload);
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(config.threads.upload)
+        .build()?;
+
+    info!("Total to be requested {:?}", requests);
+    let total_transferred_per_thread = pool.install(|| {
+        requests
+            .into_iter()
+            // Make it sequential like the original. Ramp up the file sizes.
+            .par_bridge()
+            .map(|r| -> Result<_, Error> {
+                progress_callback();
+
+                if early_termination.load(Ordering::Relaxed) {
+                    let client = Client::new();
+                    info!("Requesting {}", r.request.url());
+                    client.execute(r.request)?;
+                } else {
+                    return Ok(0);
+                }
+                progress_callback();
+
+                Ok(r.size)
+            })
+            .collect::<Result<Vec<usize>, Error>>()
+    });
+
+    let total_transferred: usize = total_transferred_per_thread?.iter().sum();
+
+    let end_time = SystemTime::now();
+
+    let measurement = SpeedMeasurement {
+        size: total_transferred,
+        duration: end_time.duration_since(start_time)?,
+    };
+
+    Ok(measurement)
 }
 
 #[derive(Debug)]
