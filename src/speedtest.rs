@@ -225,7 +225,7 @@ where
         .collect::<Result<Vec<_>, Error>>()?;
 
     // TODO: Setup Ctrl-C Termination to use this "event".
-    let early_termination = AtomicBool::new(true);
+    let early_termination = AtomicBool::new(false);
 
     // Start Timer
     let start_time = SystemTime::now();
@@ -250,7 +250,7 @@ where
                 let mut response = client.execute(r)?;
                 let mut buf = [0u8; 10240];
                 let mut read_amounts = vec![];
-                while early_termination.load(Ordering::Relaxed) {
+                while !early_termination.load(Ordering::Relaxed) {
                     let read_amount = response.read(&mut buf)?;
                     read_amounts.push(read_amount);
                     if read_amount == 0 {
@@ -331,7 +331,7 @@ where
         })
         .collect::<Result<Vec<_>, Error>>()?;
     // TODO: Setup Ctrl-C Termination to use this "event".
-    let early_termination = AtomicBool::new(true);
+    let early_termination = AtomicBool::new(false);
 
     // Start Timer
     let start_time = SystemTime::now();
@@ -351,10 +351,13 @@ where
             .map(|r| -> Result<_, Error> {
                 progress_callback();
 
-                if early_termination.load(Ordering::Relaxed) {
+                if !early_termination.load(Ordering::Relaxed) {
                     let client = Client::new();
                     info!("Requesting {}", r.request.url());
-                    client.execute(r.request)?;
+                    let response = client.execute(r.request);
+                    if response.is_err() {
+                        return Ok(r.size);
+                    };
                 } else {
                     return Ok(0);
                 }
