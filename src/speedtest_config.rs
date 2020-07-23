@@ -1,5 +1,5 @@
 use crate::{distance::EarthLocation, error::Error};
-use std::net::Ipv4Addr;
+use std::{net::Ipv4Addr, time::Duration};
 
 pub struct SpeedTestClientConfig {
     pub ip: Ipv4Addr,
@@ -33,10 +33,18 @@ pub struct SpeedTestThreadsConfig {
     pub download: usize,
 }
 
-#[derive(Default)]
 pub struct SpeedTestLengthConfig {
-    pub upload: usize,
-    pub download: usize,
+    pub upload: Duration,
+    pub download: Duration,
+}
+
+impl Default for SpeedTestLengthConfig {
+    fn default() -> Self {
+        SpeedTestLengthConfig {
+            upload: Duration::from_secs(10),
+            download: Duration::from_secs(10),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -127,11 +135,13 @@ impl SpeedTestConfig {
             upload: upload_node
                 .attribute("testlength")
                 .ok_or(Error::ConfigParseError)?
-                .parse::<usize>()?,
+                .parse::<u64>()
+                .map(Duration::from_secs)?,
             download: download_node
                 .attribute("testlength")
                 .ok_or(Error::ConfigParseError)?
-                .parse::<usize>()?,
+                .parse::<u64>()
+                .map(Duration::from_secs)?,
         };
 
         let client = SpeedTestClientConfig {

@@ -250,7 +250,9 @@ where
                 let mut response = client.execute(r)?;
                 let mut buf = [0u8; 10240];
                 let mut read_amounts = vec![];
-                while !early_termination.load(Ordering::Relaxed) {
+                while (SystemTime::now().duration_since(start_time)? < config.length.upload)
+                    && !early_termination.load(Ordering::Relaxed)
+                {
                     let read_amount = response.read(&mut buf)?;
                     read_amounts.push(read_amount);
                     if read_amount == 0 {
@@ -351,7 +353,9 @@ where
             .map(|r| -> Result<_, Error> {
                 progress_callback();
 
-                if !early_termination.load(Ordering::Relaxed) {
+                if (SystemTime::now().duration_since(start_time)? < config.length.upload)
+                    && !early_termination.load(Ordering::Relaxed)
+                {
                     let client = Client::new();
                     info!("Requesting {}", r.request.url());
                     let response = client.execute(r.request);
