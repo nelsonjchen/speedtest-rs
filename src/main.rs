@@ -1,3 +1,6 @@
+mod speedtest_config;
+mod speedtest_servers_config;
+
 use crate::speedtest_csv::SpeedTestCsvResult;
 use chrono::Utc;
 use clap::{crate_version, App, Arg};
@@ -90,14 +93,14 @@ fn main() -> Result<(), error::Error> {
     if !matches.is_present("simple") && !machine_format {
         println!("Retrieving speedtest.net configuration...");
     }
-    let config = speedtest::get_configuration()?;
+    let mut config = speedtest::get_configuration()?;
 
     let mut server_list_sorted;
     if !matches.is_present("mini") {
         if !matches.is_present("simple") && !machine_format {
             println!("Retrieving speedtest.net server list...");
         }
-        let server_list = speedtest::get_server_list_with_config(Some(&config))?;
+        let server_list = speedtest::get_server_list_with_config(&config)?;
         server_list_sorted = server_list.servers_sorted_by_distance(&config);
 
         if matches.is_present("list") {
@@ -116,7 +119,10 @@ fn main() -> Result<(), error::Error> {
             return Ok(());
         }
         if !matches.is_present("simple") && !machine_format {
-            println!("Testing from {} ({})...", config.isp, config.ip);
+            println!(
+                "Testing from {} ({})...",
+                config.client.isp, config.client.ip
+            );
             println!("Selecting best server based on latency...");
         }
 
@@ -174,14 +180,14 @@ fn main() -> Result<(), error::Error> {
                     .server
                     .distance
                     .map_or("".to_string(), |d| format!(" [{:.2} km]", d)),
-                latency_test_result.latency.num_milliseconds(),
-                latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
+                latency_test_result.latency.as_millis(),
+                latency_test_result.latency.as_micros() % 1000,
             );
         } else {
             println!(
                 "Ping: {}.{} ms",
-                latency_test_result.latency.num_milliseconds(),
-                latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000,
+                latency_test_result.latency.as_millis(),
+                latency_test_result.latency.as_millis() % 1000,
             );
         }
     }
@@ -194,12 +200,15 @@ fn main() -> Result<(), error::Error> {
     if !matches.is_present("no-download") {
         if !matches.is_present("simple") && !machine_format {
             print!("Testing download speed");
-            inner_download_measurement =
-                speedtest::test_download_with_progress(best_server, print_dot)?;
+            inner_download_measurement = speedtest::test_download_with_progress_and_config(
+                best_server,
+                print_dot,
+                &mut config,
+            )?;
             println!();
         } else {
             inner_download_measurement =
-                speedtest::test_download_with_progress(best_server, || {})?;
+                speedtest::test_download_with_progress_and_config(best_server, || {}, &mut config)?;
         }
 
         if !machine_format {
@@ -227,10 +236,11 @@ fn main() -> Result<(), error::Error> {
         if !matches.is_present("simple") && !machine_format {
             print!("Testing upload speed");
             inner_upload_measurement =
-                speedtest::test_upload_with_progress(best_server, print_dot)?;
+                speedtest::test_upload_with_progress_and_config(best_server, print_dot, &config)?;
             println!();
         } else {
-            inner_upload_measurement = speedtest::test_upload_with_progress(best_server, || {})?;
+            inner_upload_measurement =
+                speedtest::test_upload_with_progress_and_config(best_server, || {}, &config)?;
         }
 
         if !machine_format {
@@ -270,8 +280,8 @@ fn main() -> Result<(), error::Error> {
                 .map_or("".to_string(), |d| format!("{:.14}", d)))[..],
             ping: &format!(
                 "{}.{}",
-                latency_test_result.latency.num_milliseconds(),
-                latency_test_result.latency.num_microseconds().unwrap_or(0) % 1000
+                latency_test_result.latency.as_millis(),
+                latency_test_result.latency.as_micros() % 1000
             ),
             download: &(if let Some(measurement) = download_measurement {
                 measurement.bps_f64()
@@ -290,7 +300,7 @@ fn main() -> Result<(), error::Error> {
             } else {
                 "".to_string()
             },
-            ip_address: &config.ip,
+            ip_address: &config.client.ip.to_string(),
         };
         let mut wtr = csv::WriterBuilder::new()
             .has_headers(false)
@@ -316,6 +326,16 @@ fn main() -> Result<(), error::Error> {
         );
     }
 
+    if let (Some(download_measurement), Some(upload_measurement)) =
+        (download_measurement, upload_measurement)
+    {
+        if !machine_format
+            && ((download_measurement.kbps() as f32 / 1000.00) > 200.0
+                || (upload_measurement.kbps() as f32 / 1000.00) > 200.0)
+        {
+            println!("WARNING: This tool may not be accurate for high bandwidth connections! Consider using a socket-based client alternative.")
+        }
+    }
     Ok(())
 }
 

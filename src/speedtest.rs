@@ -1,73 +1,22 @@
-use std::cmp::Ordering::Less;
-use std::io::Read;
-use std::path::Path;
-use std::sync::mpsc::sync_channel;
-use std::sync::{Arc, RwLock};
-use std::thread;
+use std::{
+    io::Read,
+    path::Path,
+    sync::atomic::{AtomicBool, Ordering},
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 
-use log::{debug, info};
-use reqwest::header::{CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
-use reqwest::{Client, Response};
-use time::{now, Duration};
-use xml::reader::EventReader;
-use xml::reader::XmlEvent::StartElement;
+use log::info;
+use reqwest::blocking::{Body, Client, Request, Response};
+use reqwest::header::{HeaderValue, CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
+use reqwest::Url;
 
-use crate::distance::{self, EarthLocation};
+use crate::distance::EarthLocation;
 use crate::error::Error;
+use crate::speedtest_config::SpeedTestConfig;
+use crate::speedtest_servers_config::SpeedTestServersConfig;
+use rayon::prelude::*;
 
 const ST_USER_AGENT: &str = concat!("reqwest/speedtest-rs ", env!("CARGO_PKG_VERSION"));
-
-pub struct SpeedTestConfig {
-    pub ip: String,
-    location: EarthLocation,
-    pub isp: String,
-}
-
-impl SpeedTestConfig {
-    fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestConfig, Error> {
-        let mut ip: Option<String> = None;
-        let mut lat: Option<f32> = None;
-        let mut lon: Option<f32> = None;
-        let mut isp: Option<String> = None;
-        for event in parser {
-            if let Ok(StartElement {
-                ref name,
-                ref attributes,
-                ..
-            }) = event
-            {
-                if name.local_name == "client" {
-                    for attribute in attributes {
-                        match attribute.name.local_name.as_ref() {
-                            "ip" => {
-                                ip = Some(attribute.value.clone());
-                            }
-                            "lat" => lat = attribute.value.parse::<f32>().ok(),
-                            "lon" => lon = attribute.value.parse::<f32>().ok(),
-                            "isp" => {
-                                isp = Some(attribute.value.clone());
-                            }
-                            _ => {}
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        if let (Some(ip), Some(lat), Some(lon), Some(isp)) = (ip, lat, lon, isp) {
-            Ok(SpeedTestConfig {
-                ip,
-                location: EarthLocation {
-                    latitude: lat,
-                    longitude: lon,
-                },
-                isp,
-            })
-        } else {
-            Err(Error::ConfigParseError)
-        }
-    }
-}
 
 #[derive(Clone, Debug)]
 pub struct SpeedTestServer {
@@ -79,107 +28,6 @@ pub struct SpeedTestServer {
     pub name: String,
     pub sponsor: String,
     pub url: String,
-}
-
-pub struct SpeedTestServersConfig {
-    servers: Vec<SpeedTestServer>,
-}
-
-impl SpeedTestServersConfig {
-    fn new<R: Read>(parser: EventReader<R>) -> Result<SpeedTestServersConfig, Error> {
-        SpeedTestServersConfig::with_config(parser, None)
-    }
-
-    fn with_config<R: Read>(
-        parser: EventReader<R>,
-        config: Option<&SpeedTestConfig>,
-    ) -> Result<SpeedTestServersConfig, Error> {
-        let mut servers: Vec<SpeedTestServer> = Vec::new();
-
-        for event in parser {
-            if let Ok(StartElement {
-                ref name,
-                ref attributes,
-                ..
-            }) = event
-            {
-                if name.local_name == "server" {
-                    let mut country: Option<String> = None;
-                    let mut host: Option<String> = None;
-                    let mut id: Option<u32> = None;
-                    let mut lat: Option<f32> = None;
-                    let mut lon: Option<f32> = None;
-                    let mut name: Option<String> = None;
-                    let mut sponsor: Option<String> = None;
-                    let mut url: Option<String> = None;
-                    for attribute in attributes {
-                        match attribute.name.local_name.as_ref() {
-                            "country" => {
-                                country = Some(attribute.value.clone());
-                            }
-                            "host" => {
-                                host = Some(attribute.value.clone());
-                            }
-                            "id" => id = attribute.value.parse::<u32>().ok(),
-                            "lat" => lat = attribute.value.parse::<f32>().ok(),
-                            "lon" => lon = attribute.value.parse::<f32>().ok(),
-                            "name" => {
-                                name = Some(attribute.value.clone());
-                            }
-                            "sponsor" => {
-                                sponsor = Some(attribute.value.clone());
-                            }
-                            "url" => {
-                                url = Some(attribute.value.clone());
-                            }
-                            _ => {}
-                        }
-                    }
-                    if let (
-                        Some(country),
-                        Some(host),
-                        Some(id),
-                        Some(lat),
-                        Some(lon),
-                        Some(name),
-                        Some(sponsor),
-                        Some(url),
-                    ) = (country, host, id, lat, lon, name, sponsor, url)
-                    {
-                        let location = EarthLocation {
-                            latitude: lat,
-                            longitude: lon,
-                        };
-                        let distance = config
-                            .map(|config| distance::compute_distance(&config.location, &location));
-                        let server = SpeedTestServer {
-                            country,
-                            host,
-                            id,
-                            location,
-                            distance,
-                            name,
-                            sponsor,
-                            url,
-                        };
-                        servers.push(server);
-                    }
-                }
-            }
-        }
-        Ok(SpeedTestServersConfig { servers })
-    }
-
-    pub fn servers_sorted_by_distance(&self, config: &SpeedTestConfig) -> Vec<SpeedTestServer> {
-        let location = &config.location;
-        let mut sorted_servers = self.servers.clone();
-        sorted_servers.sort_by(|a, b| {
-            let a_distance = distance::compute_distance(&location, &a.location);
-            let b_distance = distance::compute_distance(&location, &b.location);
-            a_distance.partial_cmp(&b_distance).unwrap_or(Less)
-        });
-        sorted_servers
-    }
 }
 
 pub fn download_configuration() -> Result<Response, Error> {
@@ -204,8 +52,7 @@ pub fn download_configuration() -> Result<Response, Error> {
 pub fn get_configuration() -> Result<SpeedTestConfig, Error> {
     let config_body = download_configuration()?;
     info!("Parsing Configuration");
-    let config_parser = EventReader::new(config_body);
-    let spt_config = SpeedTestConfig::new(config_parser);
+    let spt_config = SpeedTestConfig::parse(&(config_body.text()?));
     info!("Parsed Configuration");
     spt_config
 }
@@ -228,15 +75,12 @@ pub fn download_server_list() -> Result<Response, Error> {
 }
 
 pub fn get_server_list_with_config(
-    config: Option<&SpeedTestConfig>,
+    config: &SpeedTestConfig,
 ) -> Result<SpeedTestServersConfig, Error> {
     let config_body = download_server_list()?;
     info!("Parsing Server List");
-    let config_parser = EventReader::new(config_body);
-    let spt_config = match config {
-        Some(config) => SpeedTestServersConfig::with_config(config_parser, Some(config)),
-        None => SpeedTestServersConfig::new(config_parser),
-    };
+    let server_config_string = config_body.text()?;
+    let spt_config = SpeedTestServersConfig::parse_with_config(&server_config_string, config);
     info!("Parsed Server List");
     spt_config
 }
@@ -253,7 +97,7 @@ pub fn get_best_server_based_on_latency(
     info!("Testing for fastest server");
     let client = Client::new();
     let mut fastest_server = None;
-    let mut fastest_latency = Duration::max_value();
+    let mut fastest_latency = Duration::new(u64::MAX, 0);
     'server_loop: for server in servers {
         let path = Path::new(&server.url);
         let latency_path = format!(
@@ -265,7 +109,7 @@ pub fn get_best_server_based_on_latency(
         info!("Downloading: {:?}", latency_path);
         let mut latency_measurements = vec![];
         for _ in 0..3 {
-            let start_time = now();
+            let start_time = SystemTime::now();
             let res = client
                 .get(&latency_path)
                 .header(CONNECTION, "close")
@@ -274,9 +118,9 @@ pub fn get_best_server_based_on_latency(
             if res.is_err() {
                 continue 'server_loop;
             }
-            res?.bytes().last();
-            let latency_measurement = now() - start_time;
-            info!("Sampled {} ms", latency_measurement.num_milliseconds());
+            res?.bytes()?.last();
+            let latency_measurement = SystemTime::now().duration_since(start_time)?;
+            info!("Sampled {} ms", latency_measurement.as_millis());
             latency_measurements.push(latency_measurement);
         }
         // Divide by the double to get the non-RTT time but the trip time.
@@ -284,9 +128,9 @@ pub fn get_best_server_based_on_latency(
         // https://github.com/sivel/speedtest-cli/pull/199
         let latency = latency_measurements
             .iter()
-            .fold(Duration::zero(), |a, &i| a + i)
-            / ((latency_measurements.iter().count() as i32) * 2);
-        info!("Trip calculated to {} ms", latency.num_milliseconds());
+            .fold(Duration::new(0, 0), |a, &i| a + i)
+            / ((latency_measurements.iter().count() as u32) * 2);
+        info!("Trip calculated to {} ms", latency.as_millis());
 
         if latency < fastest_latency {
             fastest_server = Some(server);
@@ -295,7 +139,7 @@ pub fn get_best_server_based_on_latency(
     }
     info!(
         "Fastest Server @ {}ms : {:?}",
-        fastest_latency.num_milliseconds(),
+        fastest_latency.as_millis(),
         fastest_server
     );
     Ok(SpeedTestLatencyTestResult {
@@ -312,188 +156,232 @@ pub struct SpeedMeasurement {
 
 impl SpeedMeasurement {
     pub fn kbps(&self) -> u32 {
-        (self.size as u32 * 8) / self.duration.num_milliseconds() as u32
+        (self.size as u32 * 8) / self.duration.as_millis() as u32
     }
 
     pub fn bps_f64(&self) -> f64 {
-        (self.size as f64 * 8.0) / (self.duration.num_milliseconds() as f64 / (1000.0))
+        (self.size as f64 * 8.0) / (self.duration.as_millis() as f64 / (1000.0))
     }
 }
 
-pub fn test_download_with_progress<F>(
+pub fn test_download_with_progress_and_config<F>(
     server: &SpeedTestServer,
-    f: F,
+    progress_callback: F,
+    config: &mut SpeedTestConfig,
 ) -> Result<SpeedMeasurement, Error>
 where
     F: Fn() + Send + Sync + 'static,
 {
     info!("Testing Download speed");
-    let root_path = Path::new(&server.url)
-        .parent()
-        .ok_or(Error::ConfigParseError)?;
-    debug!("Root path is: {}", root_path.display());
-    let start_time = Arc::new(now());
-    let total_size;
+    let root_url = Url::parse(&server.url)?;
 
-    let sizes = [350, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000];
-    let times_to_run_each_file = 4;
-    let len_sizes = sizes.len() * times_to_run_each_file;
-    let complete = Arc::new(RwLock::new(vec![]));
-    let (tx, rx) = sync_channel(6);
-    let root_path = root_path.to_path_buf();
-    let thread_start_time = start_time.clone();
-    let farc = Arc::new(f);
-    let prod_thread = thread::spawn(move || {
-        for size in &sizes {
-            for _ in 0..times_to_run_each_file {
-                let size = *size;
-                let root_path = root_path.clone();
-                let start_time = thread_start_time.clone();
-                let farc = farc.clone();
-                let thread = thread::spawn(move || {
-                    let path = root_path.join(format!("random{0}x{0}.jpg", size));
-                    let f = farc.clone();
-                    f();
-                    if (now() - *start_time) > Duration::seconds(10) {
-                        info!("Canceled Downloading {} of {}", size, path.display());
-                        return 0;
-                    }
-                    let client = Client::new();
-                    let mut res = client
-                        .get(path.to_str().unwrap())
-                        .header(CONNECTION, "close")
-                        .header(USER_AGENT, ST_USER_AGENT.to_owned())
-                        .send()
-                        .unwrap();
-                    let mut buffer = [0; 10240];
-                    let mut size: usize = 0;
-                    loop {
-                        match res.read(&mut buffer) {
-                            Ok(0) => {
-                                break;
-                            }
-                            Ok(n) => size += n,
-                            _ => panic!("Something has gone wrong."),
-                        }
-                    }
-                    info!("Done {}, {}", path.display(), size);
-                    size
-                });
-                tx.send(thread).unwrap();
-            }
+    let mut urls = vec![];
+    for size in &config.sizes.download {
+        let mut download_with_size_url = root_url.clone();
+        {
+            let mut path_segments_mut = download_with_size_url
+                .path_segments_mut()
+                .map_err(|_| Error::ServerParseError)?;
+            path_segments_mut.push(&format!("random{}x{}.jpg", size, size));
         }
+        for _ in 0..config.counts.download {
+            urls.push(download_with_size_url.clone());
+        }
+    }
+
+    let _request_count = urls.len();
+
+    let requests: Vec<_> = urls
+        .iter()
+        .enumerate()
+        .map(|(i, url)| {
+            let mut cache_busting_url = url.clone();
+            cache_busting_url.query_pairs_mut().append_pair(
+                "x",
+                &format!(
+                    "{}.{}",
+                    SystemTime::now()
+                        .duration_since(UNIX_EPOCH)?
+                        .as_millis()
+                        .to_string(),
+                    i
+                ),
+            );
+            let mut request = Request::new(reqwest::Method::GET, url.clone());
+            request.headers_mut().insert(
+                reqwest::header::CACHE_CONTROL,
+                HeaderValue::from_static("no-cache"),
+            );
+            request.headers_mut().insert(
+                reqwest::header::USER_AGENT,
+                HeaderValue::from_static(&ST_USER_AGENT),
+            );
+            request.headers_mut().insert(
+                reqwest::header::CONNECTION,
+                HeaderValue::from_static("close"),
+            );
+            Ok(request)
+        })
+        .collect::<Result<Vec<_>, Error>>()?;
+
+    // TODO: Setup Ctrl-C Termination to use this "event".
+    let early_termination = AtomicBool::new(false);
+
+    // Start Timer
+    let start_time = SystemTime::now();
+
+    info!("Download Threads: {}", config.threads.download);
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(config.threads.download)
+        .build()?;
+
+    info!("Total to be requested {:?}", requests);
+
+    let total_transferred_per_thread = pool.install(|| {
+        requests
+            .into_iter()
+            // Make it sequential like the original. Ramp up the file sizes.
+            .par_bridge()
+            .map(|r| -> Result<_, Error> {
+                let client = Client::new();
+                // let downloaded_count = vec![];
+                progress_callback();
+                info!("Requesting {}", r.url());
+                let mut response = client.execute(r)?;
+                let mut buf = [0u8; 10240];
+                let mut read_amounts = vec![];
+                while (SystemTime::now().duration_since(start_time)? < config.length.upload)
+                    && !early_termination.load(Ordering::Relaxed)
+                {
+                    let read_amount = response.read(&mut buf)?;
+                    read_amounts.push(read_amount);
+                    if read_amount == 0 {
+                        break;
+                    }
+                }
+                let total_transfered = read_amounts.iter().sum::<usize>();
+                progress_callback();
+
+                Ok(total_transfered)
+            })
+            .collect::<Result<Vec<usize>, Error>>()
     });
 
-    let cons_complete = complete.clone();
+    let total_transferred: usize = total_transferred_per_thread?.iter().sum();
 
-    let cons_thread = thread::spawn(move || {
-        while cons_complete.read().unwrap().len() < len_sizes {
-            let thread = rx.recv().unwrap();
-            let mut complete = (*cons_complete).write().unwrap();
-            complete.push(thread.join().unwrap());
-        }
-    });
-    prod_thread.join().unwrap();
-    cons_thread.join().unwrap();
-    total_size = (*complete).read().unwrap().iter().sum();
-    Ok(SpeedMeasurement {
-        size: total_size,
-        duration: now() - *start_time,
-    })
+    let end_time = SystemTime::now();
+
+    let measurement = SpeedMeasurement {
+        size: total_transferred,
+        duration: end_time.duration_since(start_time)?,
+    };
+
+    if measurement.bps_f64() > 100000.0 {
+        config.threads.upload = 8
+    }
+
+    Ok(measurement)
 }
 
-pub fn test_upload_with_progress<F>(
+#[derive(Debug)]
+pub struct SpeedTestUploadRequest {
+    pub request: Request,
+    pub size: usize,
+}
+
+pub fn test_upload_with_progress_and_config<F>(
     server: &SpeedTestServer,
-    f: F,
+    progress_callback: F,
+    config: &SpeedTestConfig,
 ) -> Result<SpeedMeasurement, Error>
 where
     F: Fn() + Send + Sync + 'static,
 {
-    info!("Testing Upload");
-    let upload_path = Path::new(&server.url).to_path_buf();
-    let total_size: usize;
-    let start_time = Arc::new(now());
-    let small_sizes = [250_000; 25];
-    let large_sizes = [500_000; 25];
-    let sizes = small_sizes
-        .iter()
-        .chain(large_sizes.iter())
-        .cloned()
-        .collect::<Vec<usize>>();
-    let len_sizes = sizes.len();
-    let complete = Arc::new(RwLock::new(vec![]));
-    let (tx, rx) = sync_channel(6);
+    info!("Testing Upload speed");
 
-    let thread_start_time = start_time.clone();
-    let farc = Arc::new(f);
-    let prod_thread = thread::spawn(move || {
-        for size in &sizes {
-            let size = *size;
-            let path = upload_path.to_path_buf().clone();
-            let start_time = thread_start_time.clone();
-            let farc = farc.clone();
-            let thread = thread::spawn(move || {
-                info!("Uploading {} to {}", size, path.display());
-                let f = farc.clone();
-                f();
-                if (now() - *start_time) > Duration::seconds(10) {
-                    info!("Canceled Uploading {} of {}", size, path.display());
-                    return 0;
-                }
-                let body_loop = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().cycle();
-                let client = Client::new();
-                let body = format!("content1={}", body_loop.take(size).collect::<String>());
-                let mut res = client
-                    .post(path.to_str().unwrap())
-                    .body(body)
-                    .header(CONNECTION, "close")
-                    .header(USER_AGENT, ST_USER_AGENT.to_owned())
-                    .send()
-                    .unwrap();
-                let mut buffer = [0; 10240];
-                loop {
-                    match res.read(&mut buffer) {
-                        Ok(0) => {
-                            break;
-                        }
-                        Ok(_) => {}
-                        _ => panic!("Something has gone wrong."),
-                    }
-                }
-                info!("Done {}, {}", path.display(), size);
-                size
-            });
-            tx.send(thread).unwrap();
+    let mut sizes = vec![];
+    for &size in &config.sizes.upload {
+        for _ in 0..config.counts.upload {
+            sizes.push(size)
         }
+    }
+
+    let best_url = Url::parse(&server.url)?;
+
+    let request_count = config.upload_max;
+
+    let requests: Vec<SpeedTestUploadRequest> = sizes
+        .into_iter()
+        .map(|size| {
+            let content_iter = b"content1="
+                .iter()
+                .chain(b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".iter().cycle())
+                .take(size);
+            let content_iter_read = iter_read::IterRead::new(content_iter);
+            let body = Body::sized(content_iter_read, size as u64);
+            let mut request = Request::new(reqwest::Method::POST, best_url.clone());
+            request.headers_mut().insert(
+                reqwest::header::USER_AGENT,
+                HeaderValue::from_static(&ST_USER_AGENT),
+            );
+            request.headers_mut().insert(
+                reqwest::header::CONNECTION,
+                HeaderValue::from_static("close"),
+            );
+            *request.body_mut() = Some(body);
+            Ok(SpeedTestUploadRequest { request, size })
+        })
+        .collect::<Result<Vec<_>, Error>>()?;
+    // TODO: Setup Ctrl-C Termination to use this "event".
+    let early_termination = AtomicBool::new(false);
+
+    // Start Timer
+    let start_time = SystemTime::now();
+
+    info!("Upload Threads: {}", config.threads.upload);
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(config.threads.upload)
+        .build()?;
+
+    info!("Total to be requested {:?}", requests.len());
+    let total_transferred_per_thread = pool.install(|| {
+        requests
+            .into_iter()
+            .take(request_count)
+            // Make it sequential like the original. Ramp up the file sizes.
+            .par_bridge()
+            .map(|r| -> Result<_, Error> {
+                progress_callback();
+
+                if (SystemTime::now().duration_since(start_time)? < config.length.upload)
+                    && !early_termination.load(Ordering::Relaxed)
+                {
+                    let client = Client::new();
+                    info!("Requesting {}", r.request.url());
+                    let response = client.execute(r.request);
+                    if response.is_err() {
+                        return Ok(r.size);
+                    };
+                } else {
+                    return Ok(0);
+                }
+                progress_callback();
+
+                Ok(r.size)
+            })
+            .collect::<Result<Vec<usize>, Error>>()
     });
 
-    let cons_complete = complete.clone();
+    let total_transferred: usize = total_transferred_per_thread?.iter().sum();
 
-    let cons_thread = thread::spawn(move || {
-        while cons_complete.read().unwrap().len() < len_sizes {
-            let thread = rx.recv().unwrap();
-            let mut complete = (*cons_complete).write().unwrap();
-            complete.push(thread.join().unwrap());
-        }
-    });
+    let end_time = SystemTime::now();
 
-    prod_thread.join().unwrap();
-    cons_thread.join().unwrap();
-    total_size = (*complete).read().unwrap().iter().sum();
-    let latency = now() - *start_time;
-    info!(
-        "It took {} ms to upload {} bytes",
-        latency.num_milliseconds(),
-        total_size
-    );
-    info!(
-        "{} bytes per second",
-        total_size as i64 / (latency.num_milliseconds() / 1000)
-    );
-    Ok(SpeedMeasurement {
-        size: total_size,
-        duration: now() - *start_time,
-    })
+    let measurement = SpeedMeasurement {
+        size: total_transferred,
+        duration: end_time.duration_since(start_time)?,
+    };
+
+    Ok(measurement)
 }
 
 #[derive(Debug)]
@@ -508,7 +396,7 @@ impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
     pub fn hash(&self) -> String {
         let hashed_str = format!(
             "{}-{}-{}-{}",
-            self.latency_measurement.latency.num_milliseconds(),
+            self.latency_measurement.latency.as_millis(),
             if let Some(upload_measurement) = self.upload_measurement {
                 upload_measurement.kbps()
             } else {
@@ -557,7 +445,7 @@ pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Error
                 }
             ),
         ),
-        ("ping", format!("{}", ping.num_milliseconds())),
+        ("ping", format!("{}", ping.as_millis())),
         (
             "upload",
             format!(
@@ -591,8 +479,7 @@ pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Error
         .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
         .body(body)
         .send();
-    let mut encode_return = String::new();
-    res?.read_to_string(&mut encode_return)?;
+    let encode_return = res?.text()?;
     let response_id = parse_share_request_response_id(encode_return.as_bytes())?;
     Ok(format!(
         "http://www.speedtest.net/result/{}.png",
@@ -624,12 +511,12 @@ mod tests {
     fn test_share_url_hash() {
         let download_measurement = SpeedMeasurement {
             size: (6096 * 100) as usize,
-            duration: Duration::seconds(1),
+            duration: Duration::new(1, 0),
         };
         println!("Download: {:?}", download_measurement);
         let upload_measurement = SpeedMeasurement {
             size: (1861 * 100) as usize,
-            duration: Duration::seconds(1),
+            duration: Duration::new(1, 0),
         };
         println!("Upload: {:?}", upload_measurement);
         let server = SpeedTestServer {
@@ -648,7 +535,7 @@ mod tests {
         println!("Server: {:?}", server);
         let latency_measurement = SpeedTestLatencyTestResult {
             server: &server,
-            latency: Duration::milliseconds(26),
+            latency: Duration::from_millis(26),
         };
         println!("Latency: {:?}", latency_measurement);
         let request = SpeedTestResult {
@@ -662,57 +549,6 @@ mod tests {
 
     #[test]
     fn test_construct_share_form() {}
-
-    #[test]
-    fn test_parse_config_xml() {
-        let parser = EventReader::new(include_bytes!("../tests/config/config.php.xml") as &[u8]);
-        let config = SpeedTestConfig::new(parser).unwrap();
-        assert_eq!("174.79.12.26", config.ip);
-        assert_eq!(
-            EarthLocation {
-                latitude: 32.9954,
-                longitude: -117.0753,
-            },
-            config.location
-        );
-        assert_eq!("Cox Communications", config.isp);
-    }
-
-    #[test]
-    fn test_parse_speedtest_servers_xml() {
-        let parser = EventReader::new(include_bytes!(
-            "../tests/confi\
-             g/stripped-ser\
-             vers-static.\
-             php.xml"
-        ) as &[u8]);
-        let spt_server_config = SpeedTestServersConfig::new(parser).unwrap();
-        assert!(spt_server_config.servers.len() > 5);
-        let server = spt_server_config.servers.get(1).unwrap();
-        assert!(!server.url.is_empty());
-        assert!(!server.country.is_empty());
-    }
-
-    #[test]
-    fn test_fastest_server() {
-        let spt_config = SpeedTestConfig {
-            ip: "127.0.0.1".to_string(),
-            location: EarthLocation {
-                latitude: 32.9954,
-                longitude: -117.0753,
-            },
-            isp: "xxxfinity".to_string(),
-        };
-        let parser = EventReader::new(include_bytes!(
-            "../tests/confi\
-             g/geo-test-ser\
-             vers-static.\
-             php.xml"
-        ) as &[u8]);
-        let config = SpeedTestServersConfig::new(parser).unwrap();
-        let closest_server = &config.servers_sorted_by_distance(&spt_config)[0];
-        assert_eq!("Los Angeles, CA", closest_server.name);
-    }
 
     #[test]
     fn test_get_configuration() {
@@ -734,6 +570,6 @@ mod tests {
             .with_body_from_file("tests/config/servers-static.php.xml")
             .create();
 
-        let _server_list_config = get_server_list_with_config(None);
+        let _server_list_config = get_server_list_with_config(&SpeedTestConfig::default());
     }
 }
