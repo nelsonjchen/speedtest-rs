@@ -1,0 +1,136 @@
+# From https://github.com/paskausks/rust-bin-github-workflows/blob/master/.github/workflows/release.yml
+# With some cribbing from GitHub readmes
+
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - '*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+name: Create Release
+
+env:
+  # Could, potentially automatically parse
+  # the bin name, but let's do it automatically for now.
+  RELEASE_BIN: speedtest-rs
+
+  # Space separated paths to include in the archive.
+  # Start relative paths with a dot if you don't want
+  # paths to be preserved. Use "/" as a delimiter.
+  RELEASE_ADDS: README.md LICENSE-APACHE LICENSE-MIT
+jobs:
+  build:
+    name: Build Release
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        build: [linux, macos, windows]
+        include:
+          - build: linux
+            os: ubuntu-latest
+            rust: stable
+          - build: macos
+            os: macos-latest
+            rust: stable
+          - build: windows
+            os: windows-latest
+            rust: stable
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: ${{ matrix.rust }}
+        override: true
+
+    - name: Build
+      run: cargo build --verbose --release
+
+    - name: Create artifact directory
+      run: mkdir artifacts
+
+    - name: Create archive for Linux
+      run: 7z a -ttar -so -an ./target/release/${{ env.RELEASE_BIN }} ${{ env.RELEASE_ADDS }} | 7z a -si ./artifacts/${{ env.RELEASE_BIN }}-linux-x86_64.tar.gz
+      if: matrix.os == 'ubuntu-latest'
+
+    - name: Create archive for Windows
+      run: 7z a -tzip ./artifacts/${{ env.RELEASE_BIN }}-windows-x86_64.zip ./target/release/${{ env.RELEASE_BIN }}.exe ${{ env.RELEASE_ADDS }}
+      if: matrix.os == 'windows-latest'
+
+    - name: Install p7zip
+      # 7Zip not available on MacOS, install p7zip via homebrew.
+      run: brew install p7zip
+      if: matrix.os == 'macos-latest'
+
+    - name: Create archive for MacOS
+      run: 7z a -tzip ./artifacts/${{ env.RELEASE_BIN }}-mac-x86_64.zip ./target/release/${{ env.RELEASE_BIN }} ${{ env.RELEASE_ADDS }}
+      if: matrix.os == 'macos-latest'
+
+    # This will double-zip
+    # See - https://github.com/actions/upload-artifact/issues/39
+    - uses: actions/upload-artifact@v1
+      name: Upload archive
+      with:
+        name: ${{ runner.os }}
+        path: artifacts/
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: Linux
+      - uses: actions/download-artifact@v2
+        with:
+          name: macOS
+      - uses: actions/download-artifact@v2
+        with:
+          name: Windows
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset (Linux)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url:  ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.RELEASE_BIN }}-linux-x86_64.tar.gz
+          asset_name: ${{ env.RELEASE_BIN }}-linux-x86_64.tar.gz
+          asset_content_type: application/zip
+
+      - name: Upload Release Asset (Windows)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url:  ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.RELEASE_BIN }}-windows-x86_64.zip
+          asset_name: ${{ env.RELEASE_BIN }}-windows-x86_64.zip
+          asset_content_type: application/zip
+
+      - name: Upload Release Asset (Mac)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url:  ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.RELEASE_BIN }}-mac-x86_64.zip
+          asset_name: ${{ env.RELEASE_BIN }}-mac-x86_64.zip
+          asset_content_type: application/zip
