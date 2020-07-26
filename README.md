@@ -11,7 +11,7 @@ Status: This is usable for lower-end residential connections using ["HTTP Legacy
 
 This tool currently only supports [HTTP Legacy Fallback][http_legacy_fallback] for testing.
 
-High bandwidth connections higher than ~200Mbps may return incorrect results! 
+High bandwidth connections higher than ~200Mbps may return incorrect results!
 
 The testing operations are different from socket versions of tools connecting to speedtest.net infrastructure. In the many FOSS Go versions, tests are done to find an amount of data that can run for a default of 3 seconds over some TCP connection. In particular, `speedtest-cli` and `speedtest-rs` tests with what Ookla calls the ["HTTP Legacy Fallback"][http_legacy_fallback] for hosts that cannot establish a direct TCP connection.
 
@@ -22,7 +22,7 @@ The testing operations are different from socket versions of tools connecting to
 
 https://www.speedtest.net/apps/cli
 
-Please look here. Unfortunately, it is not FOSS. Still, it is supported by them and can be used for non-commercial purposes. 
+Please look here. Unfortunately, it is not FOSS. Still, it is supported by them and can be used for non-commercial purposes.
 
 ## Purpose
 
@@ -32,11 +32,15 @@ The [HTTP Legacy Fallback][http_legacy_fallback] is currently based on the popul
 
 https://github.com/sivel/speedtest-cli @ 2.1.2
 
-There are also other speedtest.net using tools using different approaches to be stolen from in the future. For example: 
+There are also other speedtest.net using tools using different approaches to be stolen from in the future. For example:
 
 https://github.com/traetox/speedtest
 
 This example seems different as it appears to just use TCP connections and some protocol. It's probably more suitable to high-speed connections. TODO: Add a default TCP-mode.
+
+## Use as a Library
+
+The API is very much not stable. Use at your own risk. Semver adherence definitely not guaranteed. Please lock to exact versions if you must.
 
 ## License
 

@@ -1,4 +1,8 @@
+mod distance;
+mod error;
+mod speedtest;
 mod speedtest_config;
+mod speedtest_csv;
 mod speedtest_servers_config;
 
 use crate::speedtest_csv::SpeedTestCsvResult;
@@ -7,11 +11,6 @@ use clap::{crate_version, App, Arg};
 use log::info;
 use std::io::{self, Write};
 use url::Url;
-
-mod distance;
-mod error;
-mod speedtest;
-mod speedtest_csv;
 
 fn main() -> Result<(), error::Error> {
     env_logger::init();
