@@ -16,7 +16,7 @@ fn main() -> Result<(), error::Error> {
     env_logger::init();
 
     let matches = App::new("speedtest-rs")
-        .version(&crate_version!()[..])
+        .version(crate_version!())
         .about("Command line interface for testing internet bandwidth using speedtest.net.")
         .arg(
             Arg::with_name("no-download")
