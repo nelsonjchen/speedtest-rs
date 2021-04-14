@@ -84,6 +84,7 @@ impl SpeedTestConfig {
             .attribute("ignoreids")
             .ok_or(Error::ConfigParseError)?
             .split(',')
+            .filter(|s| !s.is_empty())
             .map(|s| s.parse::<u32>())
             .collect::<Result<Vec<u32>, _>>()?;
 

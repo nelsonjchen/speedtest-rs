@@ -129,7 +129,7 @@ pub fn get_best_server_based_on_latency(
         let latency = latency_measurements
             .iter()
             .fold(Duration::new(0, 0), |a, &i| a + i)
-            / ((latency_measurements.iter().count() as u32) * 2);
+            / ((latency_measurements.len() as u32) * 2);
         info!("Trip calculated to {} ms", latency.as_millis());
 
         if latency < fastest_latency {
