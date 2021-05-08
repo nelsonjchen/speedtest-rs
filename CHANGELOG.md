@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - [Check whether ignore_server str is empty.](https://github.com/nelsonjchen/speedtest-rs/pull/78) Thanks [@pcmid](https://github.com/pcmid)!
 
-## [0.1.1] - 2021-07-26
+## [0.1.1] - 2020-07-26
 ### Added
 - Add a plain `lib.rs` with no guarantees on stability
 
