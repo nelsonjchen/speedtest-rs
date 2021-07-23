@@ -52,9 +52,9 @@ pub fn download_configuration() -> Result<Response, Error> {
 pub fn get_configuration() -> Result<SpeedTestConfig, Error> {
     let config_body = download_configuration()?;
     info!("Parsing Configuration");
-    let spt_config = SpeedTestConfig::parse(&(config_body.text()?));
+    let spt_config = SpeedTestConfig::parse(&(config_body.text()?))?;
     info!("Parsed Configuration");
-    spt_config
+    Ok(spt_config)
 }
 
 pub fn download_server_list() -> Result<Response, Error> {
