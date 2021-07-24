@@ -196,4 +196,12 @@ mod tests {
         );
         assert_eq!("Cox Communications", config.client.isp);
     }
+
+    #[test]
+    fn test_parse_config_xml_83() {
+        let config =
+            SpeedTestConfig::parse(include_str!("../tests/config/2021-07-speedtest-config.xml"))
+                .unwrap();
+        assert_eq!("Cox Communications", config.client.isp);
+    }
 }
