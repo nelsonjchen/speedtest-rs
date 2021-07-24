@@ -1,5 +1,5 @@
 use crate::distance::{self, EarthLocation};
-use crate::{error::Error, speedtest::SpeedTestServer, speedtest_config::SpeedTestConfig};
+use crate::{error::SpeedTestError, speedtest::SpeedTestServer, speedtest_config::SpeedTestConfig};
 use std::cmp::Ordering::Less;
 
 pub struct SpeedTestServersConfig {
@@ -10,39 +10,39 @@ impl SpeedTestServersConfig {
     pub fn parse_with_config(
         server_config_xml: &str,
         config: &SpeedTestConfig,
-    ) -> Result<SpeedTestServersConfig, Error> {
+    ) -> Result<SpeedTestServersConfig, SpeedTestError> {
         let document = roxmltree::Document::parse(server_config_xml)?;
         let servers = document
             .descendants()
             .filter(|node| node.tag_name().name() == "server")
-            .map::<Result<_, Error>, _>(|n| {
+            .map::<Result<_, SpeedTestError>, _>(|n| {
                 let location = EarthLocation {
-                    latitude: n.attribute("lat").ok_or(Error::ServerParseError)?.parse()?,
-                    longitude: n.attribute("lon").ok_or(Error::ServerParseError)?.parse()?,
+                    latitude: n.attribute("lat").ok_or(SpeedTestError::ServerParseError)?.parse()?,
+                    longitude: n.attribute("lon").ok_or(SpeedTestError::ServerParseError)?.parse()?,
                 };
                 Ok(SpeedTestServer {
                     country: n
                         .attribute("country")
-                        .ok_or(Error::ServerParseError)?
+                        .ok_or(SpeedTestError::ServerParseError)?
                         .to_string(),
                     host: n
                         .attribute("host")
-                        .ok_or(Error::ServerParseError)?
+                        .ok_or(SpeedTestError::ServerParseError)?
                         .to_string(),
-                    id: n.attribute("id").ok_or(Error::ServerParseError)?.parse()?,
+                    id: n.attribute("id").ok_or(SpeedTestError::ServerParseError)?.parse()?,
                     location: location.clone(),
                     distance: Some(distance::compute_distance(&config.location, &location)),
                     name: n
                         .attribute("name")
-                        .ok_or(Error::ServerParseError)?
+                        .ok_or(SpeedTestError::ServerParseError)?
                         .to_string(),
                     sponsor: n
                         .attribute("sponsor")
-                        .ok_or(Error::ServerParseError)?
+                        .ok_or(SpeedTestError::ServerParseError)?
                         .to_string(),
                     url: n
                         .attribute("url")
-                        .ok_or(Error::ServerParseError)?
+                        .ok_or(SpeedTestError::ServerParseError)?
                         .to_string(),
                 })
             })

@@ -11,7 +11,7 @@ use reqwest::header::{HeaderValue, CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT
 use reqwest::Url;
 
 use crate::distance::EarthLocation;
-use crate::error::Error;
+use crate::error::SpeedTestError;
 use crate::speedtest_config::SpeedTestConfig;
 use crate::speedtest_servers_config::SpeedTestServersConfig;
 use rayon::prelude::*;
@@ -30,7 +30,7 @@ pub struct SpeedTestServer {
     pub url: String,
 }
 
-pub fn download_configuration() -> Result<Response, Error> {
+pub fn download_configuration() -> Result<Response, SpeedTestError> {
     info!("Downloading Configuration from speedtest.net");
 
     #[cfg(not(test))]
@@ -49,7 +49,7 @@ pub fn download_configuration() -> Result<Response, Error> {
     Ok(res)
 }
 
-pub fn get_configuration() -> Result<SpeedTestConfig, Error> {
+pub fn get_configuration() -> Result<SpeedTestConfig, SpeedTestError> {
     let config_body = download_configuration()?;
     info!("Parsing Configuration");
     let spt_config = SpeedTestConfig::parse(&(config_body.text()?))?;
@@ -57,7 +57,7 @@ pub fn get_configuration() -> Result<SpeedTestConfig, Error> {
     Ok(spt_config)
 }
 
-pub fn download_server_list() -> Result<Response, Error> {
+pub fn download_server_list() -> Result<Response, SpeedTestError> {
     info!("Download Server List");
     #[cfg(not(test))]
     let url = "http://www.speedtest.net/speedtest-servers.php";
@@ -76,7 +76,7 @@ pub fn download_server_list() -> Result<Response, Error> {
 
 pub fn get_server_list_with_config(
     config: &SpeedTestConfig,
-) -> Result<SpeedTestServersConfig, Error> {
+) -> Result<SpeedTestServersConfig, SpeedTestError> {
     let config_body = download_server_list()?;
     info!("Parsing Server List");
     let server_config_string = config_body.text()?;
@@ -93,7 +93,7 @@ pub struct SpeedTestLatencyTestResult<'a> {
 
 pub fn get_best_server_based_on_latency(
     servers: &[SpeedTestServer],
-) -> Result<SpeedTestLatencyTestResult, Error> {
+) -> Result<SpeedTestLatencyTestResult, SpeedTestError> {
     info!("Testing for fastest server");
     let client = Client::new();
     let mut fastest_server = None;
@@ -103,7 +103,7 @@ pub fn get_best_server_based_on_latency(
         let latency_path = format!(
             "{}/latency.txt",
             path.parent()
-                .ok_or(Error::LatencyTestInvalidPath)?
+                .ok_or(SpeedTestError::LatencyTestInvalidPath)?
                 .display()
         );
         info!("Downloading: {:?}", latency_path);
@@ -143,7 +143,7 @@ pub fn get_best_server_based_on_latency(
         fastest_server
     );
     Ok(SpeedTestLatencyTestResult {
-        server: fastest_server.ok_or(Error::LatencyTestClosestError)?,
+        server: fastest_server.ok_or(SpeedTestError::LatencyTestClosestError)?,
         latency: fastest_latency,
     })
 }
@@ -168,7 +168,7 @@ pub fn test_download_with_progress_and_config<F>(
     server: &SpeedTestServer,
     progress_callback: F,
     config: &mut SpeedTestConfig,
-) -> Result<SpeedMeasurement, Error>
+) -> Result<SpeedMeasurement, SpeedTestError>
 where
     F: Fn() + Send + Sync + 'static,
 {
@@ -181,7 +181,7 @@ where
         {
             let mut path_segments_mut = download_with_size_url
                 .path_segments_mut()
-                .map_err(|_| Error::ServerParseError)?;
+                .map_err(|_| SpeedTestError::ServerParseError)?;
             path_segments_mut.push(&format!("random{}x{}.jpg", size, size));
         }
         for _ in 0..config.counts.download {
@@ -222,7 +222,7 @@ where
             );
             Ok(request)
         })
-        .collect::<Result<Vec<_>, Error>>()?;
+        .collect::<Result<Vec<_>, SpeedTestError>>()?;
 
     // TODO: Setup Ctrl-C Termination to use this "event".
     let early_termination = AtomicBool::new(false);
@@ -242,7 +242,7 @@ where
             .into_iter()
             // Make it sequential like the original. Ramp up the file sizes.
             .par_bridge()
-            .map(|r| -> Result<_, Error> {
+            .map(|r| -> Result<_, SpeedTestError> {
                 let client = Client::new();
                 // let downloaded_count = vec![];
                 progress_callback();
@@ -264,7 +264,7 @@ where
 
                 Ok(total_transfered)
             })
-            .collect::<Result<Vec<usize>, Error>>()
+            .collect::<Result<Vec<usize>, SpeedTestError>>()
     });
 
     let total_transferred: usize = total_transferred_per_thread?.iter().sum();
@@ -293,7 +293,7 @@ pub fn test_upload_with_progress_and_config<F>(
     server: &SpeedTestServer,
     progress_callback: F,
     config: &SpeedTestConfig,
-) -> Result<SpeedMeasurement, Error>
+) -> Result<SpeedMeasurement, SpeedTestError>
 where
     F: Fn() + Send + Sync + 'static,
 {
@@ -331,7 +331,7 @@ where
             *request.body_mut() = Some(body);
             Ok(SpeedTestUploadRequest { request, size })
         })
-        .collect::<Result<Vec<_>, Error>>()?;
+        .collect::<Result<Vec<_>, SpeedTestError>>()?;
     // TODO: Setup Ctrl-C Termination to use this "event".
     let early_termination = AtomicBool::new(false);
 
@@ -350,7 +350,7 @@ where
             .take(request_count)
             // Make it sequential like the original. Ramp up the file sizes.
             .par_bridge()
-            .map(|r| -> Result<_, Error> {
+            .map(|r| -> Result<_, SpeedTestError> {
                 progress_callback();
 
                 if (SystemTime::now().duration_since(start_time)? < config.length.upload)
@@ -369,7 +369,7 @@ where
 
                 Ok(r.size)
             })
-            .collect::<Result<Vec<usize>, Error>>()
+            .collect::<Result<Vec<usize>, SpeedTestError>>()
     });
 
     let total_transferred: usize = total_transferred_per_thread?.iter().sum();
@@ -414,7 +414,7 @@ impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
     }
 }
 
-pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Error> {
+pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, SpeedTestError> {
     info!("Generating share URL");
     let download = if let Some(download_measurement) = speedtest_result.download_measurement {
         download_measurement.kbps()
@@ -487,14 +487,14 @@ pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Error
     ))
 }
 
-pub fn parse_share_request_response_id(input: &[u8]) -> Result<String, Error> {
+pub fn parse_share_request_response_id(input: &[u8]) -> Result<String, SpeedTestError> {
     let pairs = url::form_urlencoded::parse(input);
     for pair in pairs {
         if pair.0 == "resultid" {
             return Ok(pair.1.into_owned());
         }
     }
-    Err(Error::ParseShareUrlError)
+    Err(SpeedTestError::ParseShareUrlError)
 }
 
 #[cfg(test)]
