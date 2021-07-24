@@ -56,8 +56,8 @@ impl SpeedTestServersConfig {
         let location = &config.location;
         let mut sorted_servers = self.servers.clone();
         sorted_servers.sort_by(|a, b| {
-            let a_distance = distance::compute_distance(&location, &a.location);
-            let b_distance = distance::compute_distance(&location, &b.location);
+            let a_distance = distance::compute_distance(location, &a.location);
+            let b_distance = distance::compute_distance(location, &b.location);
             a_distance.partial_cmp(&b_distance).unwrap_or(Less)
         });
         sorted_servers

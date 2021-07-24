@@ -214,7 +214,7 @@ where
             );
             request.headers_mut().insert(
                 reqwest::header::USER_AGENT,
-                HeaderValue::from_static(&ST_USER_AGENT),
+                HeaderValue::from_static(ST_USER_AGENT),
             );
             request.headers_mut().insert(
                 reqwest::header::CONNECTION,
@@ -322,7 +322,7 @@ where
             let mut request = Request::new(reqwest::Method::POST, best_url.clone());
             request.headers_mut().insert(
                 reqwest::header::USER_AGENT,
-                HeaderValue::from_static(&ST_USER_AGENT),
+                HeaderValue::from_static(ST_USER_AGENT),
             );
             request.headers_mut().insert(
                 reqwest::header::CONNECTION,
