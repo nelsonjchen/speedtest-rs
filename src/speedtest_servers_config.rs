@@ -17,8 +17,14 @@ impl SpeedTestServersConfig {
             .filter(|node| node.tag_name().name() == "server")
             .map::<Result<_, SpeedTestError>, _>(|n| {
                 let location = EarthLocation {
-                    latitude: n.attribute("lat").ok_or(SpeedTestError::ServerParseError)?.parse()?,
-                    longitude: n.attribute("lon").ok_or(SpeedTestError::ServerParseError)?.parse()?,
+                    latitude: n
+                        .attribute("lat")
+                        .ok_or(SpeedTestError::ServerParseError)?
+                        .parse()?,
+                    longitude: n
+                        .attribute("lon")
+                        .ok_or(SpeedTestError::ServerParseError)?
+                        .parse()?,
                 };
                 Ok(SpeedTestServer {
                     country: n
@@ -29,7 +35,10 @@ impl SpeedTestServersConfig {
                         .attribute("host")
                         .ok_or(SpeedTestError::ServerParseError)?
                         .to_string(),
-                    id: n.attribute("id").ok_or(SpeedTestError::ServerParseError)?.parse()?,
+                    id: n
+                        .attribute("id")
+                        .ok_or(SpeedTestError::ServerParseError)?
+                        .parse()?,
                     location: location.clone(),
                     distance: Some(distance::compute_distance(&config.location, &location)),
                     name: n
