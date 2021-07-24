@@ -263,7 +263,7 @@ fn main() -> Result<(), error::SpeedTestError> {
     let speedtest_result = speedtest::SpeedTestResult {
         download_measurement,
         upload_measurement,
-        server: &best_server,
+        server: best_server,
         latency_measurement: &latency_test_result,
     };
 
