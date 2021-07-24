@@ -12,7 +12,7 @@ use log::info;
 use std::io::{self, Write};
 use url::Url;
 
-fn main() -> Result<(), error::Error> {
+fn main() -> Result<(), error::SpeedTestError> {
     env_logger::init();
 
     let matches = App::new("speedtest-rs")
@@ -263,7 +263,7 @@ fn main() -> Result<(), error::Error> {
     let speedtest_result = speedtest::SpeedTestResult {
         download_measurement,
         upload_measurement,
-        server: &best_server,
+        server: best_server,
         latency_measurement: &latency_test_result,
     };
 

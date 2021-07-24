@@ -1,4 +1,4 @@
-use crate::{distance::EarthLocation, error::Error};
+use crate::{distance::EarthLocation, error::SpeedTestError};
 use std::{net::Ipv4Addr, time::Duration};
 
 pub struct SpeedTestClientConfig {
@@ -60,29 +60,29 @@ pub struct SpeedTestConfig {
 }
 
 impl SpeedTestConfig {
-    pub fn parse(config_xml: &str) -> Result<SpeedTestConfig, Error> {
+    pub fn parse(config_xml: &str) -> Result<SpeedTestConfig, SpeedTestError> {
         let document = roxmltree::Document::parse(config_xml)?;
 
         let server_config_node = document
             .descendants()
             .find(|n| n.has_tag_name("server-config"))
-            .ok_or(Error::ConfigParseError)?;
+            .ok_or(SpeedTestError::ConfigParseError)?;
         let download_node = document
             .descendants()
             .find(|n| n.has_tag_name("download"))
-            .ok_or(Error::ConfigParseError)?;
+            .ok_or(SpeedTestError::ConfigParseError)?;
         let upload_node = document
             .descendants()
             .find(|n| n.has_tag_name("upload"))
-            .ok_or(Error::ConfigParseError)?;
+            .ok_or(SpeedTestError::ConfigParseError)?;
         let client_node = document
             .descendants()
             .find(|n| n.has_tag_name("client"))
-            .ok_or(Error::ConfigParseError)?;
+            .ok_or(SpeedTestError::ConfigParseError)?;
 
         let ignore_servers: Vec<u32> = server_config_node
             .attribute("ignoreids")
-            .ok_or(Error::ConfigParseError)?
+            .ok_or(SpeedTestError::ConfigParseError)?
             .split(',')
             .filter(|s| !s.is_empty())
             .map(|s| s.parse::<u32>())
@@ -90,12 +90,12 @@ impl SpeedTestConfig {
 
         let ratio = upload_node
             .attribute("ratio")
-            .ok_or(Error::ConfigParseError)?
+            .ok_or(SpeedTestError::ConfigParseError)?
             .parse::<usize>()?;
 
         let upload_max = upload_node
             .attribute("maxchunkcount")
-            .ok_or(Error::ConfigParseError)?
+            .ok_or(SpeedTestError::ConfigParseError)?
             .parse::<usize>()?;
 
         let up_sizes = [32768usize, 65536, 131072, 262144, 524288, 1048576, 7340032];
@@ -103,7 +103,7 @@ impl SpeedTestConfig {
         let sizes = SpeedTestSizeConfig {
             upload: up_sizes
                 .get(ratio - 1..)
-                .ok_or(Error::ConfigParseError)?
+                .ok_or(SpeedTestError::ConfigParseError)?
                 .to_vec(),
             download: vec![350usize, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000],
         };
@@ -116,18 +116,18 @@ impl SpeedTestConfig {
             upload: upload_count,
             download: download_node
                 .attribute("threadsperurl")
-                .ok_or(Error::ConfigParseError)?
+                .ok_or(SpeedTestError::ConfigParseError)?
                 .parse::<usize>()?,
         };
 
         let threads = SpeedTestThreadsConfig {
             upload: upload_node
                 .attribute("threads")
-                .ok_or(Error::ConfigParseError)?
+                .ok_or(SpeedTestError::ConfigParseError)?
                 .parse::<usize>()?,
             download: server_config_node
                 .attribute("threadcount")
-                .ok_or(Error::ConfigParseError)?
+                .ok_or(SpeedTestError::ConfigParseError)?
                 .parse::<usize>()?
                 * 2,
         };
@@ -135,12 +135,12 @@ impl SpeedTestConfig {
         let length = SpeedTestLengthConfig {
             upload: upload_node
                 .attribute("testlength")
-                .ok_or(Error::ConfigParseError)?
+                .ok_or(SpeedTestError::ConfigParseError)?
                 .parse::<u64>()
                 .map(Duration::from_secs)?,
             download: download_node
                 .attribute("testlength")
-                .ok_or(Error::ConfigParseError)?
+                .ok_or(SpeedTestError::ConfigParseError)?
                 .parse::<u64>()
                 .map(Duration::from_secs)?,
         };
@@ -148,11 +148,11 @@ impl SpeedTestConfig {
         let client = SpeedTestClientConfig {
             ip: client_node
                 .attribute("ip")
-                .ok_or(Error::ConfigParseError)?
+                .ok_or(SpeedTestError::ConfigParseError)?
                 .parse()?,
             isp: client_node
                 .attribute("isp")
-                .ok_or(Error::ConfigParseError)?
+                .ok_or(SpeedTestError::ConfigParseError)?
                 .to_string(),
         };
 
@@ -167,11 +167,11 @@ impl SpeedTestConfig {
             location: EarthLocation {
                 latitude: client_node
                     .attribute("lat")
-                    .ok_or(Error::ConfigParseError)?
+                    .ok_or(SpeedTestError::ConfigParseError)?
                     .parse()?,
                 longitude: client_node
                     .attribute("lon")
-                    .ok_or(Error::ConfigParseError)?
+                    .ok_or(SpeedTestError::ConfigParseError)?
                     .parse()?,
             },
         })
@@ -194,6 +194,14 @@ mod tests {
             },
             config.location
         );
+        assert_eq!("Cox Communications", config.client.isp);
+    }
+
+    #[test]
+    fn test_parse_config_xml_83() {
+        let config =
+            SpeedTestConfig::parse(include_str!("../tests/config/2021-07-speedtest-config.xml"))
+                .unwrap();
         assert_eq!("Cox Communications", config.client.isp);
     }
 }
