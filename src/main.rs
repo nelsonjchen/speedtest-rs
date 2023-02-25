@@ -112,7 +112,7 @@ fn main() -> Result<(), error::SpeedTestError> {
                     server.country,
                     server
                         .distance
-                        .map_or("None".to_string(), |d| format!("{d:.2} km")),
+                        .map_or_else(|| "None".to_string(), |d| format!("{d:.2} km")),
                 );
             }
             return Ok(());
@@ -139,10 +139,10 @@ fn main() -> Result<(), error::SpeedTestError> {
         let host = mini_url.host().unwrap().to_string();
         let hostport = mini_url //
             .port()
-            .map(|_| host.to_string())
-            .unwrap_or_else(|| {
-                format!("{}:{}", mini_url.host().unwrap(), mini_url.port().unwrap())
-            });
+            .map_or_else(
+                || format!("{}:{}", mini_url.host().unwrap(), mini_url.port().unwrap()),
+                |_| host.to_string(),
+            );
 
         let mut path = mini_url.path();
         if path == "/" {
@@ -281,13 +281,9 @@ fn main() -> Result<(), error::SpeedTestError> {
                 latency_test_result.latency.as_micros() % 1000
             ),
             download: &download_measurement
-                .map(|x| x.bps_f64())
-                .unwrap_or_default()
+                .map_or(0.0, |x| x.bps_f64())
                 .to_string(),
-            upload: &upload_measurement
-                .map(|x| x.bps_f64())
-                .unwrap_or_default()
-                .to_string(),
+            upload: &upload_measurement.map_or(0.0, |x| x.bps_f64()).to_string(),
             share: &if matches.is_present("share") {
                 speedtest::get_share_url(&speedtest_result)?
             } else {

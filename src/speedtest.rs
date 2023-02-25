@@ -392,12 +392,8 @@ impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
         let hashed_str = format!(
             "{}-{}-{}-{}",
             self.latency_measurement.latency.as_millis(),
-            self.upload_measurement
-                .map(|x| x.kbps())
-                .unwrap_or_default(),
-            self.download_measurement
-                .map(|x| x.kbps())
-                .unwrap_or_default(),
+            self.upload_measurement.map_or(0, |x| x.kbps()),
+            self.download_measurement.map_or(0, |x| x.kbps()),
             "297aae72"
         );
 
@@ -409,13 +405,9 @@ pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Speed
     info!("Generating share URL");
     let download = speedtest_result
         .download_measurement
-        .map(|x| x.kbps())
-        .unwrap_or_default();
+        .map_or(0, |x| x.kbps());
     info!("Download parameter is {download:?}");
-    let upload = speedtest_result
-        .upload_measurement
-        .map(|x| x.kbps())
-        .unwrap_or_default();
+    let upload = speedtest_result.upload_measurement.map_or(0, |x| x.kbps());
     info!("Upload parameter is {upload:?}");
     let server = speedtest_result.server.id;
     info!("Server parameter is {server:?}");
@@ -427,8 +419,7 @@ pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Speed
             "download",
             speedtest_result
                 .download_measurement
-                .map(|x| x.kbps())
-                .unwrap_or_default()
+                .map_or(0, |x| x.kbps())
                 .to_string(),
         ),
         ("ping", ping.as_millis().to_string()),
@@ -436,8 +427,7 @@ pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Speed
             "upload",
             speedtest_result
                 .upload_measurement
-                .map(|x| x.kbps())
-                .unwrap_or_default()
+                .map_or(0, |x| x.kbps())
                 .to_string(),
         ),
         ("promo", String::new()),
