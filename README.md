@@ -7,6 +7,18 @@
 
 Status: This is usable for lower-end residential connections using ["HTTP Legacy Fallback"][http_legacy_fallback]
 
+## Install from AUR
+
+```sh
+paru -S speedtest-rs
+```
+
+or
+
+```sh
+paru -S speedtest-rs-bin
+```
+
 ## [HTTP Legacy Fallback][http_legacy_fallback]
 
 This tool currently only supports [HTTP Legacy Fallback][http_legacy_fallback] for testing.
