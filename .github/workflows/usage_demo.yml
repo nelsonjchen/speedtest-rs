@@ -1,12 +1,8 @@
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the master branch
+  # Trigger the workflow on push or pull request on all branches
   push:
-    branches:
-      - master
   pull_request:
-    branches:
-      - master
+  # And every day at midnight
   schedule:
     - cron:  '0 0 * * *'
 
