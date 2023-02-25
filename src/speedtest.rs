@@ -118,7 +118,7 @@ pub fn get_best_server_based_on_latency(
             if res.is_err() {
                 continue 'server_loop;
             }
-            res?.bytes()?.last();
+            let _ = res?.bytes()?.last();
             let latency_measurement = SystemTime::now().duration_since(start_time)?;
             info!("Sampled {} ms", latency_measurement.as_millis());
             latency_measurements.push(latency_measurement);
@@ -190,7 +190,7 @@ where
 
     let _request_count = urls.len();
 
-    let requests: Vec<_> = urls
+    let requests = urls
         .iter()
         .enumerate()
         .map(|(i, url)| {
@@ -237,7 +237,7 @@ where
             .into_iter()
             // Make it sequential like the original. Ramp up the file sizes.
             .par_bridge()
-            .map(|r| -> Result<_, SpeedTestError> {
+            .map(|r| {
                 let client = Client::new();
                 // let downloaded_count = vec![];
                 progress_callback();
@@ -259,7 +259,7 @@ where
 
                 Ok(total_transfered)
             })
-            .collect::<Result<Vec<_>, _>>()
+            .collect::<Result<Vec<_>, SpeedTestError>>()
     });
 
     let total_transferred: usize = total_transferred_per_thread?.iter().sum();
@@ -345,7 +345,7 @@ where
             .take(request_count)
             // Make it sequential like the original. Ramp up the file sizes.
             .par_bridge()
-            .map(|r| -> Result<_, SpeedTestError> {
+            .map(|r| {
                 progress_callback();
 
                 if (SystemTime::now().duration_since(start_time)? < config.length.upload)
@@ -458,13 +458,12 @@ pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Speed
 }
 
 pub fn parse_share_request_response_id(input: &[u8]) -> Result<String, SpeedTestError> {
-    let pairs = url::form_urlencoded::parse(input);
-    for pair in pairs {
-        if pair.0 == "resultid" {
-            return Ok(pair.1.into_owned());
-        }
-    }
-    Err(SpeedTestError::ParseShareUrlError)
+    url::form_urlencoded::parse(input)
+        .find(|pair| pair.0 == "resultid")
+        .map_or_else(
+            || Err(SpeedTestError::ParseShareUrlError),
+            |pair| Ok(pair.1.into_owned()),
+        )
 }
 
 #[cfg(test)]
