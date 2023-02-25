@@ -138,9 +138,8 @@ pub fn get_best_server_based_on_latency(
         }
     }
     info!(
-        "Fastest Server @ {}ms : {:?}",
+        "Fastest Server @ {}ms : {fastest_server:?}",
         fastest_latency.as_millis(),
-        fastest_server
     );
     Ok(SpeedTestLatencyTestResult {
         server: fastest_server.ok_or(SpeedTestError::LatencyTestClosestError)?,
@@ -182,7 +181,7 @@ where
             let mut path_segments_mut = download_with_size_url
                 .path_segments_mut()
                 .map_err(|_| SpeedTestError::ServerParseError)?;
-            path_segments_mut.push(&format!("random{}x{}.jpg", size, size));
+            path_segments_mut.push(&format!("random{size}x{size}.jpg"));
         }
         for _ in 0..config.counts.download {
             urls.push(download_with_size_url.clone());
@@ -199,12 +198,8 @@ where
             cache_busting_url.query_pairs_mut().append_pair(
                 "x",
                 &format!(
-                    "{}.{}",
-                    SystemTime::now()
-                        .duration_since(UNIX_EPOCH)?
-                        .as_millis()
-                        .to_string(),
-                    i
+                    "{}.{i}",
+                    SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis(),
                 ),
             );
             let mut request = Request::new(reqwest::Method::GET, url.clone());
@@ -235,7 +230,7 @@ where
         .num_threads(config.threads.download)
         .build()?;
 
-    info!("Total to be requested {:?}", requests);
+    info!("Total to be requested {requests:?}");
 
     let total_transferred_per_thread = pool.install(|| {
         requests
@@ -264,7 +259,7 @@ where
 
                 Ok(total_transfered)
             })
-            .collect::<Result<Vec<usize>, SpeedTestError>>()
+            .collect::<Result<Vec<_>, _>>()
     });
 
     let total_transferred: usize = total_transferred_per_thread?.iter().sum();
@@ -310,7 +305,7 @@ where
 
     let request_count = config.upload_max;
 
-    let requests: Vec<SpeedTestUploadRequest> = sizes
+    let requests = sizes
         .into_iter()
         .map(|size| {
             let content_iter = b"content1="
@@ -369,7 +364,7 @@ where
 
                 Ok(r.size)
             })
-            .collect::<Result<Vec<usize>, SpeedTestError>>()
+            .collect::<Result<Vec<_>, SpeedTestError>>()
     });
 
     let total_transferred: usize = total_transferred_per_thread?.iter().sum();
@@ -397,16 +392,12 @@ impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
         let hashed_str = format!(
             "{}-{}-{}-{}",
             self.latency_measurement.latency.as_millis(),
-            if let Some(upload_measurement) = self.upload_measurement {
-                upload_measurement.kbps()
-            } else {
-                0
-            },
-            if let Some(download_measurement) = self.download_measurement {
-                download_measurement.kbps()
-            } else {
-                0
-            },
+            self.upload_measurement
+                .map(|x| x.kbps())
+                .unwrap_or_default(),
+            self.download_measurement
+                .map(|x| x.kbps())
+                .unwrap_or_default(),
             "297aae72"
         );
 
@@ -416,52 +407,44 @@ impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
 
 pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, SpeedTestError> {
     info!("Generating share URL");
-    let download = if let Some(download_measurement) = speedtest_result.download_measurement {
-        download_measurement.kbps()
-    } else {
-        0
-    };
-    info!("Download parameter is {:?}", download);
-    let upload = if let Some(upload_measurement) = speedtest_result.upload_measurement {
-        upload_measurement.kbps()
-    } else {
-        0
-    };
-    info!("Upload parameter is {:?}", upload);
+    let download = speedtest_result
+        .download_measurement
+        .map(|x| x.kbps())
+        .unwrap_or_default();
+    info!("Download parameter is {download:?}");
+    let upload = speedtest_result
+        .upload_measurement
+        .map(|x| x.kbps())
+        .unwrap_or_default();
+    info!("Upload parameter is {upload:?}");
     let server = speedtest_result.server.id;
-    info!("Server parameter is {:?}", server);
+    info!("Server parameter is {server:?}");
     let ping = speedtest_result.latency_measurement.latency;
-    info!("Ping parameter is {:?}", ping);
+    info!("Ping parameter is {ping:?}");
 
     let pairs = [
         (
             "download",
-            format!(
-                "{}",
-                if let Some(download_measurement) = speedtest_result.download_measurement {
-                    download_measurement.kbps()
-                } else {
-                    0
-                }
-            ),
+            speedtest_result
+                .download_measurement
+                .map(|x| x.kbps())
+                .unwrap_or_default()
+                .to_string(),
         ),
-        ("ping", format!("{}", ping.as_millis())),
+        ("ping", ping.as_millis().to_string()),
         (
             "upload",
-            format!(
-                "{}",
-                if let Some(upload_measurement) = speedtest_result.upload_measurement {
-                    upload_measurement.kbps()
-                } else {
-                    0
-                }
-            ),
+            speedtest_result
+                .upload_measurement
+                .map(|x| x.kbps())
+                .unwrap_or_default()
+                .to_string(),
         ),
-        ("promo", format!("")),
+        ("promo", String::new()),
         ("startmode", "pingselect".to_string()),
-        ("recommendedserverid", format!("{}", server)),
+        ("recommendedserverid", format!("{server}")),
         ("accuracy", "1".to_string()),
-        ("serverid", format!("{}", server)),
+        ("serverid", format!("{server}")),
         ("hash", speedtest_result.hash()),
     ];
 
@@ -469,7 +452,7 @@ pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Speed
         .extend_pairs(pairs.iter())
         .finish();
 
-    info!("Share Body Request: {:?}", body);
+    info!("Share Body Request: {body:?}");
 
     let client = Client::new();
     let res = client
@@ -481,10 +464,7 @@ pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Speed
         .send();
     let encode_return = res?.text()?;
     let response_id = parse_share_request_response_id(encode_return.as_bytes())?;
-    Ok(format!(
-        "http://www.speedtest.net/result/{}.png",
-        response_id
-    ))
+    Ok(format!("http://www.speedtest.net/result/{response_id}.png"))
 }
 
 pub fn parse_share_request_response_id(input: &[u8]) -> Result<String, SpeedTestError> {
@@ -532,12 +512,12 @@ mod tests {
             sponsor: "".to_owned(),
             url: "".to_owned(),
         };
-        println!("Server: {:?}", server);
+        println!("Server: {server:?}");
         let latency_measurement = SpeedTestLatencyTestResult {
             server: &server,
             latency: Duration::from_millis(26),
         };
-        println!("Latency: {:?}", latency_measurement);
+        println!("Latency: {latency_measurement:?}");
         let request = SpeedTestResult {
             download_measurement: Some(&download_measurement),
             upload_measurement: Some(&upload_measurement),

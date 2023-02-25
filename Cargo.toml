@@ -6,7 +6,7 @@ license = "MIT OR Apache-2.0"
 name = "speedtest-rs"
 repository = "https://github.com/nelsonjchen/speedtest-rs"
 version = "0.1.3"
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 clap = "2.33.1"

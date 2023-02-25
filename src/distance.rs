@@ -40,7 +40,7 @@ mod tests {
         };
         let distance = compute_distance(&origin, &destination);
         let diff = (distance - 8255.1).abs();
-        println!("distance: {} diff: {}", distance, diff);
+        println!("distance: {distance} diff: {diff}");
         assert!(diff < 0.2);
     }
 }
