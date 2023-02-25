@@ -71,7 +71,7 @@ jobs:
 
     # This will double-zip
     # See - https://github.com/actions/upload-artifact/issues/39
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v3
       name: Upload archive
       with:
         name: ${{ runner.os }}
