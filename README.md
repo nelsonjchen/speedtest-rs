@@ -69,4 +69,4 @@ Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any
 additional terms or conditions.
 
-[http_legacy_fallback]: http://www.ookla.com/support/a84541858
+[http_legacy_fallback]: https://web.archive.org/web/20161109011118/http://www.ookla.com/support/a84541858
