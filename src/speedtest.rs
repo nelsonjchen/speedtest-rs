@@ -18,6 +18,8 @@ use rayon::prelude::*;
 
 const ST_USER_AGENT: &str = concat!("reqwest/speedtest-rs ", env!("CARGO_PKG_VERSION"));
 
+use mockito::Server as MockServer;
+
 #[derive(Clone, Debug)]
 pub struct SpeedTestServer {
     pub country: String,
@@ -33,10 +35,12 @@ pub struct SpeedTestServer {
 pub fn download_configuration() -> Result<Response, SpeedTestError> {
     info!("Downloading Configuration from speedtest.net");
 
+    let _server: mockito::ServerGuard = MockServer::new();
+
     #[cfg(not(test))]
     let url = "http://www.speedtest.net/speedtest-config.php";
     #[cfg(test)]
-    let url = &format!("{}/speedtest-config.php", &mockito::server_url());
+    let url = &format!("{}/speedtest-config.php", _server.url());
 
     let client = Client::new();
     // Creating an outgoing request.
@@ -59,10 +63,13 @@ pub fn get_configuration() -> Result<SpeedTestConfig, SpeedTestError> {
 
 pub fn download_server_list() -> Result<Response, SpeedTestError> {
     info!("Download Server List");
+
+    let _server: mockito::ServerGuard = MockServer::new();
+
     #[cfg(not(test))]
     let url = "http://www.speedtest.net/speedtest-servers.php";
     #[cfg(test)]
-    let url = &format!("{}/speedtest-servers.php", &mockito::server_url());
+    let url = &format!("{}/speedtest-servers.php", _server.url());
 
     let client = Client::new();
     let server_res = client
@@ -521,9 +528,10 @@ mod tests {
 
     #[test]
     fn test_get_configuration() {
-        use mockito::mock;
+        let mut server: mockito::ServerGuard = MockServer::new();
 
-        let _m = mock("GET", "/speedtest-config.php")
+        let _m: mockito::Mock = server
+            .mock("GET", "/speedtest-config.php")
             .with_status(200)
             .with_body_from_file("tests/config/stripped-config.php.xml")
             .create();
@@ -532,9 +540,10 @@ mod tests {
 
     #[test]
     fn test_get_server_list_with_config() {
-        use mockito::mock;
+        let mut server: mockito::ServerGuard = MockServer::new();
 
-        let _m = mock("GET", "/speedtest-config.php")
+        let _m: mockito::Mock = server
+            .mock("GET", "/speedtest-config.php")
             .with_status(200)
             .with_body_from_file("tests/config/servers-static.php.xml")
             .create();
