@@ -1,5 +1,7 @@
 mod distance;
 mod error;
+#[cfg(not(feature = "log"))]
+mod log;
 mod speedtest;
 mod speedtest_config;
 mod speedtest_csv;
@@ -8,6 +10,9 @@ mod speedtest_servers_config;
 use crate::speedtest_csv::SpeedTestCsvResult;
 use chrono::Utc;
 use clap::{crate_version, App, Arg};
+#[cfg(feature = "log")]
+use log::info;
+#[cfg(not(feature = "log"))]
 use log::info;
 use std::io::{self, Write};
 use url::Url;
@@ -127,8 +132,8 @@ fn main() -> Result<(), error::SpeedTestError> {
 
         info!("Five Closest Servers");
         server_list_sorted.truncate(5);
-        for server in &server_list_sorted {
-            info!("Close Server: {server:?}");
+        for _server in &server_list_sorted {
+            info!("Close Server: {_server:?}");
         }
     } else {
         let mini = matches.value_of("mini").unwrap();

@@ -5,7 +5,12 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
+#[cfg(feature = "log")]
 use log::info;
+
+#[cfg(not(feature = "log"))]
+use super::log::info;
+
 use reqwest::blocking::{Body, Client, Request, Response};
 use reqwest::header::{HeaderValue, CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
 use reqwest::Url;
@@ -403,6 +408,7 @@ impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
 
 pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, SpeedTestError> {
     info!("Generating share URL");
+
     let download = speedtest_result
         .download_measurement
         .map_or(0, |x| x.kbps());
@@ -415,21 +421,9 @@ pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Speed
     info!("Ping parameter is {ping:?}");
 
     let pairs = [
-        (
-            "download",
-            speedtest_result
-                .download_measurement
-                .map_or(0, |x| x.kbps())
-                .to_string(),
-        ),
+        ("download", download.to_string()),
         ("ping", ping.as_millis().to_string()),
-        (
-            "upload",
-            speedtest_result
-                .upload_measurement
-                .map_or(0, |x| x.kbps())
-                .to_string(),
-        ),
+        ("upload", upload.to_string()),
         ("promo", String::new()),
         ("startmode", "pingselect".to_string()),
         ("recommendedserverid", format!("{server}")),
