@@ -12,7 +12,8 @@ use log::info;
 use std::io::{self, Write};
 use url::Url;
 
-fn main() -> Result<(), error::SpeedTestError> {
+fn main() -> color_eyre::Result<()> {
+    color_eyre::install()?;
     env_logger::init();
 
     let matches = App::new("speedtest-rs")

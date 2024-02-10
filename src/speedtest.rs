@@ -30,7 +30,7 @@ pub struct SpeedTestServer {
     pub url: String,
 }
 
-pub fn download_configuration() -> Result<Response, SpeedTestError> {
+pub fn download_configuration() -> color_eyre::Result<Response> {
     info!("Downloading Configuration from speedtest.net");
 
     #[cfg(not(test))]
@@ -49,7 +49,7 @@ pub fn download_configuration() -> Result<Response, SpeedTestError> {
     Ok(res)
 }
 
-pub fn get_configuration() -> Result<SpeedTestConfig, SpeedTestError> {
+pub fn get_configuration() -> color_eyre::Result<SpeedTestConfig> {
     let config_body = download_configuration()?;
     info!("Parsing Configuration");
     let spt_config = SpeedTestConfig::parse(&(config_body.text()?))?;
@@ -57,7 +57,7 @@ pub fn get_configuration() -> Result<SpeedTestConfig, SpeedTestError> {
     Ok(spt_config)
 }
 
-pub fn download_server_list() -> Result<Response, SpeedTestError> {
+pub fn download_server_list() -> color_eyre::Result<Response> {
     info!("Download Server List");
     #[cfg(not(test))]
     let url = "http://www.speedtest.net/speedtest-servers.php";
@@ -76,7 +76,7 @@ pub fn download_server_list() -> Result<Response, SpeedTestError> {
 
 pub fn get_server_list_with_config(
     config: &SpeedTestConfig,
-) -> Result<SpeedTestServersConfig, SpeedTestError> {
+) -> color_eyre::Result<SpeedTestServersConfig> {
     let config_body = download_server_list()?;
     info!("Parsing Server List");
     let server_config_string = config_body.text()?;

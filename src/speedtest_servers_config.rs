@@ -10,7 +10,7 @@ impl SpeedTestServersConfig {
     pub fn parse_with_config(
         server_config_xml: &str,
         config: &SpeedTestConfig,
-    ) -> Result<SpeedTestServersConfig, SpeedTestError> {
+    ) -> color_eyre::Result<SpeedTestServersConfig> {
         let document = roxmltree::Document::parse(server_config_xml)?;
         let servers = document
             .descendants()

@@ -1,19 +1,35 @@
-#[derive(Debug)]
+use thiserror::Error;
+#[derive(Debug, Error)]
 pub enum SpeedTestError {
+    #[error("Reqwest error: {0}")]
     Reqwest(reqwest::Error),
+    #[error("Io error: {0}")]
     Io(::std::io::Error),
+    #[error("Csv error: {0}")]
     Csv(csv::Error),
+    #[error("ParseFloatError error: {0}")]
     ParseFloatError(std::num::ParseFloatError),
+    #[error("ParseIntError error: {0}")]
     ParseIntError(std::num::ParseIntError),
+    #[error("AddrParseError error: {0}")]
     AddrParseError(std::net::AddrParseError),
+    #[error("RoXmlTreeError error: {0}")]
     RoXmlTreeError(roxmltree::Error),
+    #[error("ConfigParseError error")]
     ConfigParseError,
+    #[error("ServerParseError error")]
     ServerParseError,
+    #[error("LatencyTestInvalidPath error")]
     LatencyTestInvalidPath,
+    #[error("LatencyTestClosestError error")]
     LatencyTestClosestError,
+    #[error("UrlParseError error: {0}")]
     UrlParseError(url::ParseError),
+    #[error("SystemTimeError error: {0}")]
     SystemTimeError(std::time::SystemTimeError),
+    #[error("ParseShareUrlError error")]
     ParseShareUrlError,
+    #[error("ThreadPoolBuildError error: {0}")]
     ThreadPoolBuildError(rayon::ThreadPoolBuildError),
 }
 
