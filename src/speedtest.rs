@@ -5,6 +5,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
+use color_eyre::Section;
 use log::info;
 use reqwest::blocking::{Body, Client, Request, Response};
 use reqwest::header::{HeaderValue, CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
@@ -30,7 +31,7 @@ pub struct SpeedTestServer {
     pub url: String,
 }
 
-pub fn download_configuration() -> Result<Response, SpeedTestError> {
+pub fn download_configuration() -> color_eyre::Result<Response> {
     info!("Downloading Configuration from speedtest.net");
 
     #[cfg(not(test))]
@@ -44,12 +45,13 @@ pub fn download_configuration() -> Result<Response, SpeedTestError> {
         .get(url)
         .header(CONNECTION, "close")
         .header(USER_AGENT, ST_USER_AGENT.to_owned())
-        .send()?;
+        .send()
+        .suggestion("Connect to the internet")?;
     info!("Downloaded Configuration from speedtest.net");
     Ok(res)
 }
 
-pub fn get_configuration() -> Result<SpeedTestConfig, SpeedTestError> {
+pub fn get_configuration() -> color_eyre::Result<SpeedTestConfig> {
     let config_body = download_configuration()?;
     info!("Parsing Configuration");
     let spt_config = SpeedTestConfig::parse(&(config_body.text()?))?;
@@ -57,7 +59,7 @@ pub fn get_configuration() -> Result<SpeedTestConfig, SpeedTestError> {
     Ok(spt_config)
 }
 
-pub fn download_server_list() -> Result<Response, SpeedTestError> {
+pub fn download_server_list() -> color_eyre::Result<Response> {
     info!("Download Server List");
     #[cfg(not(test))]
     let url = "http://www.speedtest.net/speedtest-servers.php";
@@ -76,7 +78,7 @@ pub fn download_server_list() -> Result<Response, SpeedTestError> {
 
 pub fn get_server_list_with_config(
     config: &SpeedTestConfig,
-) -> Result<SpeedTestServersConfig, SpeedTestError> {
+) -> color_eyre::Result<SpeedTestServersConfig> {
     let config_body = download_server_list()?;
     info!("Parsing Server List");
     let server_config_string = config_body.text()?;
