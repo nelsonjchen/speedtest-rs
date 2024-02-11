@@ -5,6 +5,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
+use color_eyre::Section;
 use log::info;
 use reqwest::blocking::{Body, Client, Request, Response};
 use reqwest::header::{HeaderValue, CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
@@ -44,7 +45,8 @@ pub fn download_configuration() -> color_eyre::Result<Response> {
         .get(url)
         .header(CONNECTION, "close")
         .header(USER_AGENT, ST_USER_AGENT.to_owned())
-        .send()?;
+        .send()
+        .suggestion("Connect to the internet")?;
     info!("Downloaded Configuration from speedtest.net");
     Ok(res)
 }
