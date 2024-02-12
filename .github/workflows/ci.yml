@@ -49,6 +49,8 @@ jobs:
 
       - uses: actions-rs/cargo@v1
         name: Run
+        env:
+            RUST_LOG: "debug"
         with:
           command: run
           args: --features=${{ matrix.features }}
