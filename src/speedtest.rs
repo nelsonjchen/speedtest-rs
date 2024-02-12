@@ -125,6 +125,8 @@ pub fn get_best_server_based_on_latency(
                 .header(USER_AGENT, ST_USER_AGENT.to_owned())
                 .send();
             if res.is_err() {
+                // Log the error and continue to the next server.
+                info!("Error: {:?}", res.err());
                 continue 'server_loop;
             }
             let _ = res?.bytes()?.last();
