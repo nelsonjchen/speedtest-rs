@@ -103,6 +103,10 @@ pub fn get_best_server_based_on_latency(
     let client = Client::new();
     let mut fastest_server = None;
     let mut fastest_latency = Duration::new(u64::MAX, 0);
+    // Return error if no servers are available.
+    if servers.is_empty() {
+        return Err(SpeedTestError::LatencyTestNoServerError);
+    }
     'server_loop: for server in servers {
         let path = Path::new(&server.url);
         let latency_path = format!(
