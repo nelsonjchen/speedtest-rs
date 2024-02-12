@@ -5,7 +5,7 @@ exclude = ["tests/config/*"]
 license = "MIT OR Apache-2.0"
 name = "speedtest-rs"
 repository = "https://github.com/nelsonjchen/speedtest-rs"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 
 [dependencies]
