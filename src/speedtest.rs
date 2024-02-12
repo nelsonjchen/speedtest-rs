@@ -5,7 +5,12 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
+#[cfg(feature = "log")]
 use log::info;
+
+#[cfg(not(feature = "log"))]
+use super::log::info;
+
 use reqwest::blocking::{Body, Client, Request, Response};
 use reqwest::header::{HeaderValue, CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};
 use reqwest::Url;
@@ -80,9 +85,9 @@ pub fn get_server_list_with_config(
     let config_body = download_server_list()?;
     info!("Parsing Server List");
     let server_config_string = config_body.text()?;
-    let spt_config = SpeedTestServersConfig::parse_with_config(&server_config_string, config);
+
     info!("Parsed Server List");
-    spt_config
+    SpeedTestServersConfig::parse_with_config(&server_config_string, config)
 }
 
 #[derive(Debug)]
@@ -98,6 +103,10 @@ pub fn get_best_server_based_on_latency(
     let client = Client::new();
     let mut fastest_server = None;
     let mut fastest_latency = Duration::new(u64::MAX, 0);
+    // Return error if no servers are available.
+    if servers.is_empty() {
+        return Err(SpeedTestError::LatencyTestNoServerError);
+    }
     'server_loop: for server in servers {
         let path = Path::new(&server.url);
         let latency_path = format!(
@@ -116,6 +125,8 @@ pub fn get_best_server_based_on_latency(
                 .header(USER_AGENT, ST_USER_AGENT.to_owned())
                 .send();
             if res.is_err() {
+                // Log the error and continue to the next server.
+                info!("Error: {:?}", res.err());
                 continue 'server_loop;
             }
             let _ = res?.bytes()?.last();
@@ -403,6 +414,7 @@ impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
 
 pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, SpeedTestError> {
     info!("Generating share URL");
+
     let download = speedtest_result
         .download_measurement
         .map_or(0, |x| x.kbps());
@@ -415,21 +427,9 @@ pub fn get_share_url(speedtest_result: &SpeedTestResult) -> Result<String, Speed
     info!("Ping parameter is {ping:?}");
 
     let pairs = [
-        (
-            "download",
-            speedtest_result
-                .download_measurement
-                .map_or(0, |x| x.kbps())
-                .to_string(),
-        ),
+        ("download", download.to_string()),
         ("ping", ping.as_millis().to_string()),
-        (
-            "upload",
-            speedtest_result
-                .upload_measurement
-                .map_or(0, |x| x.kbps())
-                .to_string(),
-        ),
+        ("upload", upload.to_string()),
         ("promo", String::new()),
         ("startmode", "pingselect".to_string()),
         ("recommendedserverid", format!("{server}")),

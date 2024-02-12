@@ -10,6 +10,7 @@ pub enum SpeedTestError {
     ConfigParseError,
     ServerParseError,
     LatencyTestInvalidPath,
+    LatencyTestNoServerError,
     LatencyTestClosestError,
     UrlParseError(url::ParseError),
     SystemTimeError(std::time::SystemTimeError),
