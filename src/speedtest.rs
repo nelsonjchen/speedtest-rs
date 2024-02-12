@@ -85,7 +85,7 @@ pub fn get_server_list_with_config(
     let config_body = download_server_list()?;
     info!("Parsing Server List");
     let server_config_string = config_body.text()?;
-    
+
     info!("Parsed Server List");
     SpeedTestServersConfig::parse_with_config(&server_config_string, config)
 }
