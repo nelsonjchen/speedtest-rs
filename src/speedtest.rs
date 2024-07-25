@@ -541,7 +541,8 @@ mod tests {
     fn test_get_server_list_with_config() {
         let mut server = mockito::Server::new();
 
-        let _m = server.mock("GET", "/speedtest-config.php")
+        let _m = server
+            .mock("GET", "/speedtest-config.php")
             .with_status(200)
             .with_body_from_file("tests/config/servers-static.php.xml")
             .create();
