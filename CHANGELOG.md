@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2024-07-27
+
+### Changed
+
+- [Update dependencies in general by @dilawar](https://github.com/nelsonjchen/speedtest-rs/pull/165)
+
 ## [0.1.5] - 2024-02-11
 
 ### Added
