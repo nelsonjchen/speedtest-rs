@@ -50,8 +50,8 @@ struct Cli {
     csv: bool,
 
     /// Print CSV headers
-    #[arg(long)]
-    csv_header: Option<String>,
+    #[arg(long, default_value_t = false)]
+    csv_header: bool,
 
     /// Single character delimiter to use in CSV output
     #[arg(long, default_value_t = ',')]
@@ -68,7 +68,7 @@ fn main() -> Result<(), error::SpeedTestError> {
     let matches = Cli::parse();
 
     // This appears to be purely informational.
-    if matches.csv_header.is_some() {
+    if matches.csv_header {
         let results = speedtest_csv::SpeedTestCsvResult::default();
 
         println!("{}", results.header_serialize());
