@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::{distance::EarthLocation, error::SpeedTestError};
 use std::{net::Ipv4Addr, time::Duration};
 
