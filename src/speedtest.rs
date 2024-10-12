@@ -400,7 +400,7 @@ pub struct SpeedTestResult<'a, 'b, 'c> {
     pub latency_measurement: &'c SpeedTestLatencyTestResult<'c>,
 }
 
-impl<'a, 'b, 'c> SpeedTestResult<'a, 'b, 'c> {
+impl SpeedTestResult<'_, '_, '_> {
     pub fn hash(&self) -> String {
         let hashed_str = format!(
             "{}-{}-{}-{}",
