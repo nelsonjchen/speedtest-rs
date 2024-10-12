@@ -10,6 +10,7 @@ use chrono::Utc;
 use clap::Parser;
 use std::io::{self, Write};
 use tracing::info;
+use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 use url::Url;
 
 #[derive(Parser)]
@@ -58,6 +59,11 @@ struct Cli {
 }
 
 fn main() -> Result<(), error::SpeedTestError> {
+    tracing_subscriber::registry()
+        .with(fmt::layer())
+        .with(EnvFilter::from_default_env())
+        .init();
+
     let matches = Cli::parse();
 
     // This appears to be purely informational.

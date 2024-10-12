@@ -1,9 +1,9 @@
 [package]
-authors = ["Nelson Chen <nelson@mindflakes.com>"]
+name = "speedtest-rs"
 description = "Speedtest.net testing utility and crate"
+authors = ["Nelson Chen <nelson@mindflakes.com>"]
 exclude = ["tests/config/*"]
 license = "MIT OR Apache-2.0"
-name = "speedtest-rs"
 repository = "https://github.com/nelsonjchen/speedtest-rs"
 version = "0.2.0"
 edition = "2021"
@@ -14,20 +14,19 @@ name = "speedtest_rs"
 
 [[bin]]
 name = "speedtest-rs"
-required-features = ["clap"]
 
 [dependencies]
-clap = { version = "<=4.4", features = ["derive"], optional = true }
+clap = { version = "<=4.4", features = ["derive"] }
 chrono = "0.4.38"
 log = { version = "0.4.22", optional = true }
 url = "2.5.2"
-mockito = "1.4.0"
+mockito = "1.5.0"
 md5 = "0.7.0"
 csv = "1.3.0"
-serde = { version = "1.0.204", features = ["derive"] }
+serde = { version = "1.0.210", features = ["derive"] }
 roxmltree = "0.20.0"
 rayon = "1.10.0"
-iter-read = "1.0.1"
+iter-read = "1.1.0"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing = "0.1.40"
 
@@ -37,5 +36,3 @@ features = ["blocking"]
 
 [features]
 rustls-tls = ["reqwest/rustls-tls"]
-log = ["dep:log"]
-clap = ["dep:clap"]
