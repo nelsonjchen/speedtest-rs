@@ -7,11 +7,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-#[cfg(feature = "log")]
-use log::info;
-
-#[cfg(not(feature = "log"))]
-use super::log::info;
+use tracing::info;
 
 use reqwest::blocking::{Body, Client, Request, Response};
 use reqwest::header::{HeaderValue, CONNECTION, CONTENT_TYPE, REFERER, USER_AGENT};

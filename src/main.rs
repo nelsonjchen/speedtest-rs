@@ -1,7 +1,5 @@
 mod distance;
 mod error;
-#[cfg(not(feature = "log"))]
-mod log;
 mod speedtest;
 mod speedtest_config;
 mod speedtest_csv;
@@ -10,11 +8,8 @@ mod speedtest_servers_config;
 use crate::speedtest_csv::SpeedTestCsvResult;
 use chrono::Utc;
 use clap::Parser;
-#[cfg(feature = "log")]
-use log::info;
-#[cfg(not(feature = "log"))]
-use log::info;
 use std::io::{self, Write};
+use tracing::info;
 use url::Url;
 
 #[derive(Parser)]
@@ -63,8 +58,6 @@ struct Cli {
 }
 
 fn main() -> Result<(), error::SpeedTestError> {
-    env_logger::init();
-
     let matches = Cli::parse();
 
     // This appears to be purely informational.
