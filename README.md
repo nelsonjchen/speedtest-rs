@@ -1,3 +1,15 @@
+# Maintenance Message
+
+I’m sorry for the pun, but I no longer have the bandwidth to maintain or develop this project. I also don’t have the bandwidth to search for or evaluate new maintainers—and, frankly, I’m not terribly interested in doing so after recent experiences in other open-source projects.
+
+When I originally built this project, the goal was to port speedtest-cli (a Python tool) to Rust for use on an ARM9/ARM926EJ-S receipt printer. Ironically, although I now work for an ISP, my interest in further developing or supporting this project hasn’t increased. This tool technically violates Ookla’s current Terms of Service, and Ookla now provides its own binaries for speed tests. Besides, I’m also not on the ISP team that handles speed testing and/or uses iperf.
+
+As of now, this project is officially mothballed. I will not be accepting pull requests for code changes or updating the crate, at least for the foreseeable future. However, I will accept pull requests related to the list of alternative projects below. You’re welcome to fork this project and give it a new name, which I’d be happy to add to this list.
+
+Alternatives (ordered by GitHub stars at the time of PR):
+
+* to be filled
+
 # speedtest-rs
 
 *a tool like `speedtest-cli`, but in Rust*
